@@ -23,9 +23,8 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineTrennung;
 /**
  * Änderungen an einer bestehenden PTM-Online-Verbindung. Pausieren/Fortsetzen kommen ohne Server-Aufruf aus und
  * funktionieren daher auch offline; Trennen löst die Bindung online (offline auf Nachfrage nur lokal) und entfernt
- * danach das Blatt. Läuft als
- * {@link SheetRunner}: eigener Blattschutz-Scope (das Blatt „PTMOnline Sync“ ist im Turnier-Modus gesperrt), kein
- * paralleler Lauf, und die Sidebar aktualisiert ihren Verbindungsstatus über den Runner-Zustandswechsel.
+ * danach Sync-Zustand und Info-Blatt. Läuft als
+ * {@link SheetRunner}: eigener Blattschutz-Scope (das Trennen entfernt ein Blatt), kein paralleler Lauf, und die Sidebar aktualisiert ihren Verbindungsstatus über den Runner-Zustandswechsel.
  */
 final class PtmOnlineVerbindungsRunner extends SheetRunner {
 
@@ -33,7 +32,7 @@ final class PtmOnlineVerbindungsRunner extends SheetRunner {
         /** Sync anhalten: kein Meldungsabgleich, kein Rundenstart-Sync. Die Verbindung bleibt bestehen. */
         PAUSIEREN,
         FORTSETZEN,
-        /** Verbindung online lösen und danach das Blatt „PTMOnline Sync“ entfernen. */
+        /** Verbindung online lösen und danach Sync-Zustand und Info-Blatt „PTMOnline Sync“ entfernen. */
         TRENNEN
     }
 

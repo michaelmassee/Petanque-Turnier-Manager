@@ -5,7 +5,6 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher;
 
 /**
  * „Neue Meldeliste“ in einem mit PTM-Online verbundenen Dokument: Das Anlegen löscht alle Blätter, auch „PTMOnline
@@ -86,25 +85,12 @@ public final class PtmOnlineNeueMeldeliste {
         return verbindungen;
     }
 
-    /** {@code null} steht für die eine Verbindung des Dokuments; bei Supermêlée alle Spieltage mit Sync-Blatt. */
-    private static List<Integer> spieltage(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
+    /** {@code null} steht für die eine Verbindung des Dokuments; bei Supermêlée alle Spieltage mit Verbindung. */
+    private static List<@Nullable Integer> spieltage(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
         if (!turnierSystem.hatMehrereSpielTage()) {
             return Collections.singletonList(null);
         }
-        String praefix = SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC_SPIELTAG_PREFIX;
-        return Arrays.stream(SheetMetadataHelper.getSchluesselMitPrefix(ws.getWorkingSpreadsheetDocument(), praefix))
-                .map(schluessel -> spieltagNr(schluessel.substring(praefix.length()))).flatMap(Optional::stream)
-                .toList();
-    }
-
-    private static Optional<Integer> spieltagNr(String rest) {
-        String ziffern = rest.replaceFirst(SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX + "$", "");
-        try {
-            return Optional.of(Integer.parseInt(ziffern));
-        } catch (NumberFormatException e) {
-            logger.warn("PTM-Online: unerwarteter Sync-Schlüssel {}", rest, e);
-            return Optional.empty();
-        }
+        return List.copyOf(PtmOnlineSyncSpeicher.angelegteSpieltage(ws));
     }
 
     /** @return {@code false}, wenn der Anwender das nur lokale Trennen ablehnt */

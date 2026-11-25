@@ -32,6 +32,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		addCheckinSortProp(KONFIG_PROPERTIES);
 		addPtmOnlineErgebnisPruefenProp(KONFIG_PROPERTIES);
 		addPtmOnlineLiveProps(KONFIG_PROPERTIES, true);
+		addPtmOnlineSyncBlattProp(KONFIG_PROPERTIES);
 		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
 	}
 

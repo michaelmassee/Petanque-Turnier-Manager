@@ -10,7 +10,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 
 /**
- * Archiviert das Blatt „PTMOnline Sync“, nachdem das verbundene Online-Turnier in PTM-Online gelöscht wurde – als
+ * Archiviert die PTM-Online-Verbindung, nachdem das verbundene Online-Turnier in PTM-Online gelöscht wurde – als
  * eigener, stiller SheetRunner, damit Blattschutz-Scope und „nur ein Lauf gleichzeitig“ gelten.
  */
 final class PtmOnlineArchivRunner extends SheetRunner {

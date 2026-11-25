@@ -31,7 +31,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
-import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.speicher.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
@@ -159,7 +159,7 @@ class PtmOnlineCheckinSupermeleeUITest extends BaseCalcUITest {
         List<NeueZuordnung> zuordnungen = new ArrayList<>();
         for (Map.Entry<Integer, Integer> spieler : zeileProSpieler.entrySet()) {
             String uuid = uuidProZeile.get(spieler.getValue());
-            zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, ziel.formelTeamNrAusLokalerUuid(uuid),
+            zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid,
                     "Spieler " + spieler.getKey(), registration(onlineId(spieler.getKey()))));
         }
         mapping.addMappings(zuordnungen);

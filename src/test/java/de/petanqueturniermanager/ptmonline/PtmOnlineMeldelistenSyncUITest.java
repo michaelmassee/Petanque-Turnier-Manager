@@ -58,7 +58,7 @@ class PtmOnlineMeldelistenSyncUITest extends BaseCalcUITest {
             String uuid = ziel.getOderErzeugeLokaleUuid(spieler.zeile1Basiert());
             zeilen.put(spieler.vorname(), spieler.zeile1Basiert());
             uuids.put(spieler.vorname(), uuid);
-            mapping.addMapping(uuid, "online-" + spieler.vorname(), ziel.formelTeamNrAusLokalerUuid(uuid), 1,
+            mapping.addMapping(uuid, "online-" + spieler.vorname(), 1,
                     spieler.vorname(), "confirmed");
         }
         verbindung = new PtmOnlineVerbindung(new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test",

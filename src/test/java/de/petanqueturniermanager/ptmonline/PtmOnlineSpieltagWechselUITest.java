@@ -15,8 +15,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncStatus;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncStatus;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
 
@@ -88,13 +88,13 @@ class PtmOnlineSpieltagWechselUITest extends BaseCalcUITest {
         spieltag1.verbinden(turnier, new SyncBindingDto(true, DOCUMENT_ID, 2), LEASE_TOKEN);
 
         assertThat(spieltag1.getTournamentId()).contains(TURNIER_ID);
-        assertThat(PtmOnlineSyncSheet.leseStatus(wkingSpreadsheet, 1).verbunden()).isTrue();
+        assertThat(PtmOnlineSyncSpeicher.leseStatus(wkingSpreadsheet, 1).verbunden()).isTrue();
     }
 
     private void pruefeArchiviert() throws Exception {
         assertThat(spieltag1.getTournamentId()).as("archiviert gilt als nicht verbunden").isEmpty();
-        assertThat(spieltag1.getSyncDocumentId()).as("Blatt bleibt als Archiv erhalten").contains(DOCUMENT_ID);
-        PtmOnlineSyncStatus status = PtmOnlineSyncSheet.leseStatus(wkingSpreadsheet, 1);
+        assertThat(spieltag1.getSyncDocumentId()).as("Verbindungsdaten bleiben als Archiv erhalten").contains(DOCUMENT_ID);
+        PtmOnlineSyncStatus status = PtmOnlineSyncSpeicher.leseStatus(wkingSpreadsheet, 1);
         assertThat(status.verbunden()).isFalse();
         assertThat(spieltag1.istPausiert()).isFalse();
     }

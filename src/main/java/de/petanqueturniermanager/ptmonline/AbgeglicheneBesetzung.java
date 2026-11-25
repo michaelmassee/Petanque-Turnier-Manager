@@ -19,8 +19,8 @@ import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 
 /**
  * Zuletzt abgeglichene Besetzung einer Meldung (T-15, T-17, T-18): Namen je Personen-Slot und die Benutzer-ID
- * registrierter Personen. Liegt im Sync-Blatt in einer ausgeblendeten Spalte, nicht in einer frei editierbaren Zelle
- * der Meldeliste, und bleibt beim Sortieren an der lokalen UUID.
+ * registrierter Personen. Liegt in der gespeicherten Zuordnung (Dokument-Properties), nicht in einer frei
+ * editierbaren Zelle der Meldeliste, und bleibt beim Sortieren an der lokalen UUID.
  * <p>
  * Sie beantwortet zwei Fragen: Hat sich eine Seite seit dem letzten Abgleich geändert (E-16)? Und welche Benutzer-ID
  * gehört zu einer lokal stehenden Person? Eine Person behält ihre Benutzer-ID, solange ihr Name unverändert ist; steht
@@ -35,7 +35,7 @@ public final class AbgeglicheneBesetzung {
     /**
      * Eine Person der Besetzung; {@code u} ist die Benutzer-ID, {@code l} die Lizenznummer und {@code c} der Verein aus
      * PTM-Online, jeweils {@code null} wenn unbekannt. PTM-Online führt den Verein der Anmeldung bei der ersten Person.
-     * Kurze Feldnamen sparen Zellinhalt; ältere Zellinhalte ohne {@code l}/{@code c} bleiben lesbar.
+     * Kurze Feldnamen sparen Platz; ältere gespeicherte Werte ohne {@code l}/{@code c} bleiben lesbar.
      */
     public record Person(String v, String n, @Nullable String u, @Nullable String l, @Nullable String c) {
 
@@ -116,7 +116,7 @@ public final class AbgeglicheneBesetzung {
         return von(ergebnis);
     }
 
-    /** Liest den gespeicherten Zellinhalt; Unlesbares gilt als „noch nie abgeglichen“ und wird protokolliert. */
+    /** Liest den gespeicherten Wert; Unlesbares gilt als „noch nie abgeglichen“ und wird protokolliert. */
     public static AbgeglicheneBesetzung lese(@Nullable String text) {
         if (text == null || text.isBlank()) {
             return LEER;
@@ -130,7 +130,7 @@ public final class AbgeglicheneBesetzung {
         }
     }
 
-    /** Zellinhalt für das Sync-Blatt. */
+    /** Gespeicherter Wert für die Zuordnung. */
     public String alsText() {
         return personen.isEmpty() ? "" : GSON.toJson(personen);
     }

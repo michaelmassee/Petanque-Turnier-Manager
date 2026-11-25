@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -99,7 +98,7 @@ class PtmOnlineNeueMeldelisteUITest extends BaseCalcUITest {
     void gesperrteFormationBrichtVorDemTrennenAb() throws Exception {
         schweizerTurnier();
         PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null);
-        mapping.addMapping(LOKALE_UUID, "r1", NrUuidSpalte.formelNrAusUuid("$A$1:$A$999", LOKALE_UUID), 1,
+        mapping.addMapping(LOKALE_UUID, "r1", 1,
                 "Hans Müller", "Bestätigt");
 
         assertThatThrownBy(() -> PtmOnlineNeueMeldeliste.vorbereiten(wkingSpreadsheet, TurnierSystem.SCHWEIZER,

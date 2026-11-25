@@ -94,7 +94,7 @@ public final class SheetNamen {
     public static final String KEY_JGJ_GRUPPE_SPIELPLAN_MUSTER      = "sheet.name.jgj.gruppe.spielplan.muster";
     /** JGJ Gesamtrangliste: gruppenübergreifende Rangliste über alle Gruppen. */
     public static final String KEY_JGJ_GESAMTRANGLISTE             = "sheet.name.jgj.gesamtrangliste";
-    /** PTM-Online-Sync-Blatt: Verbindungsdaten und Zuordnung lokal ↔ online. */
+    /** PTM-Online-Sync-Blatt: Info-Anzeige der Verbindungsdaten. */
     public static final String KEY_PTM_ONLINE_SYNC                  = "sheet.name.ptm.online.sync";
     /** PTM-Online-Sync-Blatt je Spieltag (Supermelee): {0} = Spieltagnummer. */
     public static final String KEY_PTM_ONLINE_SYNC_MUSTER           = "sheet.name.ptm.online.sync.muster";

@@ -130,9 +130,13 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         return schutzScopeGeoeffnet;
     }
 
-    /** Öffnet höchstens einen Scope je Lauf; SheetRunner schließt ihn auch bei Fehlern. */
-    private void oeffneSchutzScopeBeiAenderung(AuftragsBestand bestand) {
-        if (bestand.istGeaendert() || !bestand.ergebnisseZumAnwenden().isEmpty()) {
+    /**
+     * Öffnet höchstens einen Scope je Lauf; SheetRunner schließt ihn auch bei Fehlern. Nur das Anwenden von
+     * Versandergebnissen ändert Blätter (Online-IDs in den Nr-Zellen); Auftragsbestand und Verbindungszustand stehen
+     * in den Dokument-Properties und brauchen keinen Blattschutz-Scope.
+     */
+    private void oeffneSchutzScopeFuerErgebnisse(AuftragsBestand bestand) {
+        if (!bestand.ergebnisseZumAnwenden().isEmpty()) {
             oeffneSchutzScope();
         }
     }
@@ -174,7 +178,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
                 : null;
         PtmOnlineRegistrationMapping mapping = v.mapping();
         AuftragsBestand bestand = PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, v.spieltagNr());
-        oeffneSchutzScopeBeiAenderung(bestand);
+        oeffneSchutzScopeFuerErgebnisse(bestand);
         PtmOnlineAuftraege.Anwendung anwendung = PtmOnlineAuftraege.anwenden(bestand, mapping);
         uebernehmeOnlineStatus(mapping, passenderAbruf);
         boolean pausiert = !PtmOnlineSpielrundeSync.istSyncAktiv(mapping);
@@ -195,22 +199,19 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             erfasseErgebnismeldungen(bestand, v);
             brauchtStand = !erfasseLiveStand(bestand, v, passenderAbruf);
         }
-        oeffneSchutzScopeBeiAenderung(bestand);
         PtmOnlineAuftraege.speichern(bestand, mapping);
         timer.ifPresent(stand -> PtmOnlineTimer.erfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), stand));
         erfassung = new Erfassung(v, bestand, pausiert, brauchtStand, anwendung, nachlauf);
     }
 
-    /** Zeigt den zuletzt abgerufenen Status des Online-Turniers im Sync-Blatt an; schreibt nur bei Änderung. */
+    /** Hält den zuletzt abgerufenen Status des Online-Turniers fest; schreibt nur bei Änderung. */
     private void uebernehmeOnlineStatus(PtmOnlineRegistrationMapping mapping, @Nullable OnlineStandAbruf standAbruf)
             throws GenerateException {
         Optional<String> status = standAbruf == null ? Optional.empty()
                 : standAbruf.stand().map(SyncStandDto::status).filter(wert -> !wert.isBlank());
-        if (status.isEmpty() || status.equals(mapping.getOnlineStatus())) {
-            return;
+        if (status.isPresent() && !status.equals(mapping.getOnlineStatus())) {
+            mapping.setOnlineStatus(status.get());
         }
-        oeffneSchutzScope();
-        mapping.setOnlineStatus(status.get());
     }
 
     /**
@@ -236,7 +237,6 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         }
         getLogger().info("PTM-Online: Folgerunde ({}) nach online zurückgesetztem Start ({}), Turnier wird wieder "
                 + "aufgenommen", rundenstart.get(), zurueckgesetzt.get());
-        oeffneSchutzScope();
         mapping.setRunningAusstehendSeit(rundenstart.get());
         PtmOnlineLiveSync.vergessen(bestand, verbindung.tournamentId());
     }

@@ -11,7 +11,7 @@ import java.util.OptionalInt;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Sprachneutrale Vermerke einer Zuordnung im Sync-Blatt (Mapping-Tabelle der Spezifikation), gespeichert als
+ * Sprachneutrale Vermerke einer gespeicherten Zuordnung (Mapping-Tabelle der Spezifikation), gespeichert als
  * {@code SCHLUESSEL[=wert];...}. Unbekannte Schlüssel bleiben beim Ändern erhalten.
  */
 public final class ZuordnungsVermerke {
@@ -98,7 +98,7 @@ public final class ZuordnungsVermerke {
         return new ZuordnungsVermerke(neu);
     }
 
-    /** Zellinhalt, Schlüssel sortiert für einen stabilen Vergleich. */
+    /** Gespeicherter Wert, Schlüssel sortiert für einen stabilen Vergleich. */
     public String alsText() {
         return eintraege.entrySet().stream().sorted(Map.Entry.comparingByKey())
                 .map(eintrag -> eintrag.getValue().isEmpty() ? eintrag.getKey() : eintrag.getKey() + "=" + eintrag.getValue())

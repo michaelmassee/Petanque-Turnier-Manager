@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
@@ -42,14 +41,13 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
-import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
-import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
+import de.petanqueturniermanager.onlinesync.speicher.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
-import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
@@ -835,15 +833,8 @@ public final class RegistrationImportTask {
         for (Map.Entry<RegistrationDto, Integer> eintrag : zeileProAnmeldung.entrySet()) {
             RegistrationDto reg = eintrag.getKey();
             int zeile = eintrag.getValue();
-            String uuid = uuidProZeile.get(zeile);
-            try {
-                zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, ziel.formelTeamNrAusLokalerUuid(uuid),
-                        bezeichnungProZeile.getOrDefault(zeile, ""), reg,
-                        onlineBesetzung(reg, ziel.getFormation())));
-            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-                logger.warn("PTM-Online: Nummernformel für importierte Anmeldung {} nicht ermittelt", reg.id(), e);
-                nichtZuordenbar.add(onlineBezeichnung(reg, ziel.getFormation()));
-            }
+            zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuidProZeile.get(zeile),
+                    bezeichnungProZeile.getOrDefault(zeile, ""), reg, onlineBesetzung(reg, ziel.getFormation())));
         }
         mapping.addMappings(zuordnungen);
         return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar, nachStart, unvollstaendig,
@@ -934,12 +925,7 @@ public final class RegistrationImportTask {
     private static void verknuepfeBestehendeZeile(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel,
             RegistrationDto reg, int zeile) throws GenerateException {
         String uuid = lokaleUuid(ziel, zeile);
-        try {
-            mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(reg),
-                    lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
-        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException(I18n.get("ptmonline.fehler.verknuepfen", e.getMessage()));
-        }
+        mapping.addMapping(uuid, reg.id(), executionRevision(reg), lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
         mapping.setOnlineDetails(uuid, reg);
         mapping.setZusaetze(Map.of(uuid, ZuordnungsZusatz.besetzungUndTeamname(
                 onlineBesetzung(reg, ziel.getFormation()).alsText(),
@@ -1038,7 +1024,7 @@ public final class RegistrationImportTask {
             PtmOnlineAuftraege.anlage(bestand, tournamentId, uuid,
                     PtmOnlineMeldungsInhalt.anmeldung(ziel.getFormation(), eintrag.getValue(),
                             teamnamen.get(eintrag.getKey())),
-                    OnlineTeilnahme.INAKTIV, null, formelTeamNr(ziel, uuid), bezeichnung(eintrag.getValue()), false);
+                    OnlineTeilnahme.INAKTIV, null, bezeichnung(eintrag.getValue()), false);
         }
         PtmOnlineAuftraege.Anwendung anwendung = sendeSynchron(config, mapping, bestand);
         return new NeuanlageErgebnis(anwendung.angelegt(), anwendung.abgelehnt(), anwendung.nachStart());
@@ -1100,13 +1086,6 @@ public final class RegistrationImportTask {
         }
     }
 
-    private static String formelTeamNr(MeldelisteZiel ziel, String uuid) throws GenerateException {
-        try {
-            return ziel.formelTeamNrAusLokalerUuid(uuid);
-        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException(e.getMessage());
-        }
-    }
 
 
 

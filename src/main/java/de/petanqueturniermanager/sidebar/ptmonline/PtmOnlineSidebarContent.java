@@ -28,8 +28,8 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncStatus;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncStatus;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.AusblendbaresControlLayout;
@@ -169,7 +169,7 @@ public class PtmOnlineSidebarContent extends BaseSidebarContent {
         } catch (GenerateException e) {
             logger.warn("Aktiver Spieltag für den PTM-Online-Status nicht ermittelbar", e);
         }
-        PtmOnlineSyncStatus status = PtmOnlineSyncSheet.leseStatus(ws, spieltagNr);
+        PtmOnlineSyncStatus status = PtmOnlineSyncSpeicher.leseStatus(ws, spieltagNr);
         if (!status.verbunden()) {
             return Zeilen.nur("sidebar.ptmonline.nicht_verbunden");
         }

@@ -96,21 +96,36 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
         });
     }
 
+    /**
+     * Der Auftragsbestand steht in den Dokument-Properties: Ein neuer Auftrag wird gespeichert, ohne dass die
+     * Blätter entsperrt und wieder gesperrt werden (früher bei jeder Online-Änderung).
+     */
     @Test
-    void neuerAuftragWirdMitGenauEinemScopeGespeichert() throws Exception {
+    void neuerAuftragWirdOhneBlattschutzScopeGespeichert() throws Exception {
         mapping.setPausiert(true);
         bestand.erzeuge(AuftragsArt.RUNDE, "PUT", "/test", "{}", "{}");
         geschuetzt(() -> {
             int vorher = schutzAufrufe();
             erfasse();
-            assertThat(schutzAufrufe()).isEqualTo(vorher + 1);
+            assertThat(schutzAufrufe()).as("Speichern des Auftrags entsperrt keine Blätter").isEqualTo(vorher);
             assertThat(bestand.istGeaendert()).isFalse();
             // Neben dem Spieleinstellungen-Auftrag der ersten Erfassung genau der neue Auftrag.
             assertThat(mapping.leseAuftragsBestand().eintraege()).extracting(eintrag -> eintrag.auftrag().art())
                     .containsExactly(AuftragsArt.SPIELEINSTELLUNGEN, AuftragsArt.RUNDE);
             erfasse();
-            assertThat(schutzAufrufe()).as("Der nächste unveränderte Lauf öffnet keinen Scope")
-                    .isEqualTo(vorher + 1);
+            assertThat(schutzAufrufe()).isEqualTo(vorher);
+        });
+    }
+
+    @Test
+    void geaenderterOnlineStatusWirdOhneBlattschutzScopeUebernommen() throws Exception {
+        mapping.setPausiert(true);
+        geschuetzt(() -> {
+            int vorher = schutzAufrufe();
+            mapping.setOnlineStatus("registration");
+            erfasse(); // der abgerufene Stand meldet "running"
+            assertThat(mapping.getOnlineStatus()).contains("running");
+            assertThat(schutzAufrufe()).isEqualTo(vorher);
         });
     }
 

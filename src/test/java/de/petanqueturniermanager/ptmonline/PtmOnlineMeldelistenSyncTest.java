@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
+import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.PtmOnlineMeldelistenSync.Aenderung;
 import de.petanqueturniermanager.ptmonline.PtmOnlineMeldelistenSync.Aktion;
 import de.petanqueturniermanager.ptmonline.PtmOnlineMeldelistenSync.Anlage;

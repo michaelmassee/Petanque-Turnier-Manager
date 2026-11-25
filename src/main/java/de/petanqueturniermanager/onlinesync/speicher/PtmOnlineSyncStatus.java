@@ -1,7 +1,7 @@
 /*
  * Erstellung 2026 / Michael Massee
  */
-package de.petanqueturniermanager.onlinesync.sheet;
+package de.petanqueturniermanager.onlinesync.speicher;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import java.util.Optional;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
- * Zustand einer PTM-Online-Verbindung laut Blatt „PTMOnline Sync“ – für Anzeigen wie die Sidebar.
+ * Zustand einer PTM-Online-Verbindung laut {@link PtmOnlineSyncSpeicher} – für Anzeigen wie die Sidebar.
  *
  * @param verbunden    das Dokument (bzw. der Spieltag) ist mit einem Online-Turnier verbunden
  * @param pausiert     der Sync ist pausiert: kein Abgleich, kein Rundenstart-Sync

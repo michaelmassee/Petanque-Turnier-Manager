@@ -22,11 +22,12 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
-import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
-import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsAnzeige;
-import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
+import de.petanqueturniermanager.onlinesync.speicher.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher;
+import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsAnzeige;
+import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationAnswerDto;
@@ -36,7 +37,8 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
- * Bindeglied zum Blatt „PTMOnline Sync“ ({@link PtmOnlineSyncSheet}) einer Online-Turnier-Verbindung. Bei
+ * Bindeglied zum gespeicherten Zustand ({@link PtmOnlineSyncSpeicher}) und zum Info-Blatt „PTMOnline Sync“
+ * ({@link PtmOnlineSyncSheet}) einer Online-Turnier-Verbindung. Bei
  * Supermelee (mehrere Spieltage) gilt {@code spieltagNrOderNull} — jeder Spieltag hat seine eigene
  * Verbindung/sein eigenes Blatt; für alle anderen Turniersysteme ist er {@code null} (eine Verbindung pro
  * Dokument).
@@ -46,6 +48,7 @@ public class PtmOnlineRegistrationMapping {
     private static final Logger LOGGER = LogManager.getLogger(PtmOnlineRegistrationMapping.class);
 
     private final WorkingSpreadsheet ws;
+    private final PtmOnlineSyncSpeicher speicher;
     private final PtmOnlineSyncSheet syncSheet;
     private final PtmOnlineKonfliktSheet konfliktSheet;
     /**
@@ -56,6 +59,7 @@ public class PtmOnlineRegistrationMapping {
 
     public PtmOnlineRegistrationMapping(WorkingSpreadsheet ws, TurnierSystem turnierSystem, Integer spieltagNrOderNull) {
         this.ws = ws;
+        this.speicher = new PtmOnlineSyncSpeicher(ws, spieltagNrOderNull);
         this.syncSheet = new PtmOnlineSyncSheet(ws, turnierSystem, spieltagNrOderNull);
         this.konfliktSheet = new PtmOnlineKonfliktSheet(ws, turnierSystem);
     }
@@ -66,35 +70,39 @@ public class PtmOnlineRegistrationMapping {
     }
 
     /**
-     * Legt das Blatt an (falls nötig) und schreibt die Verbindungsdaten - einmalig beim Verbinden, synchron
-     * innerhalb eines laufenden SheetRunners. Wechselt das Online-Turnier, wird die bisherige Zuordnung geleert.
+     * Speichert die Verbindungsdaten und baut das optionale Info-Blatt neu auf (nur mit eingeschalteter Option) –
+     * einmalig beim Verbinden, synchron innerhalb eines laufenden SheetRunners. Wechselt das Online-Turnier, wird die
+     * bisherige Zuordnung geleert.
      */
     public void verbinden(OnlineTournamentDto turnier, SyncBindingDto binding, String leaseToken)
             throws GenerateException {
-        syncSheet.verbinden(turnier, binding.syncDocumentId(), leaseToken);
+        speicher.verbinden(turnier, binding.syncDocumentId(), leaseToken);
+        syncSheet.nachEinstellungAufbauen();
     }
 
     /**
-     * Legt das Blatt bei Bedarf an und aktualisiert Überschriften und Formatierung. Läuft synchron und ist für
-     * Aufrufer innerhalb eines laufenden SheetRunners gedacht (Meldungsabgleich).
+     * Gleicht das optionale Info-Blatt mit der Turnier-Option ab: Eingeschaltet wird ein fehlendes Blatt angelegt,
+     * ausgeschaltet ein vorhandenes entfernt. Läuft synchron und ist für Aufrufer innerhalb eines laufenden
+     * SheetRunners gedacht (Meldungsabgleich).
      */
     public void sicherstellen() throws GenerateException {
-        syncSheet.anlegen();
+        syncSheet.nachEinstellungAnlegen();
     }
 
-    /** Entfernt das Blatt wieder aus dem Dokument (Gegenstück zu {@link #verbinden}). */
+    /** Leert den gespeicherten Zustand und entfernt das Info-Blatt (Gegenstück zu {@link #verbinden}). */
     public void trennen() throws GenerateException {
+        speicher.trennen();
         syncSheet.entfernen();
     }
 
     // ── Zuordnung lokale Meldung ↔ Online-Anmeldung ─────────────────────────
-    // Die Online-ID steht in der Nr-Zelle der Meldung (NrZellFormel); das Sync-Blatt führt je lokaler UUID nur
-    // Anzeige, Revision und Vermerke. Gezählt werden nur Meldungen mit einer Zeile im Sync-Blatt dieser Verbindung –
+    // Die Online-ID steht in der Nr-Zelle der Meldung (NrZellFormel); der Speicher führt je lokaler UUID nur
+    // Anzeige, Revision und Vermerke. Gezählt werden nur Meldungen mit einer Zuordnung dieser Verbindung –
     // bei Supermelee trägt die Nr-Zelle sonst womöglich die ID eines anderen Spieltags.
 
-    public void addMapping(String lokaleUuid, String onlineRegistrationId, String nummerFormel, int executionRevision,
+    public void addMapping(String lokaleUuid, String onlineRegistrationId, int executionRevision,
             String lokaleBezeichnung, String onlineStatus) throws GenerateException {
-        addMappings(List.of(new NeueZuordnung(lokaleUuid, onlineRegistrationId, nummerFormel, executionRevision,
+        addMappings(List.of(new NeueZuordnung(lokaleUuid, onlineRegistrationId, executionRevision,
                 lokaleBezeichnung, onlineStatus, "", "", "", "", "", "")));
     }
 
@@ -107,9 +115,9 @@ public class PtmOnlineRegistrationMapping {
         return getImportierteOnlineIds().contains(onlineRegistrationId);
     }
 
-    /** Ob dem Online-Turnier bereits Meldungen zugeordnet sind – liest nur das Blatt „PTMOnline Sync“. */
+    /** Ob dem Online-Turnier bereits Meldungen zugeordnet sind – liest nur den gespeicherten Zustand. */
     public boolean hatZuordnungen() throws GenerateException {
-        return !syncSheet.getLokaleUuids().isEmpty();
+        return !speicher.getLokaleUuids().isEmpty();
     }
 
     /** Alle bereits zugeordneten Online-IDs – einmal lesen statt {@link #istBereitsImportiert} je Anmeldung. */
@@ -119,7 +127,7 @@ public class PtmOnlineRegistrationMapping {
 
     /** Entfernt die Zuordnungen dieser lokalen UUIDs; die Online-Anmeldungen gelten danach als nicht importiert. */
     public void entferneZuordnungen(Set<String> lokaleUuids) throws GenerateException {
-        syncSheet.entferneZuordnungen(lokaleUuids);
+        speicher.entferneZuordnungen(lokaleUuids);
         Map<String, Optional<String>> ohneId = new LinkedHashMap<>();
         lokaleUuids.forEach(uuid -> ohneId.put(uuid, Optional.empty()));
         setzeInNrZellen(ohneId);
@@ -155,7 +163,7 @@ public class PtmOnlineRegistrationMapping {
     }
 
     private void ergaenzeOhneZeile(Map<String, String> onlineIdProUuid) throws GenerateException {
-        Set<String> zugeordnet = syncSheet.getLokaleUuids();
+        Set<String> zugeordnet = speicher.getLokaleUuids();
         Map<String, String> inNrZellen = onlineIdsAusNrZellen(zugeordnet);
         onlineIdProUuid.forEach((uuid, onlineId) -> {
             if (zugeordnet.contains(uuid) && !inNrZellen.containsKey(uuid)) {
@@ -166,22 +174,22 @@ public class PtmOnlineRegistrationMapping {
 
     /** Ob die zuletzt übernommene Online-Anmeldung dieser lokalen Meldung online storniert ist. */
     public boolean istOnlineStorniert(String lokaleUuid) throws GenerateException {
-        return syncSheet.getRohStatus(lokaleUuid).map(OnlineAnmeldeStatus::istStorniert).orElse(false);
+        return speicher.getRohStatus(lokaleUuid).map(OnlineAnmeldeStatus::istStorniert).orElse(false);
     }
 
     /** Hängt eine bereits zugeordnete lokale Meldung auf eine andere Online-Anmeldung um. */
     public void ersetzeOnlineId(String lokaleUuid, String onlineRegistrationId, int executionRevision)
             throws GenerateException {
-        if (!syncSheet.getLokaleUuids().contains(lokaleUuid)) {
+        if (!speicher.getLokaleUuids().contains(lokaleUuid)) {
             throw new GenerateException(I18n.get("ptmonline.fehler.keine_zuordnung", lokaleUuid));
         }
         setzeInNrZellen(Map.of(lokaleUuid, Optional.of(onlineRegistrationId)));
-        syncSheet.setExecutionRevisionen(Map.of(lokaleUuid, executionRevision));
+        speicher.setExecutionRevisionen(Map.of(lokaleUuid, executionRevision));
     }
 
     /** Online-ID je lokaler UUID aller Zuordnungen – einmal lesen statt {@link #getOnlineId} je Meldung. */
     public Map<String, String> getOnlineIdsProUuid() throws GenerateException {
-        Set<String> zugeordnet = syncSheet.getLokaleUuids();
+        Set<String> zugeordnet = speicher.getLokaleUuids();
         Map<String, String> ergebnis = onlineIdsAusNrZellen(zugeordnet);
         ohneZeile.forEach((uuid, id) -> {
             if (zugeordnet.contains(uuid)) {
@@ -229,49 +237,48 @@ public class PtmOnlineRegistrationMapping {
 
     /** Lokale Bezeichnung je lokaler UUID – auch für Meldungen, deren Zeile es nicht mehr gibt. */
     public Map<String, String> getBezeichnungenProUuid() throws GenerateException {
-        return syncSheet.getBezeichnungenProUuid();
+        return speicher.getBezeichnungenProUuid();
     }
 
     /** Roher Online-Status je lokaler UUID, wie ihn der letzte Abgleich gesehen hat. */
     public Map<String, String> getRohStatusProUuid() throws GenerateException {
-        return syncSheet.getRohStatusProUuid();
+        return speicher.getRohStatusProUuid();
     }
 
     public Map<String, Integer> getExecutionRevisionenProUuid() throws GenerateException {
-        return syncSheet.getExecutionRevisionenProUuid();
+        return speicher.getExecutionRevisionenProUuid();
     }
 
     /** Setzt die Ausführungsrevisionen mehrerer Zuordnungen in einem Schreibzugriff. */
     public void setExecutionRevisionen(Map<String, Integer> revisionProUuid) throws GenerateException {
-        syncSheet.setExecutionRevisionen(revisionProUuid);
+        speicher.setExecutionRevisionen(revisionProUuid);
     }
 
     public void setBezeichnung(String lokaleUuid, String lokaleBezeichnung, String onlineStatus)
             throws GenerateException {
-        syncSheet.setBezeichnung(lokaleUuid, lokaleBezeichnung, onlineStatus);
+        speicher.setBezeichnung(lokaleUuid, lokaleBezeichnung, onlineStatus);
     }
 
     /** Schreibt Tarife und Anmeldefragen lesbar sowie den unübersetzten Anmeldestatus (Storno-Erkennung). */
     public void setOnlineDetails(String lokaleUuid, RegistrationDto registration) throws GenerateException {
-        ZuordnungsAnzeige.OnlineDetails details = onlineDetails(registration);
-        syncSheet.setOnlineDetails(lokaleUuid, details.tarife(), details.fragen(), details.rohStatus());
+        speicher.setOnlineDetails(lokaleUuid, onlineDetails(registration));
     }
 
     /**
      * Neue Zuordnung zu einer Online-Anmeldung samt lesbarer Details, zum gesammelten Schreiben per
      * {@link #addMappings}.
      */
-    public static NeueZuordnung neueZuordnung(String lokaleUuid, String nummerFormel, String lokaleBezeichnung,
+    public static NeueZuordnung neueZuordnung(String lokaleUuid, String lokaleBezeichnung,
             RegistrationDto registration) {
-        return neueZuordnung(lokaleUuid, nummerFormel, lokaleBezeichnung, registration,
+        return neueZuordnung(lokaleUuid, lokaleBezeichnung, registration,
                 AbgeglicheneBesetzung.ausOnline(registration.personen(), registration.club()));
     }
 
     /** @param besetzung Online-Besetzung, wie sie in der Meldeliste steht (bei „Nur Teamname“ der Teamname) */
-    public static NeueZuordnung neueZuordnung(String lokaleUuid, String nummerFormel, String lokaleBezeichnung,
+    public static NeueZuordnung neueZuordnung(String lokaleUuid, String lokaleBezeichnung,
             RegistrationDto registration, AbgeglicheneBesetzung besetzung) {
         ZuordnungsAnzeige.OnlineDetails details = onlineDetails(registration);
-        return new NeueZuordnung(lokaleUuid, registration.id(), nummerFormel,
+        return new NeueZuordnung(lokaleUuid, registration.id(),
                 registration.executionRevision() == null ? 1 : registration.executionRevision(), lokaleBezeichnung,
                 OnlineAnmeldeStatus.anzeige(registration.status()), details.tarife(), details.fragen(),
                 details.rohStatus(), besetzung.alsText(), "", AbgeglichenerTeamname.alsText(registration.teamName()));
@@ -279,23 +286,23 @@ public class PtmOnlineRegistrationMapping {
 
     /** Zuletzt abgeglichene Besetzung, Teamname und Vermerke je lokaler UUID (T-15, T-17). */
     public Map<String, ZuordnungsZusatz> getZusaetzeProUuid() throws GenerateException {
-        return syncSheet.getZusaetzeProUuid();
+        return speicher.getZusaetzeProUuid();
     }
 
     /** Setzt Besetzung und/oder Vermerke mehrerer Zuordnungen in einem Schreibzugriff. */
     public void setZusaetze(Map<String, ZuordnungsZusatz> zusatzProUuid) throws GenerateException {
-        syncSheet.setZusaetze(zusatzProUuid);
+        speicher.setZusaetze(zusatzProUuid);
     }
 
     /**
-     * Schreibt mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSheet#addMappings}). Eine lokale
-     * Meldung, die schon eine Online-Anmeldung hat, behält sie. Steht die Meldung bereits im Sync-Blatt, fehlt aber
+     * Speichert mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSpeicher#addMappings}). Eine
+     * lokale Meldung, die schon eine Online-Anmeldung hat, behält sie. Ist die Meldung bereits zugeordnet, fehlt aber
      * ihre Online-ID (z.&nbsp;B. Nr-Zelle überschrieben), wird nur die ID samt Ausführungsrevision nachgetragen.
      */
     public void addMappings(List<NeueZuordnung> zuordnungen) throws GenerateException {
-        Set<String> imSyncBlatt = syncSheet.getLokaleUuids();
+        Set<String> bereitsZugeordnet = speicher.getLokaleUuids();
         Map<String, String> bestehendeIds = getOnlineIdsProUuid();
-        syncSheet.addMappings(zuordnungen);
+        speicher.addMappings(zuordnungen);
         Map<String, Optional<String>> neueIds = new LinkedHashMap<>();
         Map<String, Integer> nachgetrageneRevisionen = new LinkedHashMap<>();
         for (NeueZuordnung zuordnung : zuordnungen) {
@@ -304,13 +311,13 @@ public class PtmOnlineRegistrationMapping {
                 continue;
             }
             neueIds.put(uuid, Optional.of(zuordnung.onlineId()));
-            if (imSyncBlatt.contains(uuid)) {
+            if (bereitsZugeordnet.contains(uuid)) {
                 nachgetrageneRevisionen.put(uuid, Math.max(1, zuordnung.executionRevision()));
             }
         }
         setzeInNrZellen(neueIds);
         if (!nachgetrageneRevisionen.isEmpty()) {
-            syncSheet.setExecutionRevisionen(nachgetrageneRevisionen);
+            speicher.setExecutionRevisionen(nachgetrageneRevisionen);
         }
     }
 
@@ -331,7 +338,7 @@ public class PtmOnlineRegistrationMapping {
                     : new ZuordnungsAnzeige(bezeichnung, OnlineAnmeldeStatus.anzeige(registration.status()),
                             Optional.of(onlineDetails(registration))));
         });
-        syncSheet.setAnzeigen(anzeigen);
+        speicher.setAnzeigen(anzeigen);
     }
 
     private static ZuordnungsAnzeige.OnlineDetails onlineDetails(RegistrationDto registration) {
@@ -363,101 +370,97 @@ public class PtmOnlineRegistrationMapping {
                 + (teilnehmer.isBlank() ? "" : " (" + teilnehmer + ")")).strip();
     }
 
-    public void aktualisiereAnzeigeFormeln(Map<String, String> formelnProUuid) throws GenerateException {
-        syncSheet.aktualisiereAnzeigeFormeln(formelnProUuid);
-    }
-
     /** Pausiert: kein Meldungsabgleich und kein Rundenstart-Sync; die Verbindung selbst bleibt bestehen. */
     public boolean istPausiert() throws GenerateException {
-        return syncSheet.istPausiert();
+        return speicher.istPausiert();
     }
 
     public void setPausiert(boolean pausiert) throws GenerateException {
-        syncSheet.setPausiert(pausiert);
+        speicher.setPausiert(pausiert);
     }
 
-    /** Archiviert die getrennte Verbindung: Blatt bleibt zur Einsicht, gilt aber als nicht verbunden. */
+    /** Archiviert die getrennte Verbindung: Zustand und Blatt bleiben zur Einsicht, gelten aber als nicht verbunden. */
     public void archivieren() throws GenerateException {
-        syncSheet.archivieren();
+        speicher.archivieren();
     }
 
-    /** @see PtmOnlineSyncSheet#getOnlineStatus() */
+    /** @see PtmOnlineSyncSpeicher#getOnlineStatus() */
     public Optional<String> getOnlineStatus() throws GenerateException {
-        return syncSheet.getOnlineStatus();
+        return speicher.getOnlineStatus();
     }
 
-    /** @see PtmOnlineSyncSheet#setOnlineStatus(String) */
+    /** @see PtmOnlineSyncSpeicher#setOnlineStatus(String) */
     public void setOnlineStatus(String onlineStatus) throws GenerateException {
-        syncSheet.setOnlineStatus(onlineStatus);
+        speicher.setOnlineStatus(onlineStatus);
     }
 
     public void setLastSync(Instant zeitpunkt) throws GenerateException {
-        syncSheet.setLastSync(zeitpunkt);
+        speicher.setLastSync(zeitpunkt);
     }
 
     public Optional<Instant> getLastSync() throws GenerateException {
-        return syncSheet.getLastSync();
+        return speicher.getLastSync();
     }
 
-    /** @see PtmOnlineSyncSheet#getAbrufCursor() */
+    /** @see PtmOnlineSyncSpeicher#getAbrufCursor() */
     public Optional<Instant> getAbrufCursor() throws GenerateException {
-        return syncSheet.getAbrufCursor();
+        return speicher.getAbrufCursor();
     }
 
     public void setAbrufCursor(Instant cursor) throws GenerateException {
-        syncSheet.setAbrufCursor(cursor);
+        speicher.setAbrufCursor(cursor);
     }
 
     public Optional<String> getTournamentId() throws GenerateException {
-        return syncSheet.getTournamentId();
+        return speicher.getTournamentId();
     }
 
     public Optional<String> getSyncDocumentId() throws GenerateException {
-        return syncSheet.getSyncDocumentId();
+        return speicher.getSyncDocumentId();
     }
 
     public Optional<String> getLeaseToken() throws GenerateException {
-        return syncSheet.getLeaseToken();
+        return speicher.getLeaseToken();
     }
 
     /** Schreibzähler und Auftragspuffer der Bindung, wie mit dem Dokument gespeichert. */
     public AuftragsBestand leseAuftragsBestand() throws GenerateException {
-        return syncSheet.leseAuftragsBestand();
+        return speicher.leseAuftragsBestand();
     }
 
     /** Speichert Schreibzähler und Auftragspuffer; nur im Dokument-Kontext (SheetRunner). */
     public void schreibeAuftragsBestand(AuftragsBestand bestand) throws GenerateException {
-        syncSheet.schreibeAuftragsBestand(bestand);
+        speicher.schreibeAuftragsBestand(bestand);
     }
 
     public Optional<String> getConnectRequestId() throws GenerateException {
-        return syncSheet.getConnectRequestId();
+        return speicher.getConnectRequestId();
     }
 
     public void setConnectRequestId(String connectRequestId) throws GenerateException {
-        syncSheet.setConnectRequestId(connectRequestId);
+        speicher.setConnectRequestId(connectRequestId);
     }
 
     /** Lokaler Turnierstart, dessen Übergang zu {@code running} online noch aussteht (KP-05). */
     public Optional<Instant> getRunningAusstehendSeit() throws GenerateException {
-        return syncSheet.getRunningAusstehendSeit();
+        return speicher.getRunningAusstehendSeit();
     }
 
     public void setRunningAusstehendSeit(Instant lokalerStart) throws GenerateException {
-        syncSheet.setRunningAusstehendSeit(lokalerStart);
+        speicher.setRunningAusstehendSeit(lokalerStart);
     }
 
-    /** @see PtmOnlineSyncSheet#getLetzterRundenstart() */
+    /** @see PtmOnlineSyncSpeicher#getLetzterRundenstart() */
     public Optional<Instant> getLetzterRundenstart() throws GenerateException {
-        return syncSheet.getLetzterRundenstart();
+        return speicher.getLetzterRundenstart();
     }
 
-    /** @see PtmOnlineSyncSheet#setLetzterRundenstart(Instant) */
+    /** @see PtmOnlineSyncSpeicher#setLetzterRundenstart(Instant) */
     public void setLetzterRundenstart(Instant rundenstart) throws GenerateException {
-        syncSheet.setLetzterRundenstart(rundenstart);
+        speicher.setLetzterRundenstart(rundenstart);
     }
 
     public void protokolliereOfflineBestaetigung(Instant zeitpunkt, Instant letzterSync) throws GenerateException {
-        syncSheet.protokolliereOfflineBestaetigung(zeitpunkt, letzterSync);
+        speicher.protokolliereOfflineBestaetigung(zeitpunkt, letzterSync);
     }
 }

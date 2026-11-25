@@ -29,7 +29,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -257,12 +256,6 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		}
 	}
 
-	@Override
-	public String formelTeamNrAusLokalerUuid(String uuid) {
-		String nummern = "$'" + SheetNamen.meleeAnmeldung() + "'." + Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE).getAddressWith$()
-				+ ":" + Position.from(SPALTE_NR, LETZTE_DATEN_ZEILE).getAddressWith$();
-		return NrUuidSpalte.formelNrAusUuid(nummern, uuid);
-	}
 
 	@Override
 	public void uebernehmeOnlineSetzposition(int zeile1Basiert, int setzposition) throws MeldelisteSchreibException {

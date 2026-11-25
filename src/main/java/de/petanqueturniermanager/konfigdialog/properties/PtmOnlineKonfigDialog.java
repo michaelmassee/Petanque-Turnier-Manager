@@ -9,13 +9,17 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 
-/** Einstellungen für die Live-Ansicht und die Ergebnismeldung im verbundenen Online-Turnier. */
+/**
+ * Einstellungen für die Live-Ansicht und die Ergebnismeldung im verbundenen Online-Turnier sowie für das Info-Blatt
+ * „PTMOnline Sync“.
+ */
 public class PtmOnlineKonfigDialog extends BasePropertiesDialog {
 
 	private static final List<String> EIGENSCHAFTEN = List.of(
 			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
 			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
-			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN);
+			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN,
+			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_SYNC_BLATT);
 
 	public PtmOnlineKonfigDialog(WorkingSpreadsheet currentSpreadsheet) {
 		super(currentSpreadsheet);

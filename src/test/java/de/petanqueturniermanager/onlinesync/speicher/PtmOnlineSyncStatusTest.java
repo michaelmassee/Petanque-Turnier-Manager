@@ -1,17 +1,24 @@
 /*
  * Erstellung 2026 / Michael Massee
  */
-package de.petanqueturniermanager.onlinesync.sheet;
+package de.petanqueturniermanager.onlinesync.speicher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Locale;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 class PtmOnlineSyncStatusTest {
+
+    @BeforeAll
+    static void uebersetzungLaden() {
+        I18n.initFuerTest(Locale.GERMAN);
+    }
 
     @Test
     void uebersetztDieBekanntenOnlineStatus() {

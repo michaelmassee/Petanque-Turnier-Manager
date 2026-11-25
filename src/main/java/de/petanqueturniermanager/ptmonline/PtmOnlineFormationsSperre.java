@@ -19,7 +19,7 @@ import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 /**
  * Ist das Dokument mit einem Online-Turnier verbunden und sind ihm bereits Anmeldungen zugeordnet, bleibt die
  * Formation fest – die Anmeldungen passen nur zur Teamgröße, unter der sie abgegeben wurden. PTM-Online sperrt die
- * Formation in diesem Fall ebenso. Die Prüfung arbeitet nur mit dem Blatt „PTMOnline Sync“, also auch offline.
+ * Formation in diesem Fall ebenso. Die Prüfung arbeitet nur mit dem gespeicherten Sync-Zustand, also auch offline.
  */
 public final class PtmOnlineFormationsSperre {
 

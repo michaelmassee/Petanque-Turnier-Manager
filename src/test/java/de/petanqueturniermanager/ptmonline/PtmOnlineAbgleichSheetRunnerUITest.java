@@ -25,11 +25,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
@@ -60,7 +57,6 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     private static final String DOCUMENT_ID = "e9e9caec-e0b1-4fe0-8fee-a229279b9f73";
     private static final String LEASE_TOKEN = "01234567890123456789012345678901";
     /** Spaltenüberschrift „Revision“ der Zuordnungstabelle im Blatt „PTMOnline Sync“ (Zeile 7, Spalte F). */
-    private static final Position KOPF_REVISION = Position.from(5, 6);
     private static final String ANMELDUNGEN = """
             {"registrations":[
               {"id":"r1","tournamentId":"t1","firstName":"Anna","lastName":"Schmidt","status":"confirmed"},
@@ -82,6 +78,7 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         ziel = MeldelisteZielFactory.fuerAktivesSheet(wkingSpreadsheet).orElseThrow();
         ziel.schreibeBlock(List.of(new SpielerMitVerein(0, "Hans", "Müller", null, null, List.of(), List.of(), null)));
 
+        docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_SYNC_BLATT, true);
         mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null);
         OnlineTournamentDto turnier = new OnlineTournamentDto();
         turnier.id = TURNIER_ID;
@@ -212,28 +209,26 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     }
 
     /**
-     * Regression: Der Abgleich läuft selbst als SheetRunner. Das Anlegen der Zuordnungstabelle darf darin
-     * keinen zweiten Runner starten, sonst meldet LO „Verarbeitung läuft bereits“ und die Tabelle wird nicht
-     * aktualisiert.
+     * Regression: Der Abgleich läuft selbst als SheetRunner. Das Anlegen des Info-Blatts darf darin keinen zweiten
+     * Runner starten, sonst meldet LO „Verarbeitung läuft bereits“ und das Blatt fehlt.
      */
     @Test
-    void abgleichAktualisiertZuordnungstabelleOhneZweitenRunner() throws Exception {
-        PtmOnlineSyncSheet syncSheet = new PtmOnlineSyncSheet(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null);
-        syncSheet.getSheetHelper().setStringValueInCell(
-                StringCellValue.from(syncSheet.getXSpreadSheet(), KOPF_REVISION, ""));
+    void abgleichLegtFehlendesInfoBlattOhneZweitenRunnerAn() throws Exception {
+        new PtmOnlineSyncSheet(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null).entfernen();
         PtmOnlineAbgleichSheetRunner runner = neuerRunner();
 
         runner.start();
         runner.join();
 
         assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
-        assertThat(syncSheet.getSheetHelper().getTextFromCell(syncSheet.getXSpreadSheet(), KOPF_REVISION))
-                .isEqualTo(I18n.get("ptmonline.sheet.mapping.header.revision"));
+        assertThat(SheetMetadataHelper.findeSheet(wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)).isPresent();
     }
 
     /**
-     * Im Turnier-Modus sind Meldeliste (bis auf Eingabezellen) und „PTMOnline Sync“ gesperrt. Der Abgleich
-     * schreibt trotzdem – UUIDs, Zuordnung, Nr-Formeln – und hinterlässt das Sync-Blatt wieder gesperrt.
+     * Im Turnier-Modus ist die Meldeliste (bis auf Eingabezellen) gesperrt. Der Abgleich schreibt trotzdem – UUIDs,
+     * Online-IDs, Konfliktliste – und hinterlässt die Blätter wieder gesperrt. Das Info-Blatt „PTMOnline Sync“ ist
+     * nicht gesperrt, die Zuordnung steht in den Dokument-Properties.
      */
     @Test
     void abgleichImTurnierModusSchreibtInGesperrteBlaetter() throws Exception {
@@ -243,19 +238,18 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
             BlattschutzManager.get().schuetzen(konfig, wkingSpreadsheet);
             XSpreadsheet syncSheet = new PtmOnlineSyncSheet(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
                     .getXSpreadSheet();
-            assertThat(Lo.qi(XProtectable.class, syncSheet).isProtected()).as("vor dem Abgleich gesperrt").isTrue();
             abgleichenUndHansVerknuepfen();
 
             assertThat(mapping.istBereitsImportiert("r1")).isTrue();
             assertThat(mapping.istBereitsImportiert("r2")).as("Entscheidung im gesperrten Blatt eingetragen").isTrue();
-            assertThat(Lo.qi(XProtectable.class, syncSheet).isProtected()).as("nach dem Abgleich gesperrt").isTrue();
+            assertThat(Lo.qi(XProtectable.class, syncSheet).isProtected()).as("Info-Blatt bleibt ungesperrt").isFalse();
             XSpreadsheet konflikte = mapping.konfliktListe().getXSpreadSheet();
             assertThat(Lo.qi(XProtectable.class, konflikte).isProtected()).as("Konfliktliste gesperrt").isTrue();
 
             mapping.trennen();
 
             assertThat(SheetMetadataHelper.findeSheet(wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-                    SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)).as("gesperrtes Blatt wird beim Trennen entfernt")
+                    SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)).as("Info-Blatt wird beim Trennen entfernt")
                     .isEmpty();
         } finally {
             BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);

@@ -26,7 +26,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -608,10 +607,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
     }
 
-    @Override
-    public String formelTeamNrAusLokalerUuid(String uuid) {
-        return NrUuidSpalte.formelNrAusUuid("$'" + SheetNamen.meldeliste() + "'.$A$1:$A$" + (MAX_DATEN_ZEILE + 1), uuid);
-    }
 
     @Override
     public Map<String, String> leseOnlineIdsProUuid() {

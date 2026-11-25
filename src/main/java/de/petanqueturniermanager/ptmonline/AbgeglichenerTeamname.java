@@ -14,9 +14,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
 /**
- * Zuletzt abgeglichener Teamname einer Meldung im Sync-Blatt, Gegenstück zu {@link AbgeglicheneBesetzung}. Der
- * Zellinhalt ist ein JSON-String, damit „ohne Teamnamen abgeglichen“ ({@code ""}) von „noch nie abgeglichen“ (leere
- * Zelle) unterscheidbar bleibt: Nur so erkennt der Abgleich, dass online ein Teamname neu eingetragen wurde.
+ * Zuletzt abgeglichener Teamname einer Meldung in der gespeicherten Zuordnung, Gegenstück zu
+ * {@link AbgeglicheneBesetzung}. Der gespeicherte Wert ist ein JSON-String, damit „ohne Teamnamen abgeglichen“
+ * ({@code ""}) von „noch nie abgeglichen“ (leerer Wert) unterscheidbar bleibt: Nur so erkennt der Abgleich, dass online ein Teamname neu eingetragen wurde.
  */
 public final class AbgeglichenerTeamname {
 
@@ -30,7 +30,7 @@ public final class AbgeglichenerTeamname {
         return Objects.toString(teamname, "").strip();
     }
 
-    /** Zellinhalt für das Sync-Blatt. */
+    /** Gespeicherter Wert für die Zuordnung. */
     public static String alsText(@Nullable String teamname) {
         return GSON.toJson(normalisiert(teamname));
     }

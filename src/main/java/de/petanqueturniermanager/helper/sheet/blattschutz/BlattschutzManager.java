@@ -331,26 +331,11 @@ public class BlattschutzManager {
                 .ifPresent(sheet -> alle.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
                         PlanungsrechnerSheet.editierbareEingabeBereiche())));
         sammleMeleeAnmeldungSchutzInfos(xDoc, alle);
-        sammlePtmOnlineSyncSchutzInfos(xDoc, alle);
         // Konfliktliste: nur die Entscheidungsspalte bearbeitet die Turnierleitung (A-29).
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_KONFLIKTE)
                 .ifPresent(sheet -> alle.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
                         List.of(PtmOnlineKonfliktSheet.editierbarerBereich()))));
         return alle;
-    }
-
-    /**
-     * „PTMOnline Sync“-Sheets schreibt nur das Plugin – vollständig gesperrt. Der Basis-Schlüssel wird exakt
-     * gesucht, die Spieltag-Varianten (Supermelee) per Prefix: gesperrt werden bewusst alle Spieltage.
-     */
-    private void sammlePtmOnlineSyncSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
-        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)
-                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
-        for (var schluessel : SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
-                SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC_SPIELTAG_PREFIX)) {
-            SheetMetadataHelper.findeSheet(xDoc, schluessel)
-                    .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
-        }
     }
 
     /**

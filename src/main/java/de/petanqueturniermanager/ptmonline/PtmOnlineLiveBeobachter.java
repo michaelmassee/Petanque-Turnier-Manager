@@ -101,7 +101,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     /** Bündelt mehrere kurz aufeinander folgende Signale zu einem Abruf. */
     static final long SIGNAL_BUENDELUNG_MS = 1_000;
     /**
-     * Mindestabstand, in dem ein Durchlauf den Online-Zustand neu abruft – damit der im Sync-Blatt und in der Sidebar
+     * Mindestabstand, in dem ein Durchlauf den Online-Zustand neu abruft – damit der im Sync-Zustand und in der Sidebar
      * angezeigte Turnierstatus (z.&nbsp;B. Entwurf → Anmeldung) nachgeführt wird. Nur für Server, die den Status noch
      * nicht per Huckepack ({@code X-PTM-Tournament-Status}) melden.
      */
@@ -557,7 +557,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         /**
          * Rückfall für Server ohne Status-Huckepack: ruft den Online-Zustand höchstens alle
          * {@link #ONLINE_STAND_ABSTAND} neu ab. Hat sich der Turnierstatus geändert, übernimmt ihn der nächste
-         * Durchlauf ins Sync-Blatt. Ein gescheiterter Abruf behält den bisherigen Stand.
+         * Durchlauf in den Sync-Zustand. Ein gescheiterter Abruf behält den bisherigen Stand.
          * <p>
          * Sind die online vorhandenen Runden noch nicht abgeglichen (erster Abruf gescheitert), wird nach jedem
          * erfolgreichen Versand sofort erneut abgerufen; der nächste Durchlauf löscht dann überzählige Runden. Scheitert
@@ -656,7 +656,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
         /**
          * Huckepack mit dem Turnierstatus: Weicht er vom bekannten Online-Zustand ab (z.&nbsp;B. online von Entwurf auf
-         * Anmeldung gestellt), übernimmt ihn der nächste Durchlauf ins Sync-Blatt. Ohne bekannten Zustand nichts zu
+         * Anmeldung gestellt), übernimmt ihn der nächste Durchlauf in den Sync-Zustand. Ohne bekannten Zustand nichts zu
          * tun – den holt der erste Durchlauf nach dem Öffnen oder Verbinden ohnehin.
          * <p>
          * Der Huckepack nennt nur den Status; der nachgeführte Stand gilt daher als unvollständig (z.&nbsp;B. fehlt nach
@@ -736,7 +736,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         /**
          * Der Abruf der Ergebnismeldungen nennt auch den Turnierstatus. Weicht er vom bekannten Online-Zustand ab
          * (z.&nbsp;B. online von Entwurf auf Anmeldung gestellt, ohne dass das Dokument seither etwas gesendet hat),
-         * ruft der nächste Durchlauf den vollständigen Online-Zustand ab und übernimmt ihn ins Sync-Blatt und damit in
+         * ruft der nächste Durchlauf den vollständigen Online-Zustand ab und übernimmt ihn in den Sync-Zustand und damit in
          * die Sidebar.
          */
         private void beachteAbgerufenenStatus(String tournamentId, String status) {

@@ -12,8 +12,8 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 
 /**
  * Ermittelt den fuer eine PTM-Online-Verbindung massgeblichen Spieltag: nur bei Supermelee (siehe
- * {@link TurnierSystem#hatMehrereSpielTage()}) wird pro Spieltag eine eigene Verbindung/eigenes
- * Sync-Blatt gefuehrt (siehe {@link de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet}),
+ * {@link TurnierSystem#hatMehrereSpielTage()}) wird pro Spieltag eine eigene Verbindung gefuehrt (siehe
+ * {@link de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher}),
  * fuer alle anderen Turniersysteme gibt es genau eine Verbindung fuer das ganze Dokument.
  */
 public final class SpieltagKontext {

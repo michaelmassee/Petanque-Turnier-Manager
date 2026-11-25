@@ -70,7 +70,7 @@ final class PtmOnlineAuftragsTestHilfe {
                 PtmOnlineAuftraege.anlage(bestand, tournamentId, uuid, new de.petanqueturniermanager.ptmonline.dto
                         .NeueOnlineAnmeldung(erster.vorname(), erster.nachname(), null, null, null, null, null, null,
                                 null, true, true, List.of(), List.of()),
-                        meldung.teilnahme(), meldung.seedingPosition(), ziel.formelTeamNrAusLokalerUuid(uuid),
+                        meldung.teilnahme(), meldung.seedingPosition(),
                         erster.vorname() + " " + erster.nachname(), false);
             }
         }

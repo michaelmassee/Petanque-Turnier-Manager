@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncStatus;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncStatus;
 
 /**
  * Lesbare Eckdaten eines PTM-Online-Turniers für die Verbinden-Auswahl: Turniersystem, Formation, Anmeldeart, Beginn,

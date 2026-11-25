@@ -81,6 +81,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN = "PTM-Online Ergebnismeldungen durch Turnierleitung prüfen";
 	public static final String KONFIG_PROP_PTMONLINE_LIVE_ANSICHT = "PTM-Online Live-Ansicht";
 	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG = "PTM-Online Ergebnismeldung durch Spieler";
+	/** Info-Blatt „PTMOnline Sync“ anzeigen (Default {@code false}); rein informativ, für den Betrieb nicht nötig. */
+	public static final String KONFIG_PROP_PTMONLINE_SYNC_BLATT = "PTM-Online Sync-Blatt anzeigen";
 	/**
 	 * Merker (in keinem Dialog): Die PTM-Online-Schalter wurden beim ersten Verbinden schon abgefragt. Gilt für das
 	 * ganze Dokument, auch für weitere Supermêlée-Spieltage.
@@ -280,6 +282,19 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 			KONFIG_PROPERTIES.add(ptmOnlineSchalter(KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
 					"config.desc.ptmonline.ergebnismeldung", "config.label.ptmonline.ergebnismeldung"));
 		}
+	}
+
+	/**
+	 * Fügt den Schalter {@link #KONFIG_PROP_PTMONLINE_SYNC_BLATT} hinzu (Default {@code false}). Das Info-Blatt
+	 * „PTMOnline Sync“ zeigt nur die Verbindungsdaten an; der Zustand steht in den Dokument-Properties.
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addPtmOnlineSyncBlattProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_PTMONLINE_SYNC_BLATT)
+				.setDefaultVal(false)
+				.setDescription("config.desc.ptmonline.sync.blatt")
+				.setShortDescription("config.label.ptmonline.sync.blatt"));
 	}
 
 	private static ConfigProperty<Boolean> ptmOnlineSchalter(String name, String descKey, String labelKey) {

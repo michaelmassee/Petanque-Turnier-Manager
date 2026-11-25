@@ -12,7 +12,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.speicher.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
@@ -38,7 +38,7 @@ public final class PtmOnlineZuordnungWiederherstellung {
             }
             String name = (StringUtils.defaultString(server.firstName()) + " "
                     + StringUtils.defaultString(server.lastName())).strip();
-            fehlende.add(new NeueZuordnung(uuid, server.onlineRegistrationId(), formel(ziel, uuid), server.revision(),
+            fehlende.add(new NeueZuordnung(uuid, server.onlineRegistrationId(), server.revision(),
                     name, OnlineAnmeldeStatus.anzeige(server.status()), "", "", server.status(),
                     AbgeglicheneBesetzung.ausOnline(server.personen(), server.club()).alsText(), "", ""));
         }
@@ -51,14 +51,6 @@ public final class PtmOnlineZuordnungWiederherstellung {
                 .toList();
         try {
             return new HashSet<>(ziel.leseLokaleUuids(zeilen).values());
-        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException(e.getMessage());
-        }
-    }
-
-    private static String formel(MeldelisteZiel ziel, String uuid) throws GenerateException {
-        try {
-            return ziel.formelTeamNrAusLokalerUuid(uuid);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }

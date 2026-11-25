@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
@@ -326,6 +327,13 @@ public class DocumentPropertiesHelper {
 			return currentPropListe.get(korrektPropName.get());
 		}
 		return defaultVal;
+	}
+
+	/** Namen aller Properties des Dokuments, die mit {@code praefix} beginnen (Groß-/Kleinschreibung beachtet). */
+	public Set<String> getPropertyNamenMitPraefix(String praefix) {
+		checkNotNull(praefix);
+		return currentPropListe.keySet().stream().filter(name -> name.startsWith(praefix))
+				.collect(Collectors.toUnmodifiableSet());
 	}
 
 	/**

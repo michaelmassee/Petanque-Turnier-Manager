@@ -34,8 +34,8 @@ import com.sun.star.uno.UnoRuntime;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
-import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
+import de.petanqueturniermanager.onlinesync.speicher.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
@@ -60,14 +60,13 @@ import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
  * Menüaktion. Beides hält die Versandsperre des Bestands, damit der Schreibzähler in Reihenfolge ankommt.
  * <p>
  * Je Dokument und Supermelee-Spieltag gibt es genau einen Bestand im Speicher; er wird beim ersten Zugriff aus dem
- * Blatt „PTMOnline Sync“ geladen und nach jeder Änderung dorthin zurückgeschrieben.
+ * gespeicherten Sync-Zustand (Dokument-Properties) geladen und nach jeder Änderung dorthin zurückgeschrieben.
  */
 public final class PtmOnlineAuftraege {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineAuftraege.class);
     private static final Map<String, AuftragsBestand> BESTAENDE = new ConcurrentHashMap<>();
     private static final String KONTEXT_UUID = "lokaleUuid";
-    private static final String KONTEXT_NUMMER_FORMEL = "nummerFormel";
     private static final String KONTEXT_BEZEICHNUNG = "bezeichnung";
     private static final String KONTEXT_REVISIONEN = "revisionen";
     private static final String KONTEXT_TIMER_STAND = "timerStand";
@@ -224,10 +223,9 @@ public final class PtmOnlineAuftraege {
      */
     static SyncAuftrag anlage(AuftragsBestand bestand, String tournamentId, String lokaleUuid,
             NeueOnlineAnmeldung anmeldung, OnlineTeilnahme teilnahme, @Nullable Integer setzposition,
-            String nummerFormel, String bezeichnung, boolean automatisch) {
+            String bezeichnung, boolean automatisch) {
         JsonObject kontext = new JsonObject();
         kontext.addProperty(KONTEXT_UUID, lokaleUuid);
-        kontext.addProperty(KONTEXT_NUMMER_FORMEL, nummerFormel);
         kontext.addProperty(KONTEXT_BEZEICHNUNG, bezeichnung);
         return bestand.erzeuge(AuftragsArt.ANMELDUNG_ANLEGEN, "PUT",
                 TournamentSyncClient.anmeldungPfad(tournamentId, lokaleUuid),
@@ -468,7 +466,7 @@ public final class PtmOnlineAuftraege {
         }
     }
 
-    /** Ob das Online-Turnier laut Sync-Blatt läuft oder abgeschlossen ist; danach lehnt PTM-Online Anlagen ab. */
+    /** Ob das Online-Turnier laut Sync-Zustand läuft oder abgeschlossen ist; danach lehnt PTM-Online Anlagen ab. */
     static boolean istGestartet(Optional<String> onlineStatus) {
         return onlineStatus.filter(status -> ONLINE_STATUS_LAEUFT.equals(status)
                 || ONLINE_STATUS_ABGESCHLOSSEN.equals(status)).isPresent();
@@ -609,7 +607,7 @@ public final class PtmOnlineAuftraege {
 
     /**
      * Abgelehnte, noch nicht quittierte Aufträge als Fälle der Konfliktliste (A-29) – auch die aus dem
-     * Hintergrundversand. Die Bezeichnung trägt den Schreibzähler, unter dem der Auftrag im Sync-Blatt steht.
+     * Hintergrundversand. Die Bezeichnung trägt den Schreibzähler, unter dem der Auftrag gespeichert ist.
      */
     static List<AbgelehnterFall> abgelehnteFaelle(AuftragsBestand bestand) {
         List<AbgelehnterFall> faelle = new ArrayList<>();
@@ -754,8 +752,7 @@ public final class PtmOnlineAuftraege {
             try {
                 switch (auftrag.art()) {
                     case ANMELDUNG_ANLEGEN -> zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(
-                            text(kontext, KONTEXT_UUID), text(kontext, KONTEXT_NUMMER_FORMEL),
-                            text(kontext, KONTEXT_BEZEICHNUNG),
+                            text(kontext, KONTEXT_UUID), text(kontext, KONTEXT_BEZEICHNUNG),
                             TournamentSyncClient.registrationAus(ergebnis.antwort())));
                     case ANMELDUNG_AENDERN -> {
                         RegistrationDto registration = TournamentSyncClient.registrationAus(ergebnis.antwort());

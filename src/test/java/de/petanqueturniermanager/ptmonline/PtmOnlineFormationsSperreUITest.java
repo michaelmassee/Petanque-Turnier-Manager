@@ -18,7 +18,6 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -126,7 +125,7 @@ class PtmOnlineFormationsSperreUITest extends BaseCalcUITest {
     }
 
     private static void ordneAnmeldungZu(PtmOnlineRegistrationMapping mapping) throws GenerateException {
-        mapping.addMapping(LOKALE_UUID, "r1", NrUuidSpalte.formelNrAusUuid("$A$1:$A$999", LOKALE_UUID), 1,
+        mapping.addMapping(LOKALE_UUID, "r1", 1,
                 "Hans Müller", "Bestätigt");
     }
 

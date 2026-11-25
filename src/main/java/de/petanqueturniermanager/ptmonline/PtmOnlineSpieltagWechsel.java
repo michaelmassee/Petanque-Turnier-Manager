@@ -25,7 +25,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
  * Supermelee: jeder Spieltag ist online ein eigenes Turnier. Mit einem neuen Spieltag werden die Verbindungen der
- * bisherigen Spieltage online getrennt und ihre Blätter „PTMOnline Sync“ archiviert; der neue Spieltag muss mit
+ * bisherigen Spieltage online getrennt und ihre Verbindungen archiviert; der neue Spieltag muss mit
  * einem neuen Online-Turnier verbunden werden. Scheitert das Trennen online (z.&nbsp;B. kein Netz), wird trotzdem
  * lokal archiviert und gewarnt – PTM-Online blockiert den Turnierbetrieb nie.
  * <p>

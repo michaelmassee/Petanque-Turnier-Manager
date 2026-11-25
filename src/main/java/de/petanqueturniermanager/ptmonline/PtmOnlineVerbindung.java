@@ -13,7 +13,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
+import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
@@ -32,7 +32,7 @@ record PtmOnlineVerbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, Mel
     /** Rein lokale Vorprüfung: ohne Verbindung weder Zugangsdaten lesen noch einen Hintergrund-Runner starten. */
     static boolean hatVerbindung(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
         return ts != TurnierSystem.KEIN
-                && PtmOnlineSyncSheet.leseStatus(ws, SpieltagKontext.aktiverSpieltagOderNull(ws, ts)).verbunden();
+                && PtmOnlineSyncSpeicher.leseStatus(ws, SpieltagKontext.aktiverSpieltagOderNull(ws, ts)).verbunden();
     }
 
     /**

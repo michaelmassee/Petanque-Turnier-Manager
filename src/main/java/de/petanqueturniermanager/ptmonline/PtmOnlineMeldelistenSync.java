@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
+import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
@@ -30,7 +30,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 
 /**
  * Automatischer Meldelisten-Abgleich: Änderungen der Meldeliste gehen zeitnah nach PTM-Online, das Dokument ist
- * Master (E-15, E-16). Erkannt werden gegenüber dem zuletzt abgeglichenen Stand im Sync-Blatt
+ * Master (E-15, E-16). Erkannt werden gegenüber dem zuletzt abgeglichenen, gespeicherten Stand
  * <ul>
  * <li>geänderte Namen und Teamnamen zugeordneter Meldungen → Änderungsauftrag; auch online zwischenzeitlich geänderte
  * Stände werden überschrieben,</li>
@@ -92,7 +92,7 @@ final class PtmOnlineMeldelistenSync {
      *
      * @param onlineIdProUuid  Online-ID je zugeordneter Meldung mit Zeile
      * @param zusatzProUuid    zuletzt abgeglichene Besetzung, Teamname und Vermerke
-     * @param rohStatusProUuid Online-Status aller Zuordnungen des Sync-Blatts, auch ohne Zeile
+     * @param rohStatusProUuid Online-Status aller gespeicherten Zuordnungen, auch ohne Zeile
      * @param gesperrt         Meldungen mit offenem bzw. abgelehntem Auftrag
      *                         ({@link PtmOnlineAuftraege#gesperrteMeldungen})
      */
@@ -188,14 +188,9 @@ final class PtmOnlineMeldelistenSync {
             throws GenerateException {
         LokaleMeldung meldung = anlage.meldung();
         OptionalInt setzposition = ziel.getSetzpositionAusZeile(meldung.zeile1Basiert());
-        try {
-            // Teilnahme inaktiv wie beim manuellen Abgleich: den Check-in meldet die Check-in-Erkennung.
-            PtmOnlineAuftraege.anlage(bestand, tournamentId, meldung.uuid(), anlage.anmeldung(),
-                    OnlineTeilnahme.INAKTIV, setzposition.isPresent() ? setzposition.getAsInt() : null,
-                    ziel.formelTeamNrAusLokalerUuid(meldung.uuid()), anlage.bezeichnung(), true);
-        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException(e.getMessage());
-        }
+        // Teilnahme inaktiv wie beim manuellen Abgleich: den Check-in meldet die Check-in-Erkennung.
+        PtmOnlineAuftraege.anlage(bestand, tournamentId, meldung.uuid(), anlage.anmeldung(), OnlineTeilnahme.INAKTIV,
+                setzposition.isPresent() ? setzposition.getAsInt() : null, anlage.bezeichnung(), true);
     }
 
     /** Alle Meldelistenzeilen mit lokaler UUID, in wenigen Blockzugriffen gelesen. */

@@ -150,7 +150,7 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
                     binding.get().writeCounter(), I18n.get("ptmonline.auftrag.verworfen.neue_bindung"));
             mapping.setConnectRequestId("");
         } catch (GenerateException | RuntimeException e) {
-            getLogger().error("PTM-Online: Sync-Blatt für Verbindung anlegen fehlgeschlagen", e);
+            getLogger().error("PTM-Online: Verbindung im Dokument speichern fehlgeschlagen", e);
             if (!turnier.id.equals(bisherige.turnierId())) {
                 gibNeueBindungFrei(syncDocumentId, leaseToken, binding.get().writeCounter());
             }
@@ -315,7 +315,7 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
         T ausfuehren() throws IOException, InterruptedException;
     }
 
-    /** Bisherige Verbindung dieses Dokuments (bzw. Spieltags) laut Blatt „PTMOnline Sync“, jeweils leer ohne. */
+    /** Bisherige Verbindung dieses Dokuments (bzw. Spieltags) laut Sync-Zustand, jeweils leer ohne. */
     private record LokaleBindung(Optional<String> turnierIdOpt, Optional<String> syncDocumentId,
             Optional<String> leaseToken) {
 

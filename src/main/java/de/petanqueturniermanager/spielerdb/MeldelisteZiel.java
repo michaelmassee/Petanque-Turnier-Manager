@@ -243,10 +243,6 @@ public interface MeldelisteZiel extends AbgleichQuelle {
         throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teilnahme_nicht_unterstuetzt"));
     }
 
-    /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
-    default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
-    }
 
     /** Anfangswert der Aktiv-Spalte für eine neu geschriebene Meldung. */
     enum NeueMeldungTeilnahme {

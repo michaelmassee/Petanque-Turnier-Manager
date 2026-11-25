@@ -49,6 +49,7 @@ class TurnierModusBlattwechselUITest extends BaseCalcUITest {
                 false, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SCHWEIZER.getId());
+        docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_SYNC_BLATT, true);
         warteAufLoLeerlauf();
         TurnierModus.get().wiederherstellenAlleElemente(wkingSpreadsheet);
         warteAufLoLeerlauf();

@@ -191,7 +191,7 @@ public final class PtmOnlineDispatcher {
             verbindeLeeresDokument(auftrag.ws(), config, auswahl.get());
             return;
         }
-        // Server-Bindung und Sync-Blatt in einem Runner: läuft schon einer, bleibt auch der Server unberührt.
+        // Server-Bindung und Sync-Zustand in einem Runner: läuft schon einer, bleibt auch der Server unberührt.
         new PtmOnlineVerbindenRunner(auftrag.ws(), auftrag.ts(), auftrag.spieltagNr(), config, auswahl.get()).start();
     }
 
@@ -326,7 +326,7 @@ public final class PtmOnlineDispatcher {
         RegistrationImportTask.starte(ws);
     }
 
-    /** Stellt nach beschädigtem Sync-Blatt die vom Server bestätigten Zuordnungen wieder her (T-21). */
+    /** Stellt nach beschädigtem Sync-Zustand die vom Server bestätigten Zuordnungen wieder her (T-21). */
     public static void zuordnungWiederherstellen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
         LibreOfficePtmOnlineSpeicher.Zugangsdaten config = new LibreOfficePtmOnlineSpeicher(ctx).laden();

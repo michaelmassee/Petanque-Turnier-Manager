@@ -46,17 +46,12 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
  */
 class RegistrationImportMeleeUITest extends BaseCalcUITest {
 
-    /** Freie Zelle der Meldeliste, in der die Teamnummer-Formel des Mappings ausgewertet wird. */
-    private static final Position FORMEL_TESTZELLE = Position.from(30, 0);
-
-    private SchweizerMeldeListeSheetNew meldeListe;
     private MeldelisteZiel ziel;
     private PtmOnlineRegistrationMapping mapping;
 
     @BeforeEach
     void turnierMitMeleeAnmeldungAnlegen() throws Exception {
-        meldeListe = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListe.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+        new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SCHWEIZER.getId());
         MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.EINFACH);
@@ -101,18 +96,6 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
         assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
         assertThat(meleeZeilen()).hasSize(1);
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
-    }
-
-    @Test
-    void teamnummerFormelLiefertNrDerMeleeZeile() throws Exception {
-        uebernehme(anmeldung("r1", "Hans", "Müller"), anmeldung("r2", "Anna", "Schmidt"));
-        String uuid = mapping.getLokaleUuid("r2").orElseThrow();
-
-        meldeListe.getSheetHelper().setFormulaInCell(meldeListe.getXSpreadSheet(), FORMEL_TESTZELLE,
-                ziel.formelTeamNrAusLokalerUuid(uuid));
-
-        assertThat(meldeListe.getSheetHelper().getIntFromCell(meldeListe.getXSpreadSheet(), FORMEL_TESTZELLE))
-                .isEqualTo(2);
     }
 
     @Test

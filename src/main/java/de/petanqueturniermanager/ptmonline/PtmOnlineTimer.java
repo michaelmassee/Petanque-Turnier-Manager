@@ -25,8 +25,8 @@ import de.petanqueturniermanager.timer.TimerSteuerungListener;
  * Versandverzögerung gleicht {@link PtmOnlineAuftraege#timerNachstellen} aus.
  * <p>
  * Die Bedienung merkt den Stand je Dokument nur vor und stößt den {@link PtmOnlineLiveBeobachter} an. Dessen
- * {@link PtmOnlineErfassungsRunner} erfasst ihn als Auftrag – als SheetRunner mit Blattschutz-Scope, denn der
- * Auftrag wird im Sync-Blatt gespeichert – und der Hintergrund sendet ihn. Ohne Netz bleibt der Auftrag offen und
+ * {@link PtmOnlineErfassungsRunner} erfasst ihn als Auftrag – gespeichert in den Dokument-Properties
+ * ({@code PtmOnlineSyncSpeicher}) – und der Hintergrund sendet ihn. Ohne Netz bleibt der Auftrag offen und
  * geht mit dem nächsten Versand hinaus; ein neuerer Stand ersetzt ihn. Der Timer selbst läuft immer lokal.
  */
 public final class PtmOnlineTimer implements TimerSteuerungListener {

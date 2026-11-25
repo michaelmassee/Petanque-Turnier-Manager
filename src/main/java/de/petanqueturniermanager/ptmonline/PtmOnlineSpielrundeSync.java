@@ -142,7 +142,7 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Synchron: Nr-Formeln und vor der ersten Runde die Rückfragen. Ohne Start entstehen die Schreibaufträge sofort,
+     * Synchron: vor der ersten Runde die Rückfragen. Ohne Start entstehen die Schreibaufträge sofort,
      * mit Start (erste Runde oder Wiederaufnahme) erst mit seiner Bestätigung – ein Start ohne erstellte Runde beendet
      * sonst online die Anmeldung.
      */
@@ -151,19 +151,11 @@ public final class PtmOnlineSpielrundeSync {
             Set<Integer> ausgestiegeneTeamNummern) throws GenerateException {
         XComponentContext ctx = ws.getxContext();
         boolean pausiert = !istSyncAktiv(verbindung.mapping());
-        List<String> fehler = new ArrayList<>();
-
-        if (!pausiert) {
-            aktualisiereNrFormeln(verbindung.ziel(), verbindung.mapping(), fehler);
-        }
         Turnierbeginn beginn = switch (rundenstart) {
             case ERSTE_RUNDE -> turnierbeginn(ctx, verbindung, pausiert);
             case FOLGERUNDE -> wiederaufnahme(verbindung.mapping(), pausiert);
             case KEINER -> null;
         };
-        if (!fehler.isEmpty()) {
-            zeigeFehlerSammlung(ctx, fehler);
-        }
 
         // Teilnahme-Stand jetzt lesen: so wie er vor der Auslosung galt.
         Teilnahme teilnahme = pausiert ? null
@@ -299,19 +291,6 @@ public final class PtmOnlineSpielrundeSync {
         if (beginn.trotzBefunden()) {
             PtmOnlineAuftraege.entscheidungen(bestand, tournamentId,
                     List.of(new KonfliktSammlung.Protokoll(Entscheidung.TROTZDEM_STARTEN, null, null)));
-        }
-    }
-
-    private static void aktualisiereNrFormeln(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
-            List<String> fehler) {
-        try {
-            mapping.aktualisiereAnzeigeFormeln(formelnProUuid(ziel));
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Nr-Formeln der Zuordnung konnten nicht aktualisiert werden", e);
-            fehler.add(e.getMessage());
-        } catch (RuntimeException e) {
-            logger.error("PTM-Online: Unerwarteter Mapping-Fehler", e);
-            fehler.add(netzwerkFehlerText(e));
         }
     }
 
@@ -453,7 +432,7 @@ public final class PtmOnlineSpielrundeSync {
      * fehlen, und den offenen Ausschlussgründen (Konto doppelt angemeldet, online storniert trotz Check-in,
      * unvollständige Teams, Mêlée-Spieler ohne Team). Die lokalen Gründe kennt das Dokument auch ohne Netz. Ist
      * PTM-Online nicht erreichbar, nennt die Rückfrage den letzten erfolgreichen Abgleich; die Bestätigung wird im
-     * Sync-Blatt protokolliert (P-25). Übernommen wird hier nichts – dafür ist der manuelle Abgleich da.
+     * Sync-Zustand protokolliert (P-25). Übernommen wird hier nichts – dafür ist der manuelle Abgleich da.
      * <p>
      * Ohne Befund und bei online bereits geschlossener Anmeldung entfällt die Rückfrage: Der Start schließt dann nichts
      * mehr, worauf hinzuweisen wäre (E-23).
@@ -653,29 +632,11 @@ public final class PtmOnlineSpielrundeSync {
         return ergebnis;
     }
 
-    private static Map<String, String> formelnProUuid(MeldelisteZiel ziel) throws GenerateException {
-        List<Integer> zeilen = ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert)
-                .distinct().toList();
-        Map<String, String> ergebnis = new LinkedHashMap<>();
-        for (String uuid : lokaleUuids(ziel, zeilen).values()) {
-            ergebnis.put(uuid, teamnummerFormel(ziel, uuid));
-        }
-        return ergebnis;
-    }
-
     /** Lokale UUIDs der Zeilen in einem Block; fehlende werden angelegt. */
     static Map<Integer, String> lokaleUuids(MeldelisteZiel ziel, Collection<Integer> zeilen1Basiert)
             throws GenerateException {
         try {
             return ziel.getOderErzeugeLokaleUuids(zeilen1Basiert);
-        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException(e.getMessage());
-        }
-    }
-
-    private static String teamnummerFormel(MeldelisteZiel ziel, String uuid) throws GenerateException {
-        try {
-            return ziel.formelTeamNrAusLokalerUuid(uuid);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }

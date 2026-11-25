@@ -61,6 +61,7 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 
 		// Trip-Tête: Live-Ansicht ja, Spielermeldung nicht (drei Partien je Begegnung).
 		addPtmOnlineLiveProps(KONFIG_PROPERTIES, false);
+		addPtmOnlineSyncBlattProp(KONFIG_PROPERTIES);
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
