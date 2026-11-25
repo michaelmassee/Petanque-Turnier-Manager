@@ -3,12 +3,19 @@
  */
 package de.petanqueturniermanager.onlinesync;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -17,11 +24,12 @@ import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncStatus;
 
 /**
  * Lesbare Eckdaten eines PTM-Online-Turniers für die Verbinden-Auswahl: Turniersystem, Formation, Anmeldeart, Beginn,
- * Ort, Status und Teilnehmergrenze. Unbekannte Online-Werte erscheinen unverändert, damit auch Turnierarten, die PTM
+ * Ort, Status sowie Anmeldungen und Teilnehmergrenze. Unbekannte Online-Werte erscheinen unverändert, damit auch Turnierarten, die PTM
  * nicht anlegen kann, erkennbar bleiben.
  */
 public final class OnlineTurnierEckdaten {
 
+	private static final Logger logger = LogManager.getLogger(OnlineTurnierEckdaten.class);
 	private static final String TRENNER_KURZ = " · ";
 	private static final String TRENNER_DETAIL = "   ";
 	private static final String ANMELDEART_SUPERMELEE = "supermelee";
@@ -40,8 +48,26 @@ public final class OnlineTurnierEckdaten {
 				verbinde(TRENNER_DETAIL, feld("turniersystem", turnierSystem(turnier)),
 						feld("formation", formation(turnier)), feld("anmeldeart", anmeldeart(turnier.registrationType))),
 				verbinde(TRENNER_DETAIL, feld("beginn", beginn(turnier)), feld("status", status(turnier)),
-						feld("max_anmeldungen", maxAnmeldungen(turnier))),
+						anmeldungen(turnier)),
 				feld("ort", StringUtils.defaultString(turnier.location)));
+	}
+
+	/** Turnierdatum im lokalen Format, z. B. {@code 25.11.2026}; ein nicht lesbares Datum erscheint unverändert. */
+	public static String datum(OnlineTournamentDto turnier) {
+		return datum(turnier.date, Locale.getDefault(Locale.Category.FORMAT));
+	}
+
+	static String datum(String isoDatum, Locale locale) {
+		if (StringUtils.isBlank(isoDatum)) {
+			return "";
+		}
+		try {
+			return LocalDate.parse(isoDatum)
+					.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale));
+		} catch (DateTimeParseException e) {
+			logger.warn("PTM-Online: Turnierdatum '{}' nicht lesbar", isoDatum, e);
+			return isoDatum;
+		}
 	}
 
 	/**
@@ -88,15 +114,23 @@ public final class OnlineTurnierEckdaten {
 	}
 
 	private static String beginn(OnlineTournamentDto turnier) {
-		return verbinde(" ", StringUtils.defaultString(turnier.date), StringUtils.defaultString(turnier.startTime));
+		return verbinde(" ", datum(turnier), StringUtils.defaultString(turnier.startTime));
 	}
 
 	private static String status(OnlineTournamentDto turnier) {
 		return turnier.status == null ? "" : PtmOnlineSyncStatus.statusAnzeige(turnier.status);
 	}
 
-	private static String maxAnmeldungen(OnlineTournamentDto turnier) {
-		return turnier.maxRegistrations > 0 ? String.valueOf(turnier.maxRegistrations) : "";
+	/**
+	 * Anmeldungen mit Teilnehmergrenze ({@code 12 / 32}). Ein älterer Server liefert keine Anzahl; dann erscheint nur
+	 * die Grenze.
+	 */
+	private static String anmeldungen(OnlineTournamentDto turnier) {
+		String grenze = turnier.maxRegistrations > 0 ? String.valueOf(turnier.maxRegistrations) : "";
+		if (turnier.registrationCount == null) {
+			return feld("max_anmeldungen", grenze);
+		}
+		return feld("anmeldungen", verbinde(" / ", String.valueOf(turnier.registrationCount), grenze));
 	}
 
 	/** Beschriftetes Feld; leer, wenn der Wert fehlt. */

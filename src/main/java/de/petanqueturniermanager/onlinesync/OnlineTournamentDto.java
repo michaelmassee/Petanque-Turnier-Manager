@@ -30,6 +30,13 @@ public class OnlineTournamentDto {
 	@SerializedName("maxRegistrations")
 	public int maxRegistrations;
 
+	/**
+	 * Plätze belegende Anmeldungen (offen und bestätigt); nur in der Turnierliste für die Verbinden-Auswahl,
+	 * {@code null} bei einem älteren Server ohne das Feld.
+	 */
+	@SerializedName("registrationCount")
+	public Integer registrationCount;
+
 	public String type;
 
 	@SerializedName("registrationType")

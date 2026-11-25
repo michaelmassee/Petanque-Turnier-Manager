@@ -47,7 +47,7 @@ import de.petanqueturniermanager.onlinesync.OnlineVerbindbarkeit;
  * Auswahldialog "Mit Online-Turnier verbinden": zeigt alle zum aktiven API-Key gehörenden PTM-Online-Turniere in zwei
  * Listen – oben die verbindbaren zur Auswahl, unten die übrigen mit dem Grund, warum sie nicht passen. Jeder Eintrag
  * nennt die Eckdaten des Turniersystems (System, Formation, Anmeldeart); zum ausgewählten Turnier zeigt der Dialog
- * zusätzlich Beginn, Status, Teilnehmergrenze und Ort.
+ * zusätzlich Beginn, Status, Anmeldungen mit Teilnehmergrenze und Ort.
  */
 final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
@@ -250,7 +250,7 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 	}
 
 	private static String kopf(OnlineTournamentDto turnier) {
-		return StringUtils.defaultString(turnier.name) + TRENNER + StringUtils.defaultString(turnier.date) + TRENNER
+		return StringUtils.defaultString(turnier.name) + TRENNER + OnlineTurnierEckdaten.datum(turnier) + TRENNER
 				+ OnlineTurnierEckdaten.kurz(turnier);
 	}
 
