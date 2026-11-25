@@ -193,6 +193,25 @@ class PtmOnlineAuftraegeTest {
     }
 
     @Test
+    void ergebnismeldungsEntscheidungGehtNachDerRundeMitDemUebernommenenErgebnis() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.ergebnismeldungen(bestand, TURNIER, Map.of("m-uebernommen", Boolean.TRUE));
+        String entscheidungId = bestand.zuSenden(false).getFirst().auftragsId();
+
+        // Nach dem Öffnen des Dokuments werden alle Runden neu erfasst – nach der Entscheidung.
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 1, List.of());
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 2, List.of());
+        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of(), List.of());
+
+        List<SyncAuftrag> zuSenden = bestand.zuSenden(false);
+        assertThat(zuSenden).as("sonst zeigt die Live-Ansicht bis zur Runde wieder die Eingabefelder")
+                .extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RUNDE, AuftragsArt.RUNDE,
+                        AuftragsArt.ERGEBNISMELDUNGEN, AuftragsArt.RANGLISTE);
+        assertThat(zuSenden.get(2).auftragsId()).isNotEqualTo(entscheidungId);
+        assertThat(PtmOnlineAuftraege.beauftragteErgebnismeldungen(bestand)).containsExactly("m-uebernommen");
+    }
+
+    @Test
     void ungesendeteErgebnismeldungsEntscheidungUeberstehtDasNeuLaden() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         PtmOnlineAuftraege.ergebnismeldungen(bestand, TURNIER, Map.of("m-verworfen", Boolean.FALSE));

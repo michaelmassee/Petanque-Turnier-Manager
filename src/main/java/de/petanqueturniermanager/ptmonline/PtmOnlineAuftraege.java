@@ -318,12 +318,19 @@ public final class PtmOnlineAuftraege {
         return onlineIdProUuid;
     }
 
-    /** Spielrunde; ein noch ungesendeter älterer Stand derselben Runde entfällt. */
+    /**
+     * Spielrunde; ein noch ungesendeter älterer Stand derselben Runde entfällt.
+     * <p>
+     * Wartende Entscheidungen über Ergebnismeldungen von Spielern gehen danach hinaus: Ein übernommenes Ergebnis steht
+     * dann online schon in der Partie, wenn die Meldung als entschieden gilt. Umgekehrt zeigte die Live-Ansicht bis zum
+     * Eintreffen der Runde weder Meldung noch Ergebnis, sondern wieder die Eingabefelder (z.&nbsp;B. nach dem Öffnen
+     * des Dokuments, wenn alle Runden erneut übertragen werden).
+     */
     static void runde(AuftragsBestand bestand, String tournamentId, int rundeNr, List<LiveMatchDto> matches) {
         String pfad = TournamentSyncClient.rundePfad(tournamentId, rundeNr);
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
         bestand.erzeuge(AuftragsArt.RUNDE, "PUT", pfad, TournamentSyncClient.rundeBody(matches), "{}");
-        abschlussZuletzt(bestand);
+        bestand.wiederholeAmEnde(art -> art == AuftragsArt.ERGEBNISMELDUNGEN || art == AuftragsArt.ABSCHLUSS);
     }
 
     /** Löschen einer lokal nicht mehr vorhandenen Runde; ein ungesendeter Stand derselben Runde entfällt. */
