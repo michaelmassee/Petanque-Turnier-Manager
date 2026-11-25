@@ -31,6 +31,8 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.PtmOnlineApiClient;
 import de.petanqueturniermanager.onlinesync.PtmOnlineException;
 
@@ -151,27 +153,54 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 		});
 	}
 
+	/** Ergebnis von „Verbindung testen“: kurze Statuszeile auf der Seite und ausführliche Meldung im Fenster. */
+	private record TestErgebnis(boolean erfolgreich, String status, String meldung) {
+	}
+
 	/**
+	 * Testet die eingetragenen Zugangsdaten, auch wenn „Verbindung aktiv“ nicht angehakt ist (dann mit Hinweis). Das
+	 * Ergebnis erscheint in der Statuszeile und zusätzlich als Meldungsfenster, damit es nicht übersehen wird.
+	 * <p>
 	 * Netzwerk-I/O darf den LO-Main-Thread nicht blockieren, daher off-thread; das Ergebnis wird per
 	 * {@link LoMainThread#post} zurueck auf den Main-Thread marshalliert, bevor UI-Controls angefasst werden.
 	 */
 	private void verbindungTesten(XControlContainer container) {
 		String apiKey = getText(container, CTL_API_KEY_FELD);
-		XCheckBox aktiv = control(container, CTL_AKTIV, XCheckBox.class);
-		if (apiKey.isBlank() || (aktiv != null && aktiv.getState() != 1)) return;
+		if (apiKey.isBlank()) {
+			zeigeTestErgebnis(container, new TestErgebnis(false, I18n.get("ptmonline.optionen.status.getrennt"),
+					I18n.get("ptmonline.optionen.test.kein_apikey")));
+			return;
+		}
+		XCheckBox aktivKaestchen = control(container, CTL_AKTIV, XCheckBox.class);
+		boolean aktiv = aktivKaestchen == null || aktivKaestchen.getState() == 1;
 		String baseUrl = getText(container, CTL_BASE_URL_FELD);
 		aktualisiereStatus(container, I18n.get("ptmonline.optionen.test.laeuft"));
 		Thread worker = new Thread(() -> {
-			try {
-				new PtmOnlineApiClient(apiKey, baseUrl).pruefeVerbindung();
-				LoMainThread.post(context, () -> aktualisiereStatus(container, I18n.get("ptmonline.optionen.test.erfolg")));
-			} catch (PtmOnlineException e) {
-				logger.warn("PTM-Online-Verbindungstest fehlgeschlagen: {}", e.getMessage(), e);
-				LoMainThread.post(context,
-						() -> aktualisiereStatus(container, I18n.get("ptmonline.optionen.test.fehler", e.getMessage())));
-			}
+			TestErgebnis ergebnis = pruefeVerbindung(apiKey, baseUrl, aktiv);
+			LoMainThread.post(context, () -> zeigeTestErgebnis(container, ergebnis));
 		}, "PTM-Online-Verbindungstest");
 		worker.start();
+	}
+
+	private static TestErgebnis pruefeVerbindung(String apiKey, String baseUrl, boolean aktiv) {
+		try {
+			new PtmOnlineApiClient(apiKey, baseUrl).pruefeVerbindung();
+			String meldung = I18n.get("ptmonline.optionen.test.erfolg.meldung");
+			if (!aktiv) {
+				meldung += "\n\n" + I18n.get("ptmonline.optionen.test.nicht_aktiv");
+			}
+			return new TestErgebnis(true, I18n.get("ptmonline.optionen.test.erfolg"), meldung);
+		} catch (PtmOnlineException e) {
+			logger.warn("PTM-Online-Verbindungstest fehlgeschlagen: {}", e.getMessage(), e);
+			String fehler = I18n.get("ptmonline.optionen.test.fehler", e.getMessage());
+			return new TestErgebnis(false, fehler, fehler);
+		}
+	}
+
+	private void zeigeTestErgebnis(XControlContainer container, TestErgebnis ergebnis) {
+		aktualisiereStatus(container, ergebnis.status());
+		MessageBox.from(context, ergebnis.erfolgreich() ? MessageBoxTypeEnum.INFO_OK : MessageBoxTypeEnum.ERROR_OK)
+				.caption(I18n.get("ptmonline.optionen.btn.testen")).message(ergebnis.meldung()).show();
 	}
 
 	private void verbindungTrennen(XControlContainer container) {
