@@ -14,18 +14,21 @@
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
 				</prop>
 				<node oor:name="Submenu">
+					<!-- Ankündigung: Webserver, PTM-Online (falls verbunden) und optional WhatsApp -->
 					<node oor:name="X9" oor:op="replace">
-						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="de">PTM-Online</value>
-							<value xml:lang="en">PTM-Online</value>
-							<value xml:lang="es">PTM-Online</value>
-							<value xml:lang="fr">PTM-Online</value>
-							<value xml:lang="nl">PTM-Online</value>
+						<prop oor:name="Title">
+							<value xml:lang="de">Ankündigung</value>
+							<value xml:lang="en">Announcement</value>
+							<value xml:lang="es">Anuncio</value>
+							<value xml:lang="fr">Annonce</value>
+							<value xml:lang="nl">Aankondiging</value>
+						</prop>
+						<prop oor:name="URL">
+							<value>ptm:ankuendigung</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
 						</prop>
-						<prop oor:name="URL"><value>ptm:ptmonline_menu</value></prop>
 					</node>
 				</node>
 			</node>

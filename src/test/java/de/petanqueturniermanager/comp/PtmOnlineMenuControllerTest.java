@@ -18,6 +18,6 @@ class PtmOnlineMenuControllerTest {
 
     @Test
     void jederBefehlStehtGenauEinmalImMenue() {
-        assertThat(PtmOnlineMenuController.BEFEHLE).doesNotHaveDuplicates().hasSize(13);
+        assertThat(PtmOnlineMenuController.BEFEHLE).doesNotHaveDuplicates().hasSize(12);
     }
 }
