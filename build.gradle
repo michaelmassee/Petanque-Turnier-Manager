@@ -322,8 +322,18 @@ tasks.register('cleanCache', Delete) {
     delete "dist/.ooo-debug/user/uno_packages/cache"
 }
 
+def defaultLibreOfficeUserDir() {
+    new File(System.getProperty('user.home'), '.config/libreoffice/4/user')
+}
+
 def defaultLibreOfficeUserPackagesCacheDir() {
-    new File(System.getProperty('user.home'), '.config/libreoffice/4/user/uno_packages/cache')
+    new File(defaultLibreOfficeUserDir(), 'uno_packages/cache')
+}
+
+// Temporäres Extension-Repository von unopkg. Ein dort zurückgebliebener PTM-Eintrag in extensions.pmap, dessen
+// lu*.tmp_-Ordner fehlt, lässt jedes weitere "unopkg add" mit "Error binding package ... NOT_EXISTING" scheitern.
+def defaultLibreOfficeTmpExtensionsDir() {
+    new File(defaultLibreOfficeUserDir(), 'extensions/tmp')
 }
 
 def fileContainsAnyMarker(File file, List<String> markers) {
@@ -345,6 +355,7 @@ def extensionCacheMetadataContainsAnyMarker(File directory, List<String> markers
         }
         String fileName = file.name
         boolean isLibreOfficeExtensionMetadata = fileName == 'uno_packages.pmap'
+                || fileName == 'extensions.pmap'
                 || fileName == 'log.txt'
                 || fileName == 'backenddb.xml'
                 || fileName.endsWith('properties')
@@ -357,19 +368,19 @@ def extensionCacheMetadataContainsAnyMarker(File directory, List<String> markers
 
 tasks.register('purgeBrokenLibreOfficePtmExtensionCache') {
     group = 'LibreOffice'
-    description = 'Bereinigt kaputte PTM-Einträge im LibreOffice-Extension-Cache'
+    description = 'Bereinigt kaputte PTM-Einträge im LibreOffice-Extension-Cache und im temporären Extension-Repository'
     dependsOn 'uninstallExtension'
     mustRunAfter 'uninstallExtension'
 
     doLast {
-        File cacheDir = defaultLibreOfficeUserPackagesCacheDir()
+        // Läuft nach der Deinstallation: Jede verbliebene PTM-Spur ist eine Altlast.
         List<String> markers = [extensionId, project.name]
-        if (!extensionCacheMetadataContainsAnyMarker(cacheDir, markers)) {
-            return
+        [defaultLibreOfficeUserPackagesCacheDir(), defaultLibreOfficeTmpExtensionsDir()].each { File verzeichnis ->
+            if (extensionCacheMetadataContainsAnyMarker(verzeichnis, markers)) {
+                println "Bereinige LibreOffice-Extension-Verzeichnis mit PTM-Altlasten: ${verzeichnis}"
+                delete verzeichnis
+            }
         }
-
-        println "Bereinige LibreOffice-Extension-Cache mit PTM-Altlasten: ${cacheDir}"
-        delete cacheDir
     }
 }
 
