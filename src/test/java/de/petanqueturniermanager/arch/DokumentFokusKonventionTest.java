@@ -41,7 +41,6 @@ class DokumentFokusKonventionTest {
 
 	/** relativer Pfad ab {@code src/main/java} → erwartete Trefferzahl des jeweiligen Markers. */
 	private static final Map<String, Integer> ERWARTETE_TREFFER_GET_CURRENT = Map.of(
-			"de/petanqueturniermanager/addins/GlobalImpl.java", 1,
 			"de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java", 1,
 			"de/petanqueturniermanager/comp/WorkingSpreadsheet.java", 1,
 			"de/petanqueturniermanager/comp/PtmPublicService.java", 1,

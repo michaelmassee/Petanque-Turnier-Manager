@@ -1,5 +1,6 @@
 package de.petanqueturniermanager.addin;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.lib.uno.typeinfo.MethodTypeInfo;
 import com.sun.star.lib.uno.typeinfo.ParameterTypeInfo;
 import com.sun.star.lib.uno.typeinfo.TypeInfo;
@@ -12,6 +13,10 @@ import com.sun.star.uno.XInterface;
  *
  * UNOTYPEINFO is required so the UNO bridge can resolve method signatures
  * without a compiled .rdb type library.
+ * <p>
+ * Dokumentbezogene Funktionen erhalten als ersten Parameter {@code dokument}: Calc übergibt dort verdeckt das Modell
+ * des Dokuments, zu dem die Formelzelle gehört (Caller-Parameter, in der Formel nicht sichtbar). Ohne Dokument (z.&nbsp;B.
+ * Berechnung ohne DocShell) ist es ein Optionsobjekt, das kein {@code XSpreadsheetDocument} liefert.
  */
 public interface XGlobal extends XInterface {
 
@@ -61,17 +66,17 @@ public interface XGlobal extends XInterface {
         new ParameterTypeInfo("onlineId", "ptmsplruuid",        2, TypeInfo.ANY),
     };
 
-    String ptmstringproperty(String propname);
+    String ptmstringproperty(XPropertySet dokument, String propname);
 
-    int ptmintproperty(String propname);
+    int ptmintproperty(XPropertySet dokument, String propname);
 
-    String ptmturniersystem();
+    String ptmturniersystem(XPropertySet dokument);
 
     int ptmdirektvergleich(int teamA, int teamB, int[][] begegnungen, int[][] siege, int[][] spielpunkte);
 
-    int ptmaktuellerunde();
+    int ptmaktuellerunde(XPropertySet dokument);
 
-    int ptmaktuellerspieltag();
+    int ptmaktuellerspieltag(XPropertySet dokument);
 
     int ptmoperationaktiv();
 
@@ -113,7 +118,7 @@ public interface XGlobal extends XInterface {
 
     int ptmpouleanzdreiergruppen(int anzTeams);
 
-    int ptmbooleanproperty(String propname);
+    int ptmbooleanproperty(XPropertySet dokument, String propname);
 
     int ptmdbspieleranzahl();
 

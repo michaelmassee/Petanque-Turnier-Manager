@@ -11,13 +11,13 @@ import de.petanqueturniermanager.exception.GenerateException;
 
 /**
  * Dokumentbezogener Aufrufkontext für Code, der außerhalb eines konkreten UNO-Callbacks (z.B. auf
- * einem {@code SheetRunner}-Hintergrundthread) PTM.ALG.*-AddIn-Formeln für ein bestimmtes Dokument
- * schreibt/auswertet, während zeitgleich ein anderes Dokument den UI-Fokus hält.
+ * einem {@code SheetRunner}-Hintergrundthread) für ein bestimmtes Dokument arbeitet, während zeitgleich
+ * ein anderes Dokument den UI-Fokus hält. Leser wie {@code TurnierModus} nehmen dieses ThreadLocal
+ * vorrangig vor einem Fallback ohne Dokumentbezug; ein fokus-basierter Zugriff würde bei
+ * zwischenzeitlichen Fokuswechseln auf das falsche Dokument zeigen.
  * <p>
- * {@code GlobalImpl.getDocumentPropertiesHelper()} liest dieses ThreadLocal vorrangig vor dem
- * fokus-basierten {@code DocumentHelper.getCurrentSpreadsheetDocument()}-Fallback, der durch
- * zwischenzeitliche Fokuswechsel (z.B. ein noch nicht in den Vordergrund geholtes neues Dokument)
- * auf das falsche Dokument zeigen kann.
+ * Die PTM.ALG.*-AddIn-Funktionen brauchen den Kontext nicht: Calc übergibt ihnen das Dokument der
+ * Formelzelle als Caller-Parameter (siehe {@code GlobalImpl}).
  */
 public final class DokumentKontext {
 

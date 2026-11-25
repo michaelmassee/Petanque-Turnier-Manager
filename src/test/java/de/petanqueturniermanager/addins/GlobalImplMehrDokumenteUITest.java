@@ -2,38 +2,41 @@ package de.petanqueturniermanager.addins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import com.sun.star.awt.XTopWindow;
-import com.sun.star.frame.XController;
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 
 /**
- * Regressionstest für den Spieltag-Property-Leak zwischen zwei gleichzeitig offenen
- * Turnier-Dokumenten. Bug: Wird zu einem bestehenden Turnier (Dokument A, Spieltag=2) über
- * die Toolbar ein neues, leeres Turnier in einer neuen Datei gestartet (Dokument B), liefert
- * {@code PTM.ALG.INTPROPERTY("Spieltag")} in B fälschlich A's Wert statt B's eigenem.
+ * Regressionstest: Die dokumentbezogenen {@code PTM.ALG.*}-Funktionen lesen das Dokument der Formelzelle, nie das
+ * fokussierte. Calc übergibt es verdeckt als Caller-Parameter ({@code XPropertySet}, siehe {@code AddInGlobal.idl}).
  * <p>
- * Fix: {@code SheetRunner.run()} umschließt {@code doRun()} jetzt mit
- * {@link DokumentKontext#mitKontextWerfend}, sodass {@code GlobalImpl.getDocumentPropertiesHelper()}
- * das jeweils eigene Dokument liest statt fokus-basiert über
- * {@code DocumentHelper.getCurrentSpreadsheetDocument()} zurückzufallen.
+ * Früher lösten sie das Dokument über {@code DokumentKontext} und sonst über den Fokus auf. Bei einer Neuberechnung
+ * auf dem Main-Thread gab es keinen Kontext: Das Sync-Info-Blatt in Dokument A zeigte die Werte von Dokument B, sobald
+ * B beim Neuberechnen den Fokus hatte; ebenso leckte {@code PTM.ALG.INTPROPERTY("Spieltag")} beim Anlegen eines neuen
+ * Turniers.
+ * <p>
+ * Geprüft wird per direktem Aufruf mit dem Dokumentmodell als Caller – genau das, was Calc übergibt. Ein Vergleich
+ * über Formelergebnisse ist im UITest nicht möglich: Das Add-in im LO-Prozess hat einen eigenen Property-Cache, der
+ * vom Testprozess geschriebene Properties nicht sieht (Diagnose 2026-11-25: Caller kam für beide Dokumente korrekt an,
+ * der Cache meldete aber leere Properties und lieferte {@code "fehler"}).
  */
 public class GlobalImplMehrDokumenteUITest extends BaseCalcUITest {
+
+	private static final String TEST_PROPERTY = "PTM-Test Dokumentzuordnung";
 
 	private XSpreadsheetDocument zweitesDokument;
 
@@ -45,68 +48,55 @@ public class GlobalImplMehrDokumenteUITest extends BaseCalcUITest {
 		}
 	}
 
-	/**
-	 * GlobalImpl.getDocumentPropertiesHelper() liest vorrangig {@link DokumentKontext#get()} und
-	 * fällt nur ohne gesetzten Kontext auf das fokus-basierte
-	 * {@code DocumentHelper.getCurrentSpreadsheetDocument()} zurück. {@code SheetRunner.run()}
-	 * setzt diesen Kontext jetzt auf das eigene Dokument, bevor {@code doRun()} (und damit z.B.
-	 * {@code MeldeListeSheet_New} beim Anlegen eines neuen Turniers) läuft -- unabhängig davon,
-	 * welches Dokument gerade den UI-Fokus hält. Dieser Test stellt exakt die Produktionssituation
-	 * nach ("Dokument B wird gerade aufgebaut, Dokument A hat noch den Fokus") und prüft, dass
-	 * {@code PTM.ALG.INTPROPERTY(...)} dabei B's eigenen Wert liefert statt A's.
-	 * <p>
-	 * Hinweis zur Testtechnik: Der Wert wird bewusst per direktem Java-Aufruf auf einer
-	 * eigenen {@code GlobalImpl}-Instanz gelesen (wie auch die anderen PTM.ALG.*-Tests in
-	 * {@link GlobalImplUITest}), nicht über eine in eine Zelle geschriebene Calc-Formel: Wie
-	 * {@link BaseCalcUITest}'s Klassen-Javadoc dokumentiert, hat das eigentliche AddIn
-	 * innerhalb des LibreOffice-Prozesses einen eigenen, vom Testprozess entkoppelten
-	 * Property-Cache ({@code DocumentPropertiesHelper.PROPLISTE}) -- über Socket geschriebene
-	 * Zellformeln liefern dadurch keine verlässlichen Werte für einen Value-Vergleich. Der
-	 * direkte Aufruf prüft exakt dieselbe Auflösungslogik.
-	 */
+	/** Direkter Aufruf: Jeder Caller bekommt den Wert seines Dokuments, unabhängig vom Fokus. */
 	@Test
-	public void intPropertyLiestEigenesDokumentTrotzFokussiertemAltdokument() throws GenerateException {
-		// Dokument A ("altes" Turnier): Spieltag = 2
+	public void intPropertyLiestDasDokumentDesCallersTrotzFokusAufAnderem() throws Exception {
 		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 2);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
 				TurnierSystem.SUPERMELEE.getId());
+		DocumentPropertiesHelper zweiteProperties = zweitesTurnierDokument(TurnierSystem.SUPERMELEE);
+		zweiteProperties.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 1);
 
-		// Dokument B ("neues" Turnier): eigener Spieltag = 1 -- exakt der Produktionspfad aus
-		// TurnierSystemNeueDateiAuswahlDialog.beiOkGeklickt() (OfficeDocumentHelper.createSichtbaresCalc()).
-		zweitesDokument = OfficeDocumentHelper.from(loader).createSichtbaresCalc();
-		assertThat(zweitesDokument).as("zweites Dokument konnte nicht erstellt werden").isNotNull();
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
 
-		WorkingSpreadsheet zweitesWs = new WorkingSpreadsheet(starter.getxComponentContext(), zweitesDokument);
-		DocumentPropertiesHelper zweiterDocPropHelper = new DocumentPropertiesHelper(zweitesWs);
+		fokussiere(doc);
+		assertThat(impl.ptmintproperty(caller(zweitesDokument), SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG))
+				.as("Fokus auf A, Caller B").isEqualTo(1);
+		fokussiere(zweitesDokument);
+		assertThat(impl.ptmintproperty(caller(doc), SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG))
+				.as("Fokus auf B, Caller A").isEqualTo(2);
+	}
 
-		zweiterDocPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 1);
-		zweiterDocPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
-				TurnierSystem.SUPERMELEE.getId());
-
-		// Fokus explizit zurück auf Dokument A legen -- erzwingt deterministisch das
-		// Race-Fenster aus der Produktion: der Aufrufkontext "gehört" zu B (analog zum
-		// SheetRunner-Hintergrundthread, der B's Meldeliste aufbaut), aber A gilt noch als
-		// "current component".
+	/** Caller ohne Dokument (Berechnung ohne DocShell): leerer Wert statt eines fremden Dokuments. */
+	@Test
+	public void callerOhneDokumentLiefertDenLeerwert() {
+		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				TurnierSystem.SCHWEIZER.getId());
 		fokussiere(doc);
 
 		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
-		int[] spieltagWert = new int[1];
-		// Simuliert, was SheetRunner.run() jetzt für B tut: doRun() läuft mit B als DokumentKontext,
-		// unabhängig davon, dass A gerade den Fokus hält.
-		DokumentKontext.mitKontextWerfend(zweitesDokument, () ->
-				spieltagWert[0] = impl.ptmintproperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG));
 
-		assertThat(spieltagWert[0])
-				.as("PTM.ALG.INTPROPERTY(\"Spieltag\") muss den Wert des gemeinten Dokuments B liefern (1), "
-						+ "nicht den des noch fokussierten Altdokuments A (2)")
-				.isEqualTo(1);
+		assertThat(impl.ptmstringproperty(null, TEST_PROPERTY)).isEqualTo("fehler");
+		assertThat(impl.ptmturniersystem(null)).isEqualTo(TurnierSystem.KEIN.getBezeichnung());
+	}
+
+	private DocumentPropertiesHelper zweitesTurnierDokument(TurnierSystem system) {
+		zweitesDokument = OfficeDocumentHelper.from(loader).createSichtbaresCalc();
+		assertThat(zweitesDokument).as("zweites Dokument konnte nicht erstellt werden").isNotNull();
+		DocumentPropertiesHelper properties = new DocumentPropertiesHelper(
+				new WorkingSpreadsheet(starter.getxComponentContext(), zweitesDokument));
+		properties.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
+		return properties;
+	}
+
+	/** Was Calc als Caller übergibt: das Dokumentmodell. */
+	private static XPropertySet caller(XSpreadsheetDocument dokument) {
+		return Lo.qi(XPropertySet.class, dokument);
 	}
 
 	/** Gleiche Fokus-Sequenz wie {@code TurnierSystemNeueDateiAuswahlDialog.fokussiereDokument()}. */
 	private static void fokussiere(XSpreadsheetDocument dokument) {
-		XModel xModel = Lo.qi(XModel.class, dokument);
-		XController controller = xModel.getCurrentController();
-		XFrame frame = controller.getFrame();
+		XFrame frame = Lo.qi(XModel.class, dokument).getCurrentController().getFrame();
 		frame.activate();
 		XTopWindow topWindow = Lo.qi(XTopWindow.class, frame.getContainerWindow());
 		if (topWindow != null) {

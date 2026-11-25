@@ -268,11 +268,10 @@ public abstract class SheetRunner extends Thread {
 					if (koordinatorVorgekoppelt && !silentBackground) {
 						processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
 					}
-					// DokumentKontext setzen: GlobalImpl.getDocumentPropertiesHelper() liest das ThreadLocal
-					// vorrangig vor dem fokus-basierten Fallback, damit PTM.ALG.*-Formeln – auch solche, die
-					// schon updateKonfigurationSheet() auswertet, nicht erst doRun() – korrekt aufgelöst
-					// werden, wenn gerade ein anderes Dokument den UI-Fokus hält (z.B. während des Anlegens
-					// eines neuen Turniers).
+					// DokumentKontext setzen: Leser wie TurnierModus nehmen das ThreadLocal vorrangig vor einem
+					// Fallback ohne Dokumentbezug, damit sie – auch schon in updateKonfigurationSheet(), nicht erst
+					// in doRun() – dieses Dokument meinen, wenn gerade ein anderes den UI-Fokus hält (z.B.
+					// während des Anlegens eines neuen Turniers).
 					DokumentKontext.mitKontextWerfend(workingSpreadsheet.getWorkingSpreadsheetDocument(), () -> {
 						// Vor jeder Änderung: nicht mehr aktualisierbare Dokumente brechen ab, migrierbare werden umgestellt.
 						if (turnierSystem != TurnierSystem.KEIN && isDocumentAlive()) {

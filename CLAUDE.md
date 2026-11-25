@@ -281,6 +281,7 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 **Stattdessen, je nach Kontext:**
 - Callback/Listener, der an einem Frame hängt → Dokument beim Registrieren über den Frame auflösen (Muster: `ProtocolHandler.ermittleDokumentAusFrame()`), nicht bei jeder Statusabfrage neu fokus-basiert.
 - Hintergrund-Code (SheetRunner, onLoad), der für ein bestimmtes Dokument läuft → `de.petanqueturniermanager.comp.DokumentKontext` (ThreadLocal) setzen, bevor die Arbeit läuft (`mitKontext`/`mitKontextWerfend`).
+- Calc-Add-in-Funktion (`PTM.ALG.*`), die Dokumentdaten liest → in `AddInGlobal.idl`/`XGlobal` als ersten Parameter `XPropertySet dokument` (Caller, `SC_ADDINARG_CALLER`). Calc setzt dort verdeckt das Modell des Dokuments der Formelzelle ein; in der Formel erscheint er nicht. Funktionen, die nur mit ihren Argumenten rechnen (auch Bereiche/Arrays aus anderen Blättern), brauchen ihn nicht.
 
 **Pflicht-Regressionstest:** Jeder neue dokumentbezogene State-Mechanismus (Property, Toolbar-Status, Sidebar-Inhalt, Dropdown, …) braucht einen Test nach dem Muster von `GlobalImplMehrDokumenteUITest` bzw. `ProtocolHandlerStatusPerFrameTest`: zwei Dokumente gleichzeitig offen, unterschiedliche Werte, Fokus explizit auf das "falsche" Dokument gelegt, dann prüfen dass der Mechanismus trotzdem den Wert des gemeinten Dokuments liefert.
 

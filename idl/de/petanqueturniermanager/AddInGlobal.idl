@@ -3,23 +3,27 @@
 
 
 #include <com/sun/star/uno/XInterface.idl>
+#include <com/sun/star/beans/XPropertySet.idl>
 #include <com/sun/star/sheet/XVolatileResult.idl>
 #include <com/sun/star/table/XCellRange.idl>
 
 // https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1sheet_1_1AddIn.html
 // https://www.openoffice.org/api/docs/common/ref/com/sun/star/sheet/AddIn.html
 // long for integer values
+// Ein Parameter vom Typ XPropertySet ist der "Caller" (sc/source/core/tool/addincol.cxx, SC_ADDINARG_CALLER):
+// Calc setzt dort verdeckt das Modell des Dokuments ein, zu dem die Formelzelle gehoert. Er erscheint nicht in
+// der Formel. Dokumentbezogene Funktionen loesen ihr Dokument darueber auf, nie ueber den Fokus.
 
 module de { module petanqueturniermanager { module addin {
 
   interface XGlobal {
-    string ptmstringproperty([in] string propname); // return string value of property
-    long ptmintproperty([in] string propname); // return int value of property
-    string ptmturniersystem ();
+    string ptmstringproperty([in] com::sun::star::beans::XPropertySet dokument, [in] string propname); // return string value of property
+    long ptmintproperty([in] com::sun::star::beans::XPropertySet dokument, [in] string propname); // return int value of property
+    string ptmturniersystem ([in] com::sun::star::beans::XPropertySet dokument);
     // Index 3 – 2D sequence which can be assigned to a cell range in the spreadsheet.
     long ptmdirektvergleich ([in] long teamA,[in] long teamB, [in]sequence< sequence< long > > begegnungen, [in]sequence< sequence< long > > siege ,[in] sequence< sequence< long > > spielpunkte );
-    long ptmaktuellerunde();
-    long ptmaktuellerspieltag();
+    long ptmaktuellerunde([in] com::sun::star::beans::XPropertySet dokument);
+    long ptmaktuellerspieltag([in] com::sun::star::beans::XPropertySet dokument);
     long ptmoperationaktiv();
     // Supermêlée Team-Berechnung (PTM.SUPERMELEE.*) – Indizes 7-19
     long ptmsmtriplanzdoublette ([in] long anzSpieler);
@@ -44,7 +48,7 @@ module de { module petanqueturniermanager { module addin {
     long ptmpouleanzvierergruppen ([in] long anzTeams);
     long ptmpouleanzdreiergruppen ([in] long anzTeams);
     // Boolean-Property (PTM.ALG.BOOLEANPROPERTY)
-    long ptmbooleanproperty ([in] string propname); // return 0 (false) or 1 (true)
+    long ptmbooleanproperty ([in] com::sun::star::beans::XPropertySet dokument, [in] string propname); // return 0 (false) or 1 (true)
     // Spieler-DB-Lookup (PTM.DB.SPIELER.*) – Indizes 27-28
     long ptmdbspieleranzahl ();
     sequence< sequence< string > > ptmdbspielersuche ([in] string suche, [in] boolean wildcard);

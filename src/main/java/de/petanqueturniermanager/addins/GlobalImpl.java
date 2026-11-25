@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
@@ -31,8 +32,6 @@ import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.NrZellFormel;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeFormatierer;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
-import de.petanqueturniermanager.comp.DocumentHelper;
-import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -50,7 +49,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	static final Logger logger = LogManager.getLogger(GlobalImpl.class);
 
-	private final XComponentContext xContext;
 	private static final String implName = GlobalImpl.class.getName();
 	private static final String SERVICE_NAME = "de.petanqueturniermanager.addin.GlobalAddIn";
 	// WICHTIG: Beide Services müssen registriert sein!
@@ -176,7 +174,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
-		this.xContext = xContext;
 		GlobalImpl.isDirty.set(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
@@ -196,34 +193,32 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	// ------------------- XGlobal function(s) -----------------
 
 	/**
-	 * bei jeden call das aktive Dokument ermitteln
-	 * 
-	 * @return
+	 * Löst das Dokument über den Caller-Parameter auf, den Calc verdeckt mitgibt: das Modell des Dokuments, zu dem die
+	 * Formelzelle gehört. Unabhängig vom Fokus und vom aufrufenden Thread, auch bei mehreren offenen Dokumenten.
+	 *
+	 * @param dokument Caller-Parameter; ohne DocShell ein Optionsobjekt ohne {@code XSpreadsheetDocument}
+	 * @return {@code null}, wenn kein Turnierdokument vorliegt
 	 */
-
-	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
+	private DocumentPropertiesHelper getDocumentPropertiesHelper(XPropertySet dokument) {
 		try {
-			XSpreadsheetDocument doc = DokumentKontext.get();
+			XSpreadsheetDocument doc = Lo.qi(XSpreadsheetDocument.class, dokument);
 			if (doc == null) {
-				doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
-			}
-			if (doc != null) {
-				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
-				if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
-					// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
-					// oder das Dokument hat keine properties aber PTM Funktionen.
-					if (!GlobalImpl.isDirty.getAndSet(true)) {
-						logger.debug("properties isFirstLoad and isEmpty=true");
-					}
-					return null;
+				// Beim Doc-Dispose ruft LO alle PTM-Formel-Zellen einzeln auf -> nur 1x pro Dirty-Übergang loggen
+				if (!GlobalImpl.isDirty.getAndSet(true)) {
+					logger.debug("Caller ohne XSpreadsheetDocument");
 				}
-				return hlpr;
+				return null;
 			}
-			// das hat nicht funktioniert
-			// Beim Doc-Dispose ruft LO alle PTM-Formel-Zellen einzeln auf -> nur 1x pro Dirty-Übergang loggen
-			if (!GlobalImpl.isDirty.getAndSet(true)) {
-				logger.debug("XSpreadsheetDocument = null");
+			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
+			if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
+				// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
+				// oder das Dokument hat keine properties aber PTM Funktionen.
+				if (!GlobalImpl.isDirty.getAndSet(true)) {
+					logger.debug("properties isFirstLoad and isEmpty=true");
+				}
+				return null;
 			}
+			return hlpr;
 		} catch (Exception e) {
 			if (!GlobalImpl.isDirty.getAndSet(true)) {
 				logger.error("getDocumentPropertiesHelper", e);
@@ -233,8 +228,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmintproperty(String propname) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+	public int ptmintproperty(XPropertySet dokument, String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(dokument);
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
@@ -248,8 +243,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public String ptmstringproperty(String propname) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+	public String ptmstringproperty(XPropertySet dokument, String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(dokument);
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
@@ -263,8 +258,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmbooleanproperty(String propname) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+	public int ptmbooleanproperty(XPropertySet dokument, String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(dokument);
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
@@ -279,8 +274,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public String ptmturniersystem() {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+	public String ptmturniersystem(XPropertySet dokument) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(dokument);
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 			return turnierSystemAusDocument.getBezeichnung();
@@ -299,8 +294,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmaktuellerunde() {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+	public int ptmaktuellerunde(XPropertySet dokument) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(dokument);
 		if (hlpr != null) {
 			return hlpr.getIntProperty("Spielrunde", 0);
 		}
@@ -308,8 +303,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmaktuellerspieltag() {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+	public int ptmaktuellerspieltag(XPropertySet dokument) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(dokument);
 		if (hlpr != null) {
 			return hlpr.getIntProperty("Spieltag", 0);
 		}
