@@ -263,7 +263,8 @@ public final class PtmOnlineSpielrundeSync {
             PtmOnlineAuftraege.teilnahme(bestand, tournamentId, teilnahme.status().eintraege(),
                     onlineIds, mapping.getExecutionRevisionenProUuid());
             PtmOnlineAuftraege.meleeTeams(bestand, tournamentId, teilnahme.meleeTeams());
-            PtmOnlineLiveBeobachter.teilnahmeErfasst(ws.getWorkingSpreadsheetDocument(), teilnahme.status(), onlineIds);
+            PtmOnlineLiveBeobachter.teilnahmeErfasst(ws.getWorkingSpreadsheetDocument(), mapping, teilnahme.status(),
+                    onlineIds);
         }
         PtmOnlineAuftraege.speichern(bestand, mapping);
         PtmOnlineLiveBeobachter.anstossen(ws.getWorkingSpreadsheetDocument());

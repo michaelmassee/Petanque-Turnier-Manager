@@ -295,11 +295,13 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
     /**
      * Abgleich oder Rundenstart hat den vollständigen Teilnahme-Stand erfasst; Check-in-Erkennung und
-     * Meldelisten-Abgleich übernehmen ihn als bekannt. Läuft im SheetRunner, bevor die Turnierleitung wieder
-     * Zeilen ändern oder löschen kann.
+     * Meldelisten-Abgleich übernehmen ihn als bekannt. Die Zuordnungen stehen danach auch im Dokument, damit eine
+     * Löschung ein Speichern und Wiederöffnen vor dem nächsten Hintergrundlauf übersteht. Läuft im SheetRunner, bevor
+     * die Turnierleitung wieder Zeilen ändern oder löschen kann.
      */
-    static void teilnahmeErfasst(XSpreadsheetDocument xDoc, PtmOnlineStatusAuftrag status,
-            Map<String, String> onlineIds) {
+    static void teilnahmeErfasst(XSpreadsheetDocument xDoc, PtmOnlineRegistrationMapping mapping,
+            PtmOnlineStatusAuftrag status, Map<String, String> onlineIds) throws GenerateException {
+        PtmOnlineMeldelistenSync.merkeImDokument(mapping, status, onlineIds);
         PtmOnlineLiveBeobachter beobachter = instanz;
         if (beobachter != null) {
             beobachter.registriere(xDoc).ifPresent(beobachtung -> {

@@ -155,6 +155,24 @@ final class PtmOnlineMeldelistenSync {
     }
 
     /**
+     * Schreibt die Zuordnungen eines manuellen Abgleichs oder Rundenstarts sofort in den gespeicherten Stand – nicht
+     * erst beim nächsten Hintergrundlauf. Sonst ginge eine danach gelöschte, vor dem nächsten Lauf gespeicherte und
+     * geschlossene Meldung beim Wiederöffnen verloren. Läuft im Dokument-Kontext, unabhängig vom Live-Beobachter.
+     */
+    static void merkeImDokument(PtmOnlineRegistrationMapping mapping, PtmOnlineStatusAuftrag status,
+            Map<String, String> onlineIds) throws GenerateException {
+        Map<String, String> bisher = mapping.getGeseheneOnlineIds();
+        Map<String, String> neu = new LinkedHashMap<>(bisher);
+        for (PtmOnlineStatusAuftrag.Eintrag eintrag : status.eintraege()) {
+            Optional.ofNullable(onlineIds.get(eintrag.lokaleUuid()))
+                    .ifPresent(onlineId -> neu.put(eintrag.lokaleUuid(), onlineId));
+        }
+        if (!neu.equals(bisher)) {
+            mapping.setGeseheneOnlineIds(neu);
+        }
+    }
+
+    /**
      * Liest Meldeliste und Zuordnungen und erzeugt die nötigen Aufträge im Bestand.
      *
      * @return ob ein weiterer Lauf nötig ist, um gelöschte Meldungen zu bestätigen oder eine Stornierung

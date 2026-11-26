@@ -205,7 +205,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
             getLogger().info("PTM-Online: Abgleich setzt {} abweichende Check-ins online auf den Stand des Dokuments",
                     abweichend.size());
         }
-        PtmOnlineLiveBeobachter.teilnahmeErfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+        PtmOnlineLiveBeobachter.teilnahmeErfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), mapping,
                 new PtmOnlineStatusAuftrag(tournamentId, lokal), onlineIds);
         return erfasst;
     }

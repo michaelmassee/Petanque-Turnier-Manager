@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 class PtmOnlineApiClientTest {
 
 	private HttpServer server;
@@ -27,6 +30,7 @@ class PtmOnlineApiClientTest {
 
 	@BeforeEach
 	void setup() throws IOException {
+		I18n.initFuerTest(Locale.GERMAN);
 		server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
 		server.start();
 		baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
@@ -75,6 +79,18 @@ class PtmOnlineApiClientTest {
 		assertThatThrownBy(client::pruefeVerbindung)
 				.isInstanceOf(PtmOnlineException.class)
 				.hasMessageContaining("Basis-URL");
+	}
+
+	/** Ohne Protokoll warf {@code HttpRequest.newBuilder} eine ungeprüfte Exception; der Test blieb ohne Ergebnis. */
+	@Test
+	void pruefeVerbindungWirftBeiUngueltigerBasisUrl() {
+		for (String ungueltig : new String[] { "ptmonline.org", "ftp://ptmonline.org", "https://", "http://exa mple" }) {
+			var client = new PtmOnlineApiClient("ptm_testkey", ungueltig);
+
+			assertThatThrownBy(client::pruefeVerbindung).as(ungueltig)
+					.isInstanceOf(PtmOnlineException.class)
+					.hasMessage(I18n.get("ptmonline.api.fehler.ungueltige_basis_url", ungueltig));
+		}
 	}
 
 	@Test

@@ -98,6 +98,31 @@ class PtmOnlineMeldelistenSyncUITest extends BaseCalcUITest {
         assertStorno("Ben", 1);
     }
 
+    /**
+     * Manuell importiert, gleich wieder gelöscht, gespeichert und geschlossen – ohne Hintergrundlauf dazwischen: Die
+     * Zuordnung des Abgleichs muss schon im Dokument stehen.
+     */
+    @Test
+    void loeschungDirektNachManuellemImportWirdNachErneutemOeffnenErkannt() throws Exception {
+        ziel.schreibeBlock(List.of(new SpielerMitVerein(0, "Dora", "Test", null, null, List.of(), List.of(), null)));
+        new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).upDateSheet();
+        int doraZeile = ziel.leseAlleSpielerRoh().stream().filter(spieler -> "Dora".equals(spieler.vorname()))
+                .findFirst().orElseThrow().zeile1Basiert();
+        mapping.addMapping(ziel.getOderErzeugeLokaleUuid(doraZeile), "online-Dora", 1, "Dora", "confirmed");
+        PtmOnlineMeldelistenSync.merkeImDokument(mapping,
+                new PtmOnlineStatusAuftrag("t1", PtmOnlineCheckin.leseStand(verbindung)), mapping.getOnlineIdsProUuid());
+        ziel.entferneMeldung(doraZeile);
+
+        var nachOeffnen = new PtmOnlineMeldelistenSync();
+        var neueVerbindung = new PtmOnlineVerbindung(new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test",
+                "http://127.0.0.1", true), ziel, ziel,
+                new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null), "t1", null);
+        assertThat(nachOeffnen.erfasse(bestand, neueVerbindung)).isTrue();
+        assertThat(nachOeffnen.erfasse(bestand, neueVerbindung)).isFalse();
+
+        assertStorno("Dora", 1);
+    }
+
     @Test
     void leereZwischenzeileStorniertNurDieTatsaechlichGeloeschteMeldung() throws Exception {
         ziel.entferneMeldung(zeilen.get("Ben"));

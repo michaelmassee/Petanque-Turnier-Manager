@@ -176,10 +176,21 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 		String baseUrl = getText(container, CTL_BASE_URL_FELD);
 		aktualisiereStatus(container, I18n.get("ptmonline.optionen.test.laeuft"));
 		Thread worker = new Thread(() -> {
-			TestErgebnis ergebnis = pruefeVerbindung(apiKey, baseUrl, aktiv);
+			TestErgebnis ergebnis = pruefeVerbindungAbgesichert(apiKey, baseUrl, aktiv);
 			LoMainThread.post(context, () -> zeigeTestErgebnis(container, ergebnis));
 		}, "PTM-Online-Verbindungstest");
 		worker.start();
+	}
+
+	/** Liefert immer ein Ergebnis: Ein unerwarteter Fehler ließe die Statuszeile sonst auf „wird geprüft“ stehen. */
+	private static TestErgebnis pruefeVerbindungAbgesichert(String apiKey, String baseUrl, boolean aktiv) {
+		try {
+			return pruefeVerbindung(apiKey, baseUrl, aktiv);
+		} catch (RuntimeException e) {
+			logger.error("PTM-Online-Verbindungstest: unerwarteter Fehler", e);
+			String fehler = I18n.get("ptmonline.optionen.test.unerwartet", e.getMessage());
+			return new TestErgebnis(false, fehler, fehler);
+		}
 	}
 
 	private static TestErgebnis pruefeVerbindung(String apiKey, String baseUrl, boolean aktiv) {
