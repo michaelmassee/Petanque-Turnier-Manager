@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
@@ -150,6 +151,25 @@ public final class PtmOnlineAuftraege {
     @FunctionalInterface
     public interface AktionUnterSperre<T> {
         T ausfuehren() throws GenerateException, InterruptedException;
+    }
+
+    /**
+     * Die Verbindung ist getrennt und ihr gespeicherter Zustand geleert: Ein bereits geladener Bestand wird ebenfalls
+     * geleert, sonst schriebe das nächste Verbinden das Protokoll der alten Verbindung zurück ins Dokument. Wartet auf
+     * einen laufenden Versand; danach findet der Hintergrund nichts mehr zu senden.
+     */
+    static void getrennt(XSpreadsheetDocument xDoc, @Nullable Integer spieltagNr) {
+        Optional<AuftragsBestand> bestand = geladen(xDoc, spieltagNr);
+        if (bestand.isEmpty()) {
+            return;
+        }
+        ReentrantLock sperre = bestand.get().versandSperre();
+        sperre.lock();
+        try {
+            bestand.get().leeren();
+        } finally {
+            sperre.unlock();
+        }
     }
 
     /** Alle geladenen Bestände eines Dokuments, je Bindung (Supermêlée: je Spieltag) einer. */

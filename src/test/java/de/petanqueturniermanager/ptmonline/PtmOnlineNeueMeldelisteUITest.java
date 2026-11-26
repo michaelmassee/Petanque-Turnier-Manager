@@ -17,6 +17,8 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
@@ -128,6 +130,24 @@ class PtmOnlineNeueMeldelisteUITest extends BaseCalcUITest {
         assertThat(PtmOnlineNeueMeldeliste.vorbereitenFuerTestdaten(wkingSpreadsheet)).isTrue();
 
         assertThat(mapping.getTournamentId()).isEmpty();
+    }
+
+    @Test
+    void trennenLeertAuchDenGeladenenAuftragsbestand() throws Exception {
+        schweizerTurnier();
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null);
+        AuftragsBestand bestand = PtmOnlineAuftraege.bestand(wkingSpreadsheet, mapping, null);
+        bestand.erzeuge(AuftragsArt.RUNDE, "PUT", "/test", "{}", "{}");
+        PtmOnlineAuftraege.speichern(bestand, mapping);
+
+        mapping.trennen();
+
+        assertThat(PtmOnlineAuftraege.bestand(wkingSpreadsheet, mapping, null).eintraege())
+                .as("Bestand im Speicher wie die Dokumenteigenschaften leer").isEmpty();
+        verbinde(TurnierSystem.SCHWEIZER, null);
+        PtmOnlineAuftraege.neueBindung(wkingSpreadsheet, mapping, null, 0, true, "neue Bindung");
+        assertThat(mapping.leseAuftragsBestand().eintraege())
+                .as("kein Protokoll der alten Verbindung im Dokument").isEmpty();
     }
 
     private void schweizerTurnier() throws GenerateException {

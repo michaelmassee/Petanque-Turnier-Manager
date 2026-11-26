@@ -312,6 +312,20 @@ public final class AuftragsBestand {
     }
 
     /**
+     * Verbindung getrennt: Der Bestand gilt wie nie angelegt – ohne Aufträge, Protokoll, Zwischenstände und mit Zähler
+     * 0, passend zu den geleerten Dokumenteigenschaften. Aufrufer halten die {@link #versandSperre()}. Das Objekt
+     * bleibt erhalten, damit ein Hintergrundversand, der es noch hält, nicht mit einem zweiten Bestand konkurriert.
+     */
+    public synchronized void leeren() {
+        eintraege.clear();
+        ergebnisse.clear();
+        moeglicherweiseAngekommen.clear();
+        zwischenstaende.clear();
+        zaehler = 0;
+        geaendert = false;
+    }
+
+    /**
      * Dieses Dokument gilt (das Desktop-Dokument ist maßgeblich): PTM-Online kennt bereits einen höheren Zählerstand
      * dieser Bindung, etwa weil ein älterer, nicht gespeicherter Stand der Datei geöffnet wurde. Offene, noch nicht
      * gesendete Aufträge erhalten der Reihe nach neue Zählerstände oberhalb von Server und Dokument. Auftrags-ID und

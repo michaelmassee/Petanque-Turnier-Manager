@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -48,6 +49,7 @@ public class PtmOnlineRegistrationMapping {
     private static final Logger LOGGER = LogManager.getLogger(PtmOnlineRegistrationMapping.class);
 
     private final WorkingSpreadsheet ws;
+    private final @Nullable Integer spieltagNr;
     private final PtmOnlineSyncSpeicher speicher;
     private final PtmOnlineSyncSheet syncSheet;
     private final PtmOnlineKonfliktSheet konfliktSheet;
@@ -59,6 +61,7 @@ public class PtmOnlineRegistrationMapping {
 
     public PtmOnlineRegistrationMapping(WorkingSpreadsheet ws, TurnierSystem turnierSystem, Integer spieltagNrOderNull) {
         this.ws = ws;
+        this.spieltagNr = spieltagNrOderNull;
         this.speicher = new PtmOnlineSyncSpeicher(ws, spieltagNrOderNull);
         this.syncSheet = new PtmOnlineSyncSheet(ws, turnierSystem, spieltagNrOderNull);
         this.konfliktSheet = new PtmOnlineKonfliktSheet(ws, turnierSystem);
@@ -89,8 +92,12 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.nachEinstellungAnlegen();
     }
 
-    /** Leert den gespeicherten Zustand und entfernt das Info-Blatt (Gegenstück zu {@link #verbinden}). */
+    /**
+     * Leert den gespeicherten Zustand samt geladenem Auftragsbestand und entfernt das Info-Blatt (Gegenstück zu
+     * {@link #verbinden}).
+     */
     public void trennen() throws GenerateException {
+        PtmOnlineAuftraege.getrennt(ws.getWorkingSpreadsheetDocument(), spieltagNr);
         speicher.trennen();
         syncSheet.entfernen();
     }

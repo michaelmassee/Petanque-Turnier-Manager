@@ -133,6 +133,25 @@ class AuftragsBestandTest {
     }
 
     @Test
+    void leerenSetztDenBestandWieNieAngelegtZurueck() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag abgelehnt = erzeuge(bestand, AuftragsArt.ANMELDUNG_ANLEGEN);
+        bestand.gesendet(ergebnis(abgelehnt, false));
+        bestand.angewendet(bestand.ergebnisseZumAnwenden().getFirst(), "abgelehnt");
+        SyncAuftrag gesendet = erzeuge(bestand, AuftragsArt.RUNDE);
+        bestand.gesendet(ergebnis(gesendet, true));
+        erzeuge(bestand, AuftragsArt.TEILNAHME);
+
+        bestand.leeren();
+
+        assertThat(bestand.eintraege()).isEmpty();
+        assertThat(bestand.ergebnisseZumAnwenden()).isEmpty();
+        assertThat(bestand.zaehler()).isZero();
+        assertThat(bestand.istGeaendert()).isFalse();
+        assertThat(erzeuge(bestand, AuftragsArt.TEILNAHME).zaehler()).isEqualTo(1);
+    }
+
+    @Test
     void uebernimmtServerZaehlerUndNummeriertOffeneAuftraegeMitGleicherIdNeu() {
         // Älterer, nicht gespeicherter Stand: Dokument bei 23, PTM-Online hat 24–29 schon angenommen.
         AuftragsBestand bestand = AuftragsBestand.aus(23, List.of());
