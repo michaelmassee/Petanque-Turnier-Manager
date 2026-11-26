@@ -35,12 +35,19 @@ final class KiCustomSheetsRunner extends SheetRunner implements ISheet {
     @Override
     protected void doRun() throws GenerateException {
         for (CustomSheetDaten sheetDaten : sheets) {
-            NewSheet.from(this, sheetDaten.name(), "KI_" + sheetDaten.name())
+            NewSheet neuesSheet = NewSheet.from(this, sheetDaten.name(), "KI_" + sheetDaten.name())
                     .newIfExist()
                     .showGrid()
                     .setActiv()
                     .create();
-            aktuellesSheet = getSheetHelper().findByName(sheetDaten.name());
+            // Nur in ein gerade neu angelegtes Blatt schreiben: Lehnt der Anwender die Neuerstellung eines
+            // vorhandenen Blatts ab (z. B. „Meldeliste“), bleibt dessen Inhalt unangetastet.
+            if (!neuesSheet.isDidCreate()) {
+                getLogger().info("KI: Blatt '{}' nicht neu erstellt, KI-Daten werden nicht geschrieben",
+                        sheetDaten.name());
+                continue;
+            }
+            aktuellesSheet = neuesSheet.getSheet();
             schreibe(sheetDaten);
         }
     }
