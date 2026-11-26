@@ -39,7 +39,8 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
  * vollständig und schließt das Online-Turnier ab – auf Wunsch mit Veröffentlichung der Endrangliste und
  * Benachrichtigung der Teilnehmer. Der Abschluss ist ein gezählter Auftrag und wird erst erzeugt, wenn PTM-Online
  * den Endstand angenommen hat – sonst veröffentlichte er den zuletzt angenommenen, veralteten Stand. Scheitert danach
- * nur sein eigener Versand am Netz, bleibt er gespeichert und wird mit dem nächsten Versand nachgeholt. Jeder Schritt
+ * nur sein eigener Versand am Netz, bleibt er gespeichert und wird mit dem nächsten Versand nachgeholt. Ein erneuter
+ * Abschluss stellt einen solchen gespeicherten Abschluss zurück, bis der neue Endstand angenommen ist. Jeder Schritt
  * erscheint in der ProcessBox.
  */
 public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOnlineLiveAusloeser {
@@ -80,6 +81,9 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
             processBox().info(I18n.get("ptmonline.fortschritt.abschluss"));
             AuftragsBestand bestand = PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), verbindung.mapping(),
                     spieltagNr);
+            if (PtmOnlineAuftraege.abschlussZurueckstellen(bestand, verbindung.tournamentId())) {
+                getLogger().info("PTM-Online: gespeicherter Abschluss zurückgestellt, bis der Endstand angenommen ist");
+            }
             erfasseVollstaendigenStand(verbindung, bestand, client);
             processBox().info(I18n.get("ptmonline.fortschritt.abschluss.senden"));
             // Erst der Endstand, dann der Abschluss: Veröffentlicht würde sonst der zuletzt angenommene, alte Stand.

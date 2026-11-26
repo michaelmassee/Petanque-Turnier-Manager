@@ -424,6 +424,23 @@ class PtmOnlineAuftraegeTest {
     }
 
     /**
+     * Ein nach HTTP 503 gespeicherter Abschluss hat einen kleineren Zähler als der neue Endstand: Er darf erst nach
+     * dessen Annahme wieder hinausgehen, sonst veröffentlicht er trotz abgelehnter Rangliste den alten Stand.
+     */
+    @Test
+    void gespeicherterAbschlussWirdBisZumAngenommenenEndstandZurueckgestellt() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, false);
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 1, List.of());
+
+        assertThat(PtmOnlineAuftraege.abschlussZurueckstellen(bestand, TURNIER)).isTrue();
+
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RUNDE);
+        assertThat(PtmOnlineAuftraege.abschlussZurueckstellen(bestand, TURNIER)).isFalse();
+        assertThat(bestand.versandSperre().isLocked()).isFalse();
+    }
+
+    /**
      * Der Ersatz für einen liegengebliebenen Timer muss gespeichert sein, bevor er hinausgeht: Sonst vergibt das
      * Dokument nach einem Neustart seinen Zähler an eine andere ID (document_forked).
      */

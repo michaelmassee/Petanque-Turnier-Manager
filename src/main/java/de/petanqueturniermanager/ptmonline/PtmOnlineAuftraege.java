@@ -582,6 +582,26 @@ public final class PtmOnlineAuftraege {
                 TournamentSyncClient.abschlussBody(ranglisteVeroeffentlichen, teilnehmerBenachrichtigen), "{}");
     }
 
+    /**
+     * Nimmt einen gespeicherten, noch nicht gesendeten Abschluss (z.&nbsp;B. nach HTTP 503) aus dem Puffer, bis der
+     * neue Endstand angenommen ist. Er hat einen kleineren Zähler als der neu erfasste Endstand und ginge sonst vor
+     * ihm hinaus – auch wenn PTM-Online die Rangliste danach ablehnt. Hält die Versandsperre, damit kein
+     * Hintergrundversand ihn gerade sendet.
+     *
+     * @return ob ein Abschluss entfernt wurde
+     */
+    static boolean abschlussZurueckstellen(AuftragsBestand bestand, String tournamentId) throws InterruptedException {
+        String pfad = TournamentSyncClient.abschlussPfad(tournamentId);
+        bestand.versandSperre().lockInterruptibly();
+        try {
+            boolean vorhanden = bestand.zuSenden(false).stream().anyMatch(auftrag -> auftrag.pfad().equals(pfad));
+            bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+            return vorhanden;
+        } finally {
+            bestand.versandSperre().unlock();
+        }
+    }
+
     /** Schließt die Online-Anmeldung, damit bis zum Rundenstart keine Anmeldungen mehr eingehen (KP-05). */
     static void anmeldungSchliessen(AuftragsBestand bestand, String tournamentId) {
         String pfad = TournamentSyncClient.anmeldungSchliessenPfad(tournamentId);
