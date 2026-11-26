@@ -619,7 +619,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 throws InterruptedException {
             bestand.versandSperre().lockInterruptibly();
             try {
-                PtmOnlineAuftraege.timerNachstellen(bestand, Instant.now(), pausiert);
+                // Kein Nachstellen hier: Ein Ersatzauftrag ginge sonst ungespeichert hinaus. Das erledigt die
+                // unmittelbar vorausgehende Erfassung im Dokument-Kontext.
                 return AuftragsVersand.sende(bestand.zuSenden(pausiert), bestand.mitVersandVermerk(client), ergebnis -> {
                     bestand.gesendet(ergebnis);
                     beachteAblehnung(ergebnis);

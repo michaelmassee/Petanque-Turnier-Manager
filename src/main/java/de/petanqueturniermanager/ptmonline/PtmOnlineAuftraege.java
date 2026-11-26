@@ -628,7 +628,9 @@ public final class PtmOnlineAuftraege {
      * Timer-Stand (ohne Netz, Dokument gerade belegt) wird daher unmittelbar vor dem Senden durch einen neuen Auftrag
      * mit der bis jetzt verbleibenden Restzeit ersetzt. Neuer Auftrag statt geänderter Nutzlast: Eine schon
      * angekommene Auftrags-ID mit anderem Inhalt lehnt PTM-Online ab ({@code idempotency_mismatch}); ein doppelt
-     * angekommener Timer-Stand ist dagegen harmlos, er ist absolut. Nur unter der Versandsperre aufrufen.
+     * angekommener Timer-Stand ist dagegen harmlos, er ist absolut. Nur unter der Versandsperre aufrufen, und der
+     * Bestand muss vor dem Senden gespeichert werden: Sonst vergäbe das Dokument nach einem Neustart den Zähler des
+     * gesendeten Ersatzes erneut an eine andere Auftrags-ID, und PTM-Online meldet {@code document_forked}.
      */
     static void timerNachstellen(AuftragsBestand bestand, Instant jetzt, boolean pausiert) {
         for (SyncAuftrag auftrag : bestand.zuSenden(false)) {
@@ -1062,6 +1064,21 @@ public final class PtmOnlineAuftraege {
             bestand.versandSperre().unlock();
         }
         return new SynchronerVersand(stopp, anwenden(bestand, mapping));
+    }
+
+    /**
+     * Stellt liegengebliebene Timer-Aufträge nach ({@link #timerNachstellen}) und speichert den Bestand – im
+     * Dokument-Kontext der Erfassung, unmittelbar vor dem Hintergrundversand. Hält dabei die Versandsperre.
+     */
+    static void timerNachstellenUndSpeichern(AuftragsBestand bestand, PtmOnlineRegistrationMapping mapping,
+            boolean pausiert) throws GenerateException, InterruptedException {
+        bestand.versandSperre().lockInterruptibly();
+        try {
+            timerNachstellen(bestand, Instant.now(), pausiert);
+            speichern(bestand, mapping);
+        } finally {
+            bestand.versandSperre().unlock();
+        }
     }
 
     /** Sendet nur diesen einen offenen Auftrag, sofort und unabhängig von einer Pause; die übrigen bleiben liegen. */

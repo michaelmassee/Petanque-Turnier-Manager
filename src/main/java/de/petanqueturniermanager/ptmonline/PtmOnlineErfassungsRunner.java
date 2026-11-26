@@ -199,7 +199,13 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             erfasseErgebnismeldungen(bestand, v);
             brauchtStand = !erfasseLiveStand(bestand, v, passenderAbruf);
         }
-        PtmOnlineAuftraege.speichern(bestand, mapping);
+        try {
+            // Gleich danach sendet der Hintergrund: Nachgestellte Timer-Aufträge müssen vorher gespeichert sein.
+            PtmOnlineAuftraege.timerNachstellenUndSpeichern(bestand, mapping, pausiert);
+        } catch (InterruptedException e) {
+            getLogger().debug("PTM-Online: Erfassung beim Warten auf einen laufenden Versand abgebrochen", e);
+            throw verarbeitungAbgebrochen();
+        }
         timer.ifPresent(stand -> PtmOnlineTimer.erfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), stand));
         erfassung = new Erfassung(v, bestand, pausiert, brauchtStand, anwendung, nachlauf);
     }

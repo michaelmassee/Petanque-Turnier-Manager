@@ -6,6 +6,9 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -418,6 +421,25 @@ class PtmOnlineAuftraegeTest {
             assertThat(auftrag.auftragsId()).isNotEqualTo(liegengeblieben.auftragsId());
             assertThat(auftrag.zaehler()).isGreaterThan(liegengeblieben.zaehler());
         });
+    }
+
+    /**
+     * Der Ersatz für einen liegengebliebenen Timer muss gespeichert sein, bevor er hinausgeht: Sonst vergibt das
+     * Dokument nach einem Neustart seinen Zähler an eine andere ID (document_forked).
+     */
+    @Test
+    void nachgestellterTimerWirdVorDemVersandGespeichert() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.timer(bestand, TURNIER, laufenderTimer(600), Instant.now().minusSeconds(300), false);
+        bestand.gespeichert();
+        SyncAuftrag liegengeblieben = bestand.zuSenden(false).getFirst();
+        PtmOnlineRegistrationMapping mapping = mock(PtmOnlineRegistrationMapping.class);
+
+        PtmOnlineAuftraege.timerNachstellenUndSpeichern(bestand, mapping, false);
+
+        verify(mapping).schreibeAuftragsBestand(argThat(gespeichert -> gespeichert.zuSenden(false).stream()
+                .noneMatch(auftrag -> auftrag.auftragsId().equals(liegengeblieben.auftragsId()))));
+        assertThat(bestand.versandSperre().isLocked()).isFalse();
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -36,13 +37,18 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 /**
  * „Turnier online abschließen“: Nach Rückfrage überträgt das Dokument Spielrunden, Rangliste und Spieleinstellungen
  * vollständig und schließt das Online-Turnier ab – auf Wunsch mit Veröffentlichung der Endrangliste und
- * Benachrichtigung der Teilnehmer. Der Abschluss ist ein gezählter Auftrag und geht synchron hinaus; ohne Netz bleibt
- * er gespeichert und wird mit dem nächsten Versand nachgeholt. Jeder Schritt erscheint in der ProcessBox.
+ * Benachrichtigung der Teilnehmer. Der Abschluss ist ein gezählter Auftrag und wird erst erzeugt, wenn PTM-Online
+ * den Endstand angenommen hat – sonst veröffentlichte er den zuletzt angenommenen, veralteten Stand. Scheitert danach
+ * nur sein eigener Versand am Netz, bleibt er gespeichert und wird mit dem nächsten Versand nachgeholt. Jeder Schritt
+ * erscheint in der ProcessBox.
  */
 public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOnlineLiveAusloeser {
 
     private static final String CODE_KEINE_RANGLISTE = "ranking_missing";
     private static final String CODE_FREIGABELINK = "share_link_missing";
+    /** Aufträge des Endstands; wird einer abgelehnt, stünde online ein veralteter Stand. */
+    private static final Set<AuftragsArt> ENDSTAND = Set.of(AuftragsArt.RUNDE, AuftragsArt.RUNDE_LOESCHEN,
+            AuftragsArt.RANGLISTE, AuftragsArt.SPIELEINSTELLUNGEN);
 
     private final @Nullable Integer spieltagNr;
 
@@ -75,9 +81,13 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
             AuftragsBestand bestand = PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), verbindung.mapping(),
                     spieltagNr);
             erfasseVollstaendigenStand(verbindung, bestand, client);
+            processBox().info(I18n.get("ptmonline.fortschritt.abschluss.senden"));
+            // Erst der Endstand, dann der Abschluss: Veröffentlicht würde sonst der zuletzt angenommene, alte Stand.
+            PtmOnlineAuftraege.SynchronerVersand endstand = PtmOnlineAuftraege.sendeSynchron(bestand,
+                    verbindung.mapping(), client, false);
+            pruefeEndstand(endstand);
             PtmOnlineAuftraege.abschluss(bestand, verbindung.tournamentId(), wahl.get().ranglisteVeroeffentlichen(),
                     wahl.get().teilnehmerBenachrichtigen());
-            processBox().info(I18n.get("ptmonline.fortschritt.abschluss.senden"));
             PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeSynchron(bestand,
                     verbindung.mapping(), client, false);
             pruefeVersand(versand);
@@ -182,10 +192,35 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
         }
     }
 
+    /**
+     * Der Endstand muss vollständig angenommen sein, bevor abgeschlossen wird. Lehnt PTM-Online Runden, Rangliste oder
+     * Spieleinstellungen fachlich ab, wird nicht abgeschlossen; die Ablehnung steht im Auftragsprotokoll.
+     */
+    private void pruefeEndstand(PtmOnlineAuftraege.SynchronerVersand versand) throws GenerateException {
+        pruefeStopp(versand);
+        Optional<VersandErgebnis> abgelehnt = versand.anwendung().abgelehnteAuftraege().stream()
+                .filter(ergebnis -> ENDSTAND.contains(ergebnis.auftrag().art())).findFirst();
+        if (abgelehnt.isPresent()) {
+            SyncAntwort antwort = abgelehnt.get().antwort();
+            getLogger().warn("PTM-Online: Endstand abgelehnt ({}, HTTP {}), Turnier wird nicht abgeschlossen",
+                    abgelehnt.get().auftrag().art(), antwort.status());
+            throw new GenerateException(I18n.get("ptmonline.fehler.abschluss",
+                    I18n.get("ptmonline.fehler.abschluss.endstand", abgelehnt.get().auftrag().art().anzeige(),
+                            antwort.fehlertext().orElse("HTTP " + antwort.status()))));
+        }
+    }
+
     /** Wie beim manuellen Abgleich: Netz- und Serverfehler lassen die Aufträge für den nächsten Versand liegen. */
     private void pruefeVersand(PtmOnlineAuftraege.SynchronerVersand versand) throws GenerateException {
+        pruefeStopp(versand);
+        pruefeAblehnung(versand.anwendung().abgelehnt(AuftragsArt.ABSCHLUSS));
+    }
+
+    private static void pruefeStopp(PtmOnlineAuftraege.SynchronerVersand versand) throws GenerateException {
         switch (versand.stopp()) {
-            case FERTIG -> pruefeAblehnung(versand.anwendung().abgelehnt(AuftragsArt.ABSCHLUSS));
+            case FERTIG -> {
+                // vollständig gesendet; fachliche Ablehnungen prüft der Aufrufer
+            }
             case DOKUMENT_GEFORKT -> throw new PtmOnlineDokumentGeforktException();
             case BINDUNG_ABGELOEST -> throw new GenerateException(I18n.get("ptmonline.fehler.bindung_abgeloest"));
             case TURNIER_GELOESCHT -> throw new GenerateException(I18n.get("ptmonline.turnier.geloescht"));
