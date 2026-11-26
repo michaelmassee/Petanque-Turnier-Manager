@@ -448,6 +448,12 @@ public class PtmOnlineRegistrationMapping {
         speicher.setConnectRequestId(connectRequestId);
     }
 
+    /** Siehe {@link PtmOnlineSyncSpeicher#merkeVerbindungsversuch}. */
+    public void merkeVerbindungsversuch(String syncDocumentId, String leaseToken, String connectRequestId)
+            throws GenerateException {
+        speicher.merkeVerbindungsversuch(syncDocumentId, leaseToken, connectRequestId);
+    }
+
     /** Lokaler Turnierstart, dessen Übergang zu {@code running} online noch aussteht (KP-05). */
     public Optional<Instant> getRunningAusstehendSeit() throws GenerateException {
         return speicher.getRunningAusstehendSeit();

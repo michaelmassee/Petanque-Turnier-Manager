@@ -116,6 +116,26 @@ class PtmOnlineSyncSpeicherUITest extends BaseCalcUITest {
         assertThat(PtmOnlineSyncSpeicher.leseStatus(wkingSpreadsheet, null)).isEqualTo(PtmOnlineSyncStatus.NICHT_VERBUNDEN);
     }
 
+    /**
+     * Erstes Verbinden mit verlorener Antwort: Die vor dem Senden gemerkten IDs müssen ein neues Objekt (= nächster
+     * Versuch) überleben, ohne dass die Verbindung schon als angelegt gilt.
+     */
+    @Test
+    void gemerkterVerbindungsversuchUeberlebtUndGiltNichtAlsVerbunden() throws Exception {
+        String connectId = "5f0c2b7e-1d4a-4c39-9a51-2f7e8d6c4b10";
+        wieImSheetRunner(() -> new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
+                .merkeVerbindungsversuch(DOCUMENT_ID, LEASE_TOKEN, connectId));
+
+        PtmOnlineRegistrationMapping wiederholung = new PtmOnlineRegistrationMapping(wkingSpreadsheet,
+                TurnierSystem.SCHWEIZER, null);
+        assertThat(wiederholung.getSyncDocumentId()).contains(DOCUMENT_ID);
+        assertThat(wiederholung.getLeaseToken()).contains(LEASE_TOKEN);
+        assertThat(wiederholung.getConnectRequestId()).contains(connectId);
+        assertThat(wiederholung.getTournamentId()).as("ohne Server-Antwort kein Turnier eingetragen").isEmpty();
+        assertThat(PtmOnlineSyncSpeicher.leseStatus(wkingSpreadsheet, null))
+                .isEqualTo(PtmOnlineSyncStatus.NICHT_VERBUNDEN);
+    }
+
     @Test
     void zustandStehtInDenDokumentPropertiesUndUeberlebtNeueObjekte() throws Exception {
         PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");

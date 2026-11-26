@@ -43,7 +43,8 @@ import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
  * Verbindet das Dokument (bzw. den Spieltag) mit dem ausgewählten Online-Turnier – Server-Bindung, Blatt
  * „PTMOnline Sync“ und Freigabe des bisherigen Turniers in einem einzigen {@link SheetRunner}. Läuft bereits ein
  * anderer Runner, lehnt {@link #start()} ab, bevor der Server berührt wird: Online und Dokument können so nicht
- * auseinanderlaufen. Das bisherige Turnier wird erst freigegeben, wenn das neue lokal eingetragen ist.
+ * auseinanderlaufen. Das bisherige Turnier wird nach der neuen Server-Bindung freigegeben; bricht der Lauf dabei ab,
+ * wird die neue Bindung wieder gelöst und das Dokument bleibt mit dem bisherigen Turnier verbunden.
  * <p>
  * Ein leeres Dokument ({@link #fuerLeeresDokument}) bekommt im selben Lauf zuerst die zum Online-Turnier passende
  * Meldeliste ({@link PtmOnlineMeldelistenAnlage}); erst danach steht der Spieltag fest und es wird verbunden.
@@ -163,9 +164,9 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
         String leaseToken = bisherige.leaseToken().orElseGet(() -> UUID.randomUUID().toString() + UUID.randomUUID());
         // Stabile ID des Verbindungsversuchs: eine Wiederholung nach verlorener Antwort ist dieselbe Verbindung (P-22).
         String connectRequestId = mapping.getConnectRequestId().orElseGet(() -> UUID.randomUUID().toString());
-        if (bisherige.syncDocumentId().isPresent()) {
-            mapping.setConnectRequestId(connectRequestId);
-        }
+        // Vor dem Senden speichern – auch beim ersten Verbinden, sonst erzeugte die Wiederholung neue IDs und liefe
+        // gegen die eigene, schon angelegte Bindung (document_bound).
+        mapping.merkeVerbindungsversuch(syncDocumentId, leaseToken, connectRequestId);
         TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
 
         Optional<SyncBindingDto> binding = serverAufruf(
@@ -177,7 +178,14 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
         getLogger().info("PTM-Online: Turnier {} verbunden (Server-Aufruf ok)", turnier.id);
 
         if (bisherige.istVerbundenMitAnderem(turnier.id)) {
-            gibBisherigesTurnierFrei(mapping);
+            try {
+                gibBisherigesTurnierFrei(mapping);
+            } catch (GenerateException | RuntimeException e) {
+                // Lokal bleibt das bisherige Turnier eingetragen: Die neue Bindung darf online nicht verwaisen.
+                getLogger().info("PTM-Online: Turnierwechsel abgebrochen, gebe Turnier {} wieder frei", turnier.id);
+                gibNeueBindungFrei(syncDocumentId, leaseToken, binding.get().writeCounter());
+                throw e;
+            }
         }
         boolean anderesTurnier = !turnier.id.equals(bisherige.turnierId());
         try {

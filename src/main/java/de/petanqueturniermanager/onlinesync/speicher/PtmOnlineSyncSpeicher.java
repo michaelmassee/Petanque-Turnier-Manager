@@ -307,6 +307,17 @@ public final class PtmOnlineSyncSpeicher {
         schreibe(Feld.CONNECT_ID, connectRequestId);
     }
 
+    /**
+     * Speichert Dokument-ID, Schreib-Lease und ID des Verbindungsversuchs, bevor er gesendet wird: Geht die Antwort
+     * nach erfolgreicher Bindung verloren, trägt die Wiederholung dieselben Werte und trifft die eigene Bindung statt
+     * einer fremden (P-22). Ohne Turnier-ID gilt die Verbindung weiterhin als nicht angelegt.
+     */
+    public void merkeVerbindungsversuch(String syncDokumentId, String leaseToken, String connectRequestId) {
+        schreibe(Feld.SYNC_DOKUMENT, syncDokumentId);
+        schreibe(Feld.SCHLUESSEL, leaseToken);
+        schreibe(Feld.CONNECT_ID, connectRequestId);
+    }
+
     /** Lokaler Startzeitpunkt, solange der Übergang zu {@code running} online noch nicht bestätigt ist (KP-05). */
     public Optional<Instant> getRunningAusstehendSeit() {
         return zeitpunkt(Feld.RUNNING_AUSSTEHEND);
