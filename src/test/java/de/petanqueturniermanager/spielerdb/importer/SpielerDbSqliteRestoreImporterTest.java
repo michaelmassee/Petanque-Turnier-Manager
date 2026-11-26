@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 
@@ -19,6 +21,7 @@ class SpielerDbSqliteRestoreImporterTest {
 
     @BeforeEach
     void resetInstance() throws Exception {
+        I18n.initFuerTest(Locale.GERMAN);
         Field feld = SpielerDbConnection.class.getDeclaredField("INSTANCE");
         feld.setAccessible(true);
         feld.set(null, null);
@@ -31,6 +34,6 @@ class SpielerDbSqliteRestoreImporterTest {
         SpielerDbSqliteRestoreImporter importer = new SpielerDbSqliteRestoreImporter();
         assertThatThrownBy(() -> importer.restore(tempDir.resolve("quelle.sqlite3")))
                 .isInstanceOf(SpielerDbException.class)
-                .hasMessageContaining("nicht initialisiert");
+                .hasMessage(I18n.get("spielerdb.db.fehler.nicht_initialisiert"));
     }
 }

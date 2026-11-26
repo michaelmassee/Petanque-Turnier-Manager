@@ -3,18 +3,22 @@ package de.petanqueturniermanager.spielerdb;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
+import org.sqlite.SQLiteConnection;
+import org.sqlite.SQLiteErrorCode;
+
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Lifecycle für die lokale Spieler-Stammdaten-DB. Implementierung: SQLite via
@@ -67,7 +71,7 @@ public final class SpielerDbConnection implements AutoCloseable {
         try {
             Files.createDirectories(dbDir);
         } catch (IOException e) {
-            throw new SpielerDbException("DB-Verzeichnis nicht anlegbar: " + dbDir, e);
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.verzeichnis", dbDir), e);
         }
         String url = "jdbc:sqlite:" + dbDir.resolve(DB_FILENAME);
         SpielerDbConnection neu = baueConnection(url);
@@ -92,14 +96,9 @@ public final class SpielerDbConnection implements AutoCloseable {
             logger.info("Spieler-DB verbunden: {}", jdbcUrl);
             return new SpielerDbConnection(jdbcUrl, conn);
         } catch (ClassNotFoundException e) {
-            throw new SpielerDbException("SQLite-Treiber nicht im Classpath", e);
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.treiber"), e);
         } catch (SQLException e) {
-            if (istLockFehler(e)) {
-                throw new SpielerDbException(
-                        "Spieler-Datenbank ist gerade gesperrt (Schreibvorgang läuft). "
-                                + "Bitte kurz warten und erneut versuchen.", e, true);
-            }
-            throw new SpielerDbException("DB-Initialisierung fehlgeschlagen", e);
+            throw sperrOderFehler(e, I18n.get("spielerdb.db.fehler.initialisierung"));
         }
     }
 
@@ -266,70 +265,101 @@ public final class SpielerDbConnection implements AutoCloseable {
     }
 
     /**
-     * Ersetzt die aktuelle Spieler-DB-Datei durch {@code quelle}. Schließt die
-     * aktuelle Connection, sichert die alte Datei nach
-     * {@code <db>.bak.<yyyyMMdd-HHmmss>}, kopiert die Quelle an die DB-Stelle
-     * und öffnet die Connection neu.
+     * Ersetzt den Inhalt der laufenden Spieler-DB durch {@code quelle}. Der bisherige Stand wird vorher nach
+     * {@code <db>.bak.<yyyyMMdd-HHmmss>} gesichert.
      *
-     * <p>Pre-Conditions: aktuelle DB ist file-basiert, {@code quelle} ist eine
-     * SQLite-Datei (Magic-Bytes geprüft). Bei Fehler im Kopier-/Open-Schritt
-     * wird das Backup zurückgespielt und die Connection wieder geöffnet.
+     * <p>Sicherung und Wiederherstellung laufen über die SQLite-Backup-API der offenen Verbindung, nicht über
+     * Dateioperationen: Weitere Verbindungen (z.&nbsp;B. ein zweiter LibreOffice-Prozess) bleiben gültig. Ein Tausch der
+     * Datei samt Löschen von WAL und SHM verlöre deren bestätigte, noch nicht zurückgeschriebene Änderungen, und eine
+     * noch offene Verbindung schriebe danach in die verschobene Datei. Die Sicherung enthält auch diese WAL-Inhalte;
+     * die Wiederherstellung ist eine einzige Schreibtransaktion und lässt den Stand bei einem Fehler unverändert.
+     *
+     * <p>Pre-Conditions: aktuelle DB ist file-basiert, {@code quelle} ist eine andere SQLite-Datei (Magic-Bytes
+     * geprüft).
      */
     public static synchronized void restoreVon(Path quelle) throws SpielerDbException {
         SpielerDbConnection inst = INSTANCE;
-        if (inst == null) {
-            throw new SpielerDbException("Spieler-DB ist nicht initialisiert");
+        if (inst == null || !inst.istOffen()) {
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.nicht_initialisiert"));
         }
         Path zielDatei = inst.dbDatei();
         if (zielDatei == null) {
-            throw new SpielerDbException("Restore unterstützt nur file-basierte SQLite-DBs");
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.restore_nur_datei"));
+        }
+        if (inst.istDbDateiOderBegleitdatei(quelle)) {
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.restore_eigene_datei", quelle));
         }
         pruefeSqliteMagic(quelle);
 
-        String zeitstempel = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-        Path backup = zielDatei.resolveSibling(zielDatei.getFileName() + ".bak." + zeitstempel);
-
+        String zeitstempel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        Path sicherung = zielDatei.resolveSibling(zielDatei.getFileName() + ".bak." + zeitstempel);
+        SQLiteConnection sqlite = inst.sqliteVerbindung();
         try {
-            inst.connection.close();
+            pruefeErgebnis(sqlite.getDatabase().backup("main", sicherung.toAbsolutePath().toString(), null));
         } catch (SQLException e) {
-            throw new SpielerDbException("Aktuelle DB-Connection nicht schließbar", e);
+            throw sperrOderFehler(e, I18n.get("spielerdb.db.fehler.sicherung", sicherung));
         }
         try {
-            if (!inst.connection.isClosed()) {
-                throw new SpielerDbException(
-                        "DB-Connection meldet sich nach close() nicht als geschlossen — Restore abgebrochen");
-            }
+            pruefeErgebnis(sqlite.getDatabase().restore("main", quelle.toAbsolutePath().toString(), null));
+            // Ein älteres Backup kennt womöglich noch nicht alle Tabellen und Indizes.
+            schemaAnlegen(inst.connection);
         } catch (SQLException e) {
-            throw new SpielerDbException("DB-Connection-Status nicht prüfbar", e);
+            throw sperrOderFehler(e, I18n.get("spielerdb.db.fehler.restore", sicherung));
         }
-        INSTANCE = null;
+        logger.info("Spieler-DB aus {} wiederhergestellt, bisheriger Stand in {}", quelle, sicherung);
+    }
 
-        Path walDatei = zielDatei.resolveSibling(zielDatei.getFileName() + "-wal");
-        Path shmDatei = zielDatei.resolveSibling(zielDatei.getFileName() + "-shm");
-
-        try {
-            if (Files.exists(zielDatei)) {
-                Files.move(zielDatei, backup, StandardCopyOption.REPLACE_EXISTING);
+    /**
+     * Ob {@code datei} die DB-Datei dieser Verbindung oder eine ihrer WAL-Begleitdateien ist. Ein Backup dorthin
+     * ersetzte die laufende DB, eine offene Verbindung schriebe danach in die verwaiste Datei.
+     */
+    public boolean istDbDateiOderBegleitdatei(Path datei) {
+        Path db = dbDatei();
+        if (db == null) {
+            return false;
+        }
+        for (Path kandidat : List.of(db, db.resolveSibling(db.getFileName() + "-wal"),
+                db.resolveSibling(db.getFileName() + "-shm"))) {
+            if (istGleicheDatei(kandidat, datei)) {
+                return true;
             }
-            // Begleit-Dateien des WAL-Modes löschen — sonst würde die neue DB
-            // mit dem alten Write-Ahead-Log gestartet und ggf. korrumpieren.
-            Files.deleteIfExists(walDatei);
-            Files.deleteIfExists(shmDatei);
-            Files.copy(quelle, zielDatei, StandardCopyOption.REPLACE_EXISTING);
-            // Connection wird beim nächsten getInstance() neu aufgebaut.
-        } catch (IOException e) {
-            // Best-Effort-Wiederherstellung des alten Zustands.
+        }
+        return false;
+    }
+
+    private static boolean istGleicheDatei(Path a, Path b) {
+        if (Files.exists(a) && Files.exists(b)) {
             try {
-                if (Files.exists(backup)) {
-                    Files.move(backup, zielDatei, StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (IOException restoreFehler) {
-                logger.error("Backup-Wiederherstellung fehlgeschlagen — manuelle Recovery von "
-                        + backup + " nötig", restoreFehler);
+                return Files.isSameFile(a, b);
+            } catch (IOException e) {
+                logger.debug("Dateivergleich {} / {} nicht möglich, vergleiche Pfade", a, b, e);
             }
-            throw new SpielerDbException("Restore fehlgeschlagen, alter Stand wurde zurückgespielt", e);
         }
+        return a.toAbsolutePath().normalize().equals(b.toAbsolutePath().normalize());
+    }
+
+    /** Native SQLite-Verbindung für die Backup-API. */
+    public SQLiteConnection sqliteVerbindung() throws SpielerDbException {
+        try {
+            return connection.unwrap(SQLiteConnection.class);
+        } catch (SQLException e) {
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.keine_sqlite_verbindung"), e);
+        }
+    }
+
+    /** Die xerial-Backup-API meldet Fehler teils nur über den Rückgabecode. */
+    private static void pruefeErgebnis(int rueckgabe) throws SQLException {
+        if (rueckgabe != SQLiteErrorCode.SQLITE_OK.code) {
+            throw new SQLException("SQLite-Rückgabecode " + rueckgabe + " (" + SQLiteErrorCode.getErrorCode(rueckgabe)
+                    + ")", null, rueckgabe);
+        }
+    }
+
+    private static SpielerDbException sperrOderFehler(SQLException e, String meldung) {
+        if (istLockFehler(e)) {
+            return new SpielerDbException(I18n.get("spielerdb.db.fehler.gesperrt"), e, true);
+        }
+        return new SpielerDbException(meldung, e);
     }
 
     /**
@@ -344,16 +374,16 @@ public final class SpielerDbConnection implements AutoCloseable {
             try (var in = Files.newInputStream(datei)) {
                 int gelesen = in.readNBytes(kopf, 0, kopf.length);
                 if (gelesen != erwartet.length) {
-                    throw new SpielerDbException("Datei zu klein für ein SQLite-Backup: " + datei);
+                    throw new SpielerDbException(I18n.get("spielerdb.db.fehler.backup_zu_klein", datei));
                 }
             }
             for (int i = 0; i < erwartet.length; i++) {
                 if (kopf[i] != erwartet[i]) {
-                    throw new SpielerDbException("Datei ist kein SQLite-Backup: " + datei);
+                    throw new SpielerDbException(I18n.get("spielerdb.db.fehler.kein_backup", datei));
                 }
             }
         } catch (IOException e) {
-            throw new SpielerDbException("SQLite-Backup nicht lesbar: " + datei, e);
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.backup_nicht_lesbar", datei), e);
         }
     }
 
@@ -364,7 +394,7 @@ public final class SpielerDbConnection implements AutoCloseable {
                 connection.close();
             }
         } catch (SQLException e) {
-            throw new SpielerDbException("DB-Close fehlgeschlagen", e);
+            throw new SpielerDbException(I18n.get("spielerdb.db.fehler.schliessen"), e);
         }
         if (INSTANCE == this) {
             INSTANCE = null;

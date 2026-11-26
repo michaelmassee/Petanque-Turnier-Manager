@@ -6,11 +6,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Deckt die JDBC-/Dateisystem-Logik von {@link SpielerDbConnection} ab.
@@ -24,8 +34,18 @@ class SpielerDbConnectionTest {
     @TempDir
     Path tempDir;
 
+    private final List<SpielerDbConnection> weitere = new ArrayList<>();
+
+    @BeforeEach
+    void deutscheMeldungen() {
+        I18n.initFuerTest(Locale.GERMAN);
+    }
+
     @AfterEach
     void resetInstance() throws Exception {
+        for (SpielerDbConnection verbindung : weitere) {
+            verbindung.close();
+        }
         setInstance(null);
     }
 
@@ -73,7 +93,7 @@ class SpielerDbConnectionTest {
     void restoreVon_ohneInitialisierteInstance_wirft() {
         assertThatThrownBy(() -> SpielerDbConnection.restoreVon(tempDir.resolve("quelle.sqlite3")))
                 .isInstanceOf(SpielerDbException.class)
-                .hasMessageContaining("nicht initialisiert");
+                .hasMessage(I18n.get("spielerdb.db.fehler.nicht_initialisiert"));
     }
 
     @Test
@@ -83,7 +103,7 @@ class SpielerDbConnectionTest {
 
         assertThatThrownBy(() -> SpielerDbConnection.restoreVon(tempDir.resolve("quelle.sqlite3")))
                 .isInstanceOf(SpielerDbException.class)
-                .hasMessageContaining("file-basierte");
+                .hasMessage(I18n.get("spielerdb.db.fehler.restore_nur_datei"));
     }
 
     @Test
@@ -131,6 +151,88 @@ class SpielerDbConnectionTest {
                     .anyMatch(name -> name.startsWith("aktuell.sqlite3.bak."));
         }
         assertThat(Files.exists(zielDatei)).isTrue();
+    }
+
+    /**
+     * Zweite Verbindung auf dieselbe Datei (z.&nbsp;B. ein zweiter LibreOffice-Prozess): Ihre bestätigten Änderungen
+     * stehen womöglich nur im WAL. Sicherung und Wiederherstellung dürfen sie weder verlieren noch die Verbindung von
+     * der wiederhergestellten DB abhängen.
+     */
+    @Test
+    void restoreVon_zweiteVerbindung_verliertKeineBestaetigtenAenderungen() throws Exception {
+        Path quelle = tempDir.resolve("quelle.sqlite3");
+        try (SpielerDbConnection q = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + quelle)) {
+            speichereSpieler(q.getConnection(), "Quelle");
+        }
+        Path zielDatei = tempDir.resolve("aktuell.sqlite3");
+        SpielerDbConnection eigene = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + zielDatei);
+        setInstance(eigene);
+        SpielerDbConnection zweite = zweiteVerbindung(zielDatei);
+        speichereSpieler(eigene.getConnection(), "Erster");
+        speichereSpieler(zweite.getConnection(), "Zweiter");
+
+        SpielerDbConnection.restoreVon(quelle);
+
+        Path sicherung;
+        try (Stream<Path> dateien = Files.list(tempDir)) {
+            sicherung = dateien.filter(d -> d.getFileName().toString().startsWith("aktuell.sqlite3.bak."))
+                    .findFirst().orElseThrow();
+        }
+        try (SpielerDbConnection gesichert = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + sicherung)) {
+            assertThat(vornamen(gesichert.getConnection())).containsExactlyInAnyOrder("Erster", "Zweiter");
+        }
+        assertThat(vornamen(eigene.getConnection())).containsExactly("Quelle");
+        assertThat(vornamen(zweite.getConnection())).as("zweite Verbindung sieht den wiederhergestellten Stand")
+                .containsExactly("Quelle");
+
+        speichereSpieler(zweite.getConnection(), "Danach");
+        assertThat(vornamen(eigene.getConnection())).containsExactlyInAnyOrder("Quelle", "Danach");
+    }
+
+    @Test
+    void restoreVon_eigeneDbDatei_wirftUndLaesstDbUnveraendert() throws Exception {
+        Path zielDatei = tempDir.resolve("aktuell.sqlite3");
+        SpielerDbConnection eigene = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + zielDatei);
+        setInstance(eigene);
+        speichereSpieler(eigene.getConnection(), "Erster");
+
+        assertThatThrownBy(() -> SpielerDbConnection.restoreVon(zielDatei))
+                .isInstanceOf(SpielerDbException.class)
+                .hasMessage(I18n.get("spielerdb.db.fehler.restore_eigene_datei", zielDatei));
+        assertThat(vornamen(eigene.getConnection())).containsExactly("Erster");
+    }
+
+    @Test
+    void istDbDateiOderBegleitdatei_erkenntDbUndWalDateien() throws Exception {
+        Path zielDatei = tempDir.resolve("aktuell.sqlite3");
+        try (SpielerDbConnection conn = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + zielDatei)) {
+            assertThat(conn.istDbDateiOderBegleitdatei(zielDatei)).isTrue();
+            assertThat(conn.istDbDateiOderBegleitdatei(tempDir.resolve("unter/../aktuell.sqlite3"))).isTrue();
+            assertThat(conn.istDbDateiOderBegleitdatei(tempDir.resolve("aktuell.sqlite3-wal"))).isTrue();
+            assertThat(conn.istDbDateiOderBegleitdatei(tempDir.resolve("backup.sqlite3"))).isFalse();
+        }
+    }
+
+    private SpielerDbConnection zweiteVerbindung(Path datei) throws SpielerDbException {
+        SpielerDbConnection verbindung = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + datei);
+        weitere.add(verbindung);
+        return verbindung;
+    }
+
+    private static void speichereSpieler(Connection conn, String vorname) throws SQLException {
+        try (Statement st = conn.createStatement()) {
+            st.executeUpdate("INSERT INTO SPIELER (VORNAME, NACHNAME) VALUES ('" + vorname + "', 'Test')");
+        }
+    }
+
+    private static List<String> vornamen(Connection conn) throws SQLException {
+        List<String> namen = new ArrayList<>();
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT VORNAME FROM SPIELER")) {
+            while (rs.next()) {
+                namen.add(rs.getString(1));
+            }
+        }
+        return namen;
     }
 
     private static void setInstance(SpielerDbConnection wert) throws Exception {
