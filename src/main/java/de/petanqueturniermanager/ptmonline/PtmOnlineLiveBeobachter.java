@@ -49,7 +49,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
-import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.ErgebnismeldungsStand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
@@ -621,12 +620,13 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             try {
                 // Kein Nachstellen hier: Ein Ersatzauftrag ginge sonst ungespeichert hinaus. Das erledigt die
                 // unmittelbar vorausgehende Erfassung im Dokument-Kontext.
-                return AuftragsVersand.sende(bestand.zuSenden(pausiert), bestand.mitVersandVermerk(client), ergebnis -> {
-                    bestand.gesendet(ergebnis);
-                    beachteAblehnung(ergebnis);
-                    beachteHuckepack(ergebnis.antwort().ergebnismeldungen());
-                    beachteTurnierStatus(ergebnis.antwort().turnierStatus());
-                });
+                return PtmOnlineAuftraege.sendeMitEndstandSperre(bestand.zuSenden(pausiert),
+                        bestand.mitVersandVermerk(client), ergebnis -> {
+                            bestand.gesendet(ergebnis);
+                            beachteAblehnung(ergebnis);
+                            beachteHuckepack(ergebnis.antwort().ergebnismeldungen());
+                            beachteTurnierStatus(ergebnis.antwort().turnierStatus());
+                        });
             } finally {
                 bestand.versandSperre().unlock();
             }

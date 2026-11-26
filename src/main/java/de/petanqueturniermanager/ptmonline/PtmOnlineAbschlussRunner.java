@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -47,9 +46,6 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
 
     private static final String CODE_KEINE_RANGLISTE = "ranking_missing";
     private static final String CODE_FREIGABELINK = "share_link_missing";
-    /** Aufträge des Endstands; wird einer abgelehnt, stünde online ein veralteter Stand. */
-    private static final Set<AuftragsArt> ENDSTAND = Set.of(AuftragsArt.RUNDE, AuftragsArt.RUNDE_LOESCHEN,
-            AuftragsArt.RANGLISTE, AuftragsArt.SPIELEINSTELLUNGEN);
 
     private final @Nullable Integer spieltagNr;
 
@@ -203,7 +199,7 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
     private void pruefeEndstand(PtmOnlineAuftraege.SynchronerVersand versand) throws GenerateException {
         pruefeStopp(versand);
         Optional<VersandErgebnis> abgelehnt = versand.anwendung().abgelehnteAuftraege().stream()
-                .filter(ergebnis -> ENDSTAND.contains(ergebnis.auftrag().art())).findFirst();
+                .filter(ergebnis -> PtmOnlineAuftraege.ENDSTAND.contains(ergebnis.auftrag().art())).findFirst();
         if (abgelehnt.isPresent()) {
             SyncAntwort antwort = abgelehnt.get().antwort();
             getLogger().warn("PTM-Online: Endstand abgelehnt ({}, HTTP {}), Turnier wird nicht abgeschlossen",

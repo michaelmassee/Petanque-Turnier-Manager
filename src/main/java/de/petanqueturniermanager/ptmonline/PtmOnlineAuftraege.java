@@ -17,8 +17,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +43,7 @@ import de.petanqueturniermanager.onlinesync.speicher.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsSender;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
@@ -91,6 +95,12 @@ public final class PtmOnlineAuftraege {
     private static final String BODY_ERWARTETE_REVISION = "expectedExecutionRevision";
     private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
     private static final int MAX_VERKNUEPFUNGEN_JE_AUFTRAG = 200;
+    /**
+     * Aufträge des Endstands. Ein Abschluss veröffentlicht den online angenommenen Stand; er geht daher nur nach
+     * angenommenen Endstand-Aufträgen hinaus (Endstand-Sperre).
+     */
+    static final Set<AuftragsArt> ENDSTAND = Set.of(AuftragsArt.RUNDE, AuftragsArt.RUNDE_LOESCHEN,
+            AuftragsArt.RANGLISTE, AuftragsArt.SPIELEINSTELLUNGEN);
 
     private PtmOnlineAuftraege() {}
 
@@ -583,6 +593,69 @@ public final class PtmOnlineAuftraege {
     }
 
     /**
+     * Endstand-Sperre, Teil 3: Lehnt PTM-Online einen Endstand-Auftrag ab, darf ein offener Abschluss nicht mehr
+     * hinausgehen – er veröffentlichte den alten Stand. Er wird verworfen und protokolliert; abgeschlossen wird dann
+     * nur noch ausdrücklich ({@link PtmOnlineAbschlussRunner}), das den Endstand erneut prüft.
+     */
+    private static void verwerfeAbschlussBeiAbgelehntemEndstand(AuftragsBestand bestand,
+            List<VersandErgebnis> ergebnisse) {
+        if (ergebnisse.stream().anyMatch(PtmOnlineAuftraege::istAbgelehnterEndstand)) {
+            List<SyncAuftrag> verworfen = bestand.verwerfe(art -> art == AuftragsArt.ABSCHLUSS,
+                    I18n.get("ptmonline.auftrag.verworfen.endstand_abgelehnt"));
+            if (!verworfen.isEmpty()) {
+                logger.warn("PTM-Online: Endstand abgelehnt, offener Abschluss verworfen");
+            }
+        }
+    }
+
+    private static boolean istAbgelehnterEndstand(VersandErgebnis ergebnis) {
+        return !ergebnis.angenommen() && ENDSTAND.contains(ergebnis.auftrag().art());
+    }
+
+    /**
+     * Endstand-Sperre, Teil 1: Steht ein offener Abschluss vor noch offenen Endstand-Aufträgen, ginge er vor ihnen
+     * hinaus. Die Reihenfolge der Zähler lässt sich beim Senden nicht tauschen (PTM-Online verlangt streng steigende
+     * Zähler); daher wird er mit gleichem Inhalt hinter sie neu angelegt. Nur im Dokument-Kontext unter der
+     * Versandsperre, vor dem Speichern.
+     */
+    static void abschlussHinterEndstand(AuftragsBestand bestand) {
+        List<SyncAuftrag> offen = bestand.zuSenden(false);
+        for (SyncAuftrag abschluss : offen) {
+            if (abschluss.art() == AuftragsArt.ABSCHLUSS && offen.stream().anyMatch(
+                    auftrag -> ENDSTAND.contains(auftrag.art()) && auftrag.zaehler() > abschluss.zaehler())) {
+                bestand.entferneUeberholte(auftrag -> auftrag.auftragsId().equals(abschluss.auftragsId()));
+                bestand.erzeuge(AuftragsArt.ABSCHLUSS, abschluss.methode(), abschluss.pfad(), abschluss.body(),
+                        abschluss.kontext());
+                logger.info("PTM-Online: offener Abschluss hinter den offenen Endstand gestellt");
+            }
+        }
+    }
+
+    /**
+     * Endstand-Sperre, Teil 2: Sendet die Aufträge in Zählerreihenfolge, einen Abschluss aber erst, wenn alle
+     * Endstand-Aufträge davor in diesem Versand angenommen wurden. Wurde einer abgelehnt, bleibt der Abschluss samt
+     * aller späteren Aufträge liegen; das anschließende Anwenden verwirft ihn ({@link #anwenden}).
+     */
+    static VersandStopp sendeMitEndstandSperre(List<SyncAuftrag> auftraege, AuftragsSender sender,
+            Consumer<VersandErgebnis> ergebnis) throws InterruptedException {
+        int abschluss = IntStream.range(0, auftraege.size())
+                .filter(i -> auftraege.get(i).art() == AuftragsArt.ABSCHLUSS).findFirst().orElse(auftraege.size());
+        AtomicBoolean endstandAbgelehnt = new AtomicBoolean();
+        VersandStopp stopp = AuftragsVersand.sende(auftraege.subList(0, abschluss), sender, gesendet -> {
+            endstandAbgelehnt.compareAndSet(false, istAbgelehnterEndstand(gesendet));
+            ergebnis.accept(gesendet);
+        });
+        if (stopp != VersandStopp.FERTIG || abschluss == auftraege.size()) {
+            return stopp;
+        }
+        if (endstandAbgelehnt.get()) {
+            logger.warn("PTM-Online: Endstand abgelehnt, Abschluss wird nicht gesendet");
+            return stopp;
+        }
+        return AuftragsVersand.sende(auftraege.subList(abschluss, auftraege.size()), sender, ergebnis);
+    }
+
+    /**
      * Nimmt einen gespeicherten, noch nicht gesendeten Abschluss (z.&nbsp;B. nach HTTP 503) aus dem Puffer, bis der
      * neue Endstand angenommen ist. Er hat einen kleineren Zähler als der neu erfasste Endstand und ginge sonst vor
      * ihm hinaus – auch wenn PTM-Online die Rangliste danach ablehnt. Hält die Versandsperre, damit kein
@@ -890,6 +963,7 @@ public final class PtmOnlineAuftraege {
         for (VersandErgebnis ergebnis : ergebnisse) {
             bestand.angewendet(ergebnis, ablehnungsGrund(ergebnis));
         }
+        verwerfeAbschlussBeiAbgelehntemEndstand(bestand, ergebnisse);
         // Das Dokument ist Master: Mit der übernommenen Online-Revision sendet der nächste Lauf den Stand erneut.
         ueberholt.forEach(ergebnis -> bestand.quittiere(ergebnis.auftrag().auftragsId()));
         stornosErneut.forEach((storno, revision) -> stornoErneut(bestand, storno, revision));
@@ -1077,8 +1151,9 @@ public final class PtmOnlineAuftraege {
         bestand.versandSperre().lockInterruptibly();
         try {
             timerNachstellen(bestand, Instant.now(), pausiert);
+            abschlussHinterEndstand(bestand);
             speichern(bestand, mapping);
-            stopp = AuftragsVersand.sende(bestand.zuSenden(pausiert), bestand.mitVersandVermerk(client),
+            stopp = sendeMitEndstandSperre(bestand.zuSenden(pausiert), bestand.mitVersandVermerk(client),
                     bestand::gesendet);
         } finally {
             bestand.versandSperre().unlock();
@@ -1087,14 +1162,16 @@ public final class PtmOnlineAuftraege {
     }
 
     /**
-     * Stellt liegengebliebene Timer-Aufträge nach ({@link #timerNachstellen}) und speichert den Bestand – im
-     * Dokument-Kontext der Erfassung, unmittelbar vor dem Hintergrundversand. Hält dabei die Versandsperre.
+     * Bereitet den Hintergrundversand vor: stellt liegengebliebene Timer-Aufträge nach ({@link #timerNachstellen}),
+     * stellt einen offenen Abschluss hinter den offenen Endstand ({@link #abschlussHinterEndstand}) und speichert den
+     * Bestand – im Dokument-Kontext der Erfassung, unmittelbar vor dem Versand. Hält dabei die Versandsperre.
      */
-    static void timerNachstellenUndSpeichern(AuftragsBestand bestand, PtmOnlineRegistrationMapping mapping,
+    static void vorHintergrundversandSpeichern(AuftragsBestand bestand, PtmOnlineRegistrationMapping mapping,
             boolean pausiert) throws GenerateException, InterruptedException {
         bestand.versandSperre().lockInterruptibly();
         try {
             timerNachstellen(bestand, Instant.now(), pausiert);
+            abschlussHinterEndstand(bestand);
             speichern(bestand, mapping);
         } finally {
             bestand.versandSperre().unlock();

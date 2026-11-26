@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 import de.petanqueturniermanager.timer.TimerState;
 import de.petanqueturniermanager.timer.TimerZustand;
@@ -423,6 +425,72 @@ class PtmOnlineAuftraegeTest {
         });
     }
 
+    /** Endstand-Sperre: Ein offener Abschluss vor offenem Endstand wird mit gleichem Inhalt dahinter gestellt. */
+    @Test
+    void offenerAbschlussWirdHinterDenOffenenEndstandGestellt() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag abschluss = PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, true);
+        SyncAuftrag rangliste = bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", "/api/rangliste", "{}", "{}");
+
+        PtmOnlineAuftraege.abschlussHinterEndstand(bestand);
+
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art)
+                .containsExactly(AuftragsArt.RANGLISTE, AuftragsArt.ABSCHLUSS);
+        SyncAuftrag neu = bestand.zuSenden(false).getLast();
+        assertThat(neu.zaehler()).isGreaterThan(rangliste.zaehler());
+        assertThat(neu.body()).isEqualTo(abschluss.body());
+        assertThat(neu.auftragsId()).isNotEqualTo(abschluss.auftragsId());
+    }
+
+    /** Endstand-Sperre: Lehnt PTM-Online die Rangliste ab, geht der Abschluss danach nicht mehr hinaus. */
+    @Test
+    void abschlussGehtNachAbgelehnterRanglisteNichtHinaus() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", "/api/rangliste", "{}", "{}");
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, true);
+        List<AuftragsArt> gesendet = new ArrayList<>();
+
+        VersandStopp stopp = PtmOnlineAuftraege.sendeMitEndstandSperre(bestand.zuSenden(false), auftrag -> {
+            gesendet.add(auftrag.art());
+            return auftrag.art() == AuftragsArt.RANGLISTE ? new SyncAntwort(400, "{}", false)
+                    : new SyncAntwort(200, "{}", false);
+        }, bestand::gesendet);
+
+        assertThat(stopp).isEqualTo(VersandStopp.FERTIG);
+        assertThat(gesendet).containsExactly(AuftragsArt.RANGLISTE);
+    }
+
+    @Test
+    void abschlussGehtNachAngenommenemEndstandHinaus() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", "/api/rangliste", "{}", "{}");
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, true);
+        List<AuftragsArt> gesendet = new ArrayList<>();
+
+        PtmOnlineAuftraege.sendeMitEndstandSperre(bestand.zuSenden(false), auftrag -> {
+            gesendet.add(auftrag.art());
+            return new SyncAntwort(200, "{}", false);
+        }, bestand::gesendet);
+
+        assertThat(gesendet).containsExactly(AuftragsArt.RANGLISTE, AuftragsArt.ABSCHLUSS);
+    }
+
+    /** Endstand-Sperre: Nach abgelehnter Rangliste verwirft das Anwenden den liegengebliebenen Abschluss. */
+    @Test
+    void abgelehnteRanglisteVerwirftDenOffenenAbschluss() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag rangliste = bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", "/api/rangliste", "{}", "{}");
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, true);
+        bestand.gesendet(new VersandErgebnis(rangliste, new SyncAntwort(400, "{}", false), false));
+
+        PtmOnlineAuftraege.anwenden(bestand, mock(PtmOnlineRegistrationMapping.class));
+
+        assertThat(bestand.zuSenden(false)).isEmpty();
+        assertThat(bestand.eintraege()).filteredOn(eintrag -> eintrag.auftrag().art() == AuftragsArt.ABSCHLUSS)
+                .singleElement().extracting(AuftragsBestand.Eintrag::zustand)
+                .isEqualTo(AuftragsBestand.Zustand.VERWORFEN);
+    }
+
     /**
      * Ein nach HTTP 503 gespeicherter Abschluss hat einen kleineren Zähler als der neue Endstand: Er darf erst nach
      * dessen Annahme wieder hinausgehen, sonst veröffentlicht er trotz abgelehnter Rangliste den alten Stand.
@@ -452,7 +520,7 @@ class PtmOnlineAuftraegeTest {
         SyncAuftrag liegengeblieben = bestand.zuSenden(false).getFirst();
         PtmOnlineRegistrationMapping mapping = mock(PtmOnlineRegistrationMapping.class);
 
-        PtmOnlineAuftraege.timerNachstellenUndSpeichern(bestand, mapping, false);
+        PtmOnlineAuftraege.vorHintergrundversandSpeichern(bestand, mapping, false);
 
         verify(mapping).schreibeAuftragsBestand(argThat(gespeichert -> gespeichert.zuSenden(false).stream()
                 .noneMatch(auftrag -> auftrag.auftragsId().equals(liegengeblieben.auftragsId()))));
