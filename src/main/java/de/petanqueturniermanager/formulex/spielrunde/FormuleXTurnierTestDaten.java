@@ -50,7 +50,7 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
     protected void doRun() throws GenerateException {
         if (!NewTestDatenValidator
                 .from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.FORMULEX)
-                .prefix(getLogPrefix()).validate()) {
+                .prefix(getLogPrefix()).validateFuerTestdaten()) {
             return;
         }
         getSheetHelper().removeAllSheetsExclude();

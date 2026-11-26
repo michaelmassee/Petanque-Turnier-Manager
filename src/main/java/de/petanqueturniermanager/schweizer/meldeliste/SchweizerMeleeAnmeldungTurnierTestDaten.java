@@ -42,7 +42,7 @@ public class SchweizerMeleeAnmeldungTurnierTestDaten extends SheetRunner impleme
 	@Override
 	public void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SCHWEIZER)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 		getSheetHelper().removeAllSheetsExclude();

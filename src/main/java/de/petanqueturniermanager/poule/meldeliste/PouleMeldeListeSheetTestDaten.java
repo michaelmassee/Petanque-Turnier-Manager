@@ -116,7 +116,7 @@ public class PouleMeldeListeSheetTestDaten extends SheetRunner implements ISheet
     @Override
     public void doRun() throws GenerateException {
         if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.POULE)
-                .prefix(getLogPrefix()).validate()) {
+                .prefix(getLogPrefix()).validateFuerTestdaten()) {
             return;
         }
 

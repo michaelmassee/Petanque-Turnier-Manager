@@ -90,7 +90,7 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
     @Override
     protected void doRun() throws GenerateException {
         if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.KASKADE)
-                .prefix(getLogPrefix()).validate()) {
+                .prefix(getLogPrefix()).validateFuerTestdaten()) {
             return;
         }
         generate(anzKaskaden, true);

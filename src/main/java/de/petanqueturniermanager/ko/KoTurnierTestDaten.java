@@ -70,7 +70,7 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.KO)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

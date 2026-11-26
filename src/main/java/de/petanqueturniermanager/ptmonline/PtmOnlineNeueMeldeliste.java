@@ -33,7 +33,7 @@ import de.petanqueturniermanager.onlinesync.speicher.PtmOnlineSyncSpeicher;
  * Sync“. Damit Online nicht weiter eine Bindung an ein Dokument hält, das sie nicht mehr kennt, wird vorher nach
  * Rückfrage ordentlich getrennt (bei Supermêlée jeder verbundene Spieltag). Ist PTM-Online nicht erreichbar, kann auf
  * Nachfrage nur lokal getrennt werden. Online-Turnier und Anmeldungen bleiben erhalten; nach erneutem Verbinden werden
- * die Anmeldungen wieder übernommen.
+ * die Anmeldungen wieder übernommen. Dasselbe gilt für das Erzeugen von Testdaten, das ebenfalls alle Blätter ersetzt.
  */
 public final class PtmOnlineNeueMeldeliste {
 
@@ -51,13 +51,30 @@ public final class PtmOnlineNeueMeldeliste {
     public static boolean vorbereiten(WorkingSpreadsheet ws, TurnierSystem neuesSystem, Formation neueFormation)
             throws GenerateException {
         PtmOnlineFormationsSperre.pruefeAenderung(ws, neuesSystem, neueFormation);
+        return trenneNachRueckfrage(ws, I18n.get("ptmonline.neue_meldeliste.frage.trennen"));
+    }
+
+    /**
+     * Trennt bestehende Verbindungen, bevor Testdaten alle Blätter ersetzen. Ohne Trennen bliebe die Verbindung in den
+     * Dokumenteigenschaften stehen, und der automatische Abgleich schickte die Testnamen als Anmeldungen in das
+     * Online-Turnier. Die Formationssperre greift hier nicht: Nach dem Trennen gehört das Dokument zu keinem
+     * Online-Turnier mehr. Läuft synchron im SheetRunner.
+     *
+     * @return {@code false}, wenn der Anwender abgebrochen hat – die Testdaten werden dann nicht erzeugt
+     * @throws GenerateException wenn PTM-Online das Trennen ablehnt
+     */
+    public static boolean vorbereitenFuerTestdaten(WorkingSpreadsheet ws) throws GenerateException {
+        return trenneNachRueckfrage(ws, I18n.get("ptmonline.testdaten.frage.trennen"));
+    }
+
+    private static boolean trenneNachRueckfrage(WorkingSpreadsheet ws, String frageText) throws GenerateException {
         List<Verbindung> verbindungen = verbindungen(ws);
         if (verbindungen.isEmpty()) {
             return true;
         }
         XComponentContext ctx = ws.getxContext();
-        if (!frage(ctx, MessageBoxTypeEnum.WARN_YES_NO, I18n.get("ptmonline.neue_meldeliste.frage.trennen"))) {
-            logger.info("PTM-Online: Neue Meldeliste abgebrochen, Verbindung bleibt bestehen");
+        if (!frage(ctx, MessageBoxTypeEnum.WARN_YES_NO, frageText)) {
+            logger.info("PTM-Online: Blätter werden nicht ersetzt, Verbindung bleibt bestehen");
             return false;
         }
         LibreOfficePtmOnlineSpeicher.Zugangsdaten config = new LibreOfficePtmOnlineSpeicher(ctx).laden();

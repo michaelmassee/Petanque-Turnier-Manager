@@ -116,7 +116,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.MAASTRICHTER)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

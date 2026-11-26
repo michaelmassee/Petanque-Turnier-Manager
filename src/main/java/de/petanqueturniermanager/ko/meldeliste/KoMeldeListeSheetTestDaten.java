@@ -76,7 +76,7 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.KO)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 		// Testdaten aus dem Menü mit Teamnamen, wie bei den übrigen Systemen

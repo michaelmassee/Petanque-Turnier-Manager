@@ -43,7 +43,7 @@ public class MaastrichterMeleeAnmeldungTurnierTestDaten extends SheetRunner impl
 	@Override
 	public void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.MAASTRICHTER)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 		getSheetHelper().removeAllSheetsExclude();

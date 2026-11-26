@@ -72,7 +72,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.MAASTRICHTER)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

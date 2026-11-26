@@ -70,7 +70,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SUPERMELEE)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

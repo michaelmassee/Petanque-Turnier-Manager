@@ -89,7 +89,7 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
     @Override
     protected void doRun() throws GenerateException {
         if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.POULE)
-                .prefix(getLogPrefix()).validate()) {
+                .prefix(getLogPrefix()).validateFuerTestdaten()) {
             return;
         }
 

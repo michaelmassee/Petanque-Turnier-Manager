@@ -118,7 +118,7 @@ public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements IS
 	@Override
 	public void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SCHWEIZER)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

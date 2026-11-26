@@ -41,7 +41,7 @@ public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 	protected void doRun() throws GenerateException {
 
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.LIGA)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

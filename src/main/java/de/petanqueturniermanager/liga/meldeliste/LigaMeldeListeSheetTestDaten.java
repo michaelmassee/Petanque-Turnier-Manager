@@ -54,7 +54,7 @@ public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet 
 	protected void doRun() throws GenerateException {
 
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.LIGA)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 

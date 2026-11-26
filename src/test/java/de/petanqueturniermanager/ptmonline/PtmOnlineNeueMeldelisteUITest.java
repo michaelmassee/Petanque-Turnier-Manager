@@ -20,12 +20,13 @@ import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 
 /**
- * „Neue Meldeliste“ in einem verbundenen Dokument trennt die Verbindung vorher. Ohne Zugangsdaten ist PTM-Online nicht
+ * „Neue Meldeliste“ und das Erzeugen von Testdaten trennen in einem verbundenen Dokument die Verbindung vorher. Ohne Zugangsdaten ist PTM-Online nicht
  * erreichbar; die übersprungenen Rückfragen bestätigen dann das nur lokale Trennen – der Test erreicht nie einen
  * Server.
  */
@@ -34,6 +35,7 @@ class PtmOnlineNeueMeldelisteUITest extends BaseCalcUITest {
     private static final String DOCUMENT_ID = "e9e9caec-e0b1-4fe0-8fee-a229279b9f73";
     private static final String LEASE_TOKEN = "01234567890123456789012345678901";
     private static final String LOKALE_UUID = "3b0b8a3e-6c52-4f2d-9d57-1c2c7c1d9e10";
+    private static final int ANZ_TESTDATEN_TEAMS = 4;
 
     @BeforeEach
     void ohneServerUndOhneRueckfragen() {
@@ -98,13 +100,34 @@ class PtmOnlineNeueMeldelisteUITest extends BaseCalcUITest {
     void gesperrteFormationBrichtVorDemTrennenAb() throws Exception {
         schweizerTurnier();
         PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null);
-        mapping.addMapping(LOKALE_UUID, "r1", 1,
-                "Hans Müller", "Bestätigt");
+        mapping.addMapping(LOKALE_UUID, "r1", 1, "Hans Müller", "Bestätigt");
 
         assertThatThrownBy(() -> PtmOnlineNeueMeldeliste.vorbereiten(wkingSpreadsheet, TurnierSystem.SCHWEIZER,
                 Formation.TRIPLETTE)).isInstanceOf(GenerateException.class);
 
         assertThat(mapping.getTournamentId()).as("Verbindung bleibt bestehen").contains("t1");
+    }
+
+    @Test
+    void testdatenTrennenDieVerbindungVorDemErsetzenDerBlaetter() throws Exception {
+        schweizerTurnier();
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null);
+
+        new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TESTDATEN_TEAMS).doRun();
+
+        assertThat(mapping.getTournamentId()).as("keine Testnamen als Online-Anmeldungen").isEmpty();
+        assertThat(PtmOnlineNeueMeldeliste.verbindungen(wkingSpreadsheet)).isEmpty();
+    }
+
+    @Test
+    void testdatenTrennenAuchBeiGesperrterFormation() throws Exception {
+        schweizerTurnier();
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null);
+        mapping.addMapping(LOKALE_UUID, "r1", 1, "Hans Müller", "Bestätigt");
+
+        assertThat(PtmOnlineNeueMeldeliste.vorbereitenFuerTestdaten(wkingSpreadsheet)).isTrue();
+
+        assertThat(mapping.getTournamentId()).isEmpty();
     }
 
     private void schweizerTurnier() throws GenerateException {

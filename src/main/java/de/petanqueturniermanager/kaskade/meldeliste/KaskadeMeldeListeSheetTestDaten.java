@@ -77,7 +77,7 @@ public class KaskadeMeldeListeSheetTestDaten extends SheetRunner implements IShe
     @Override
     protected void doRun() throws GenerateException {
         if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.KASKADE)
-                .prefix(getLogPrefix()).validate()) {
+                .prefix(getLogPrefix()).validateFuerTestdaten()) {
             return;
         }
         erstelleMeldelisteWithTestdaten();

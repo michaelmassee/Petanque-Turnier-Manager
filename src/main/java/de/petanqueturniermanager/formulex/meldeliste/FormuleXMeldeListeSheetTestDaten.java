@@ -74,7 +74,7 @@ public class FormuleXMeldeListeSheetTestDaten extends SheetRunner implements ISh
     @Override
     protected void doRun() throws GenerateException {
         if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.FORMULEX)
-                .prefix(getLogPrefix()).validate()) {
+                .prefix(getLogPrefix()).validateFuerTestdaten()) {
             return;
         }
         erstelleMeldelisteWithTestdaten();

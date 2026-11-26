@@ -34,7 +34,7 @@ public class TripTeteSpielPlanSheetTestDaten extends TripTeteSpielPlanSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.TRIPTETE)
-				.prefix(getLogPrefix()).validate()) {
+				.prefix(getLogPrefix()).validateFuerTestdaten()) {
 			return;
 		}
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
