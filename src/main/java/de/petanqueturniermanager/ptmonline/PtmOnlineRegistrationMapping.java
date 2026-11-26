@@ -444,14 +444,27 @@ public class PtmOnlineRegistrationMapping {
         return speicher.getConnectRequestId();
     }
 
-    public void setConnectRequestId(String connectRequestId) throws GenerateException {
-        speicher.setConnectRequestId(connectRequestId);
+    /** Siehe {@link PtmOnlineSyncSpeicher#merkeVerbindungsversuch}. */
+    public void merkeVerbindungsversuch(String syncDocumentId, String leaseToken, String connectRequestId,
+            String zielTurnierId) throws GenerateException {
+        speicher.merkeVerbindungsversuch(syncDocumentId, leaseToken, connectRequestId, zielTurnierId);
     }
 
-    /** Siehe {@link PtmOnlineSyncSpeicher#merkeVerbindungsversuch}. */
-    public void merkeVerbindungsversuch(String syncDocumentId, String leaseToken, String connectRequestId)
-            throws GenerateException {
-        speicher.merkeVerbindungsversuch(syncDocumentId, leaseToken, connectRequestId);
+    public Optional<String> getVerbindungsZiel() throws GenerateException {
+        return speicher.getVerbindungsZiel();
+    }
+
+    public void verbindungsversuchAbgeschlossen() throws GenerateException {
+        speicher.verbindungsversuchAbgeschlossen();
+    }
+
+    /** Siehe {@link PtmOnlineSyncSpeicher#getGeseheneOnlineIds}. */
+    public Map<String, String> getGeseheneOnlineIds() throws GenerateException {
+        return speicher.getGeseheneOnlineIds();
+    }
+
+    public void setGeseheneOnlineIds(Map<String, String> onlineIdProUuid) throws GenerateException {
+        speicher.setGeseheneOnlineIds(onlineIdProUuid);
     }
 
     /** Lokaler Turnierstart, dessen Übergang zu {@code running} online noch aussteht (KP-05). */

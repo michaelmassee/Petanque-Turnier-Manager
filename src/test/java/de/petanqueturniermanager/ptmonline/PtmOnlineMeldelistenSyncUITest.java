@@ -80,6 +80,24 @@ class PtmOnlineMeldelistenSyncUITest extends BaseCalcUITest {
         assertStorno("Ben", 1);
     }
 
+    /**
+     * Gelöscht, gespeichert und geschlossen vor dem nächsten Lauf: Nach dem Öffnen gibt es weder den flüchtigen
+     * Zustand noch die Nr-Zelle der Zeile. Die Online-ID kommt aus dem im Dokument gespeicherten Stand.
+     */
+    @Test
+    void loeschungWirdNachErneutemOeffnenErkannt() throws Exception {
+        ziel.entferneMeldung(zeilen.get("Ben"));
+        var nachOeffnen = new PtmOnlineMeldelistenSync();
+        var neuesMapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null);
+        var neueVerbindung = new PtmOnlineVerbindung(new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test",
+                "http://127.0.0.1", true), ziel, ziel, neuesMapping, "t1", null);
+
+        assertThat(nachOeffnen.erfasse(bestand, neueVerbindung)).isTrue();
+        assertThat(nachOeffnen.erfasse(bestand, neueVerbindung)).isFalse();
+
+        assertStorno("Ben", 1);
+    }
+
     @Test
     void leereZwischenzeileStorniertNurDieTatsaechlichGeloeschteMeldung() throws Exception {
         ziel.entferneMeldung(zeilen.get("Ben"));

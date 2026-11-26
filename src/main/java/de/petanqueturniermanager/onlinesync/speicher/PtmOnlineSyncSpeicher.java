@@ -62,12 +62,16 @@ public final class PtmOnlineSyncSpeicher {
         ONLINE_STATUS_ANZEIGE("OnlineStatusAnzeige"),
         SCHREIBZAEHLER("Schreibzaehler"),
         CONNECT_ID("ConnectId"),
+        /** Online-Turnier des laufenden Verbindungsversuchs, siehe {@link #merkeVerbindungsversuch}. */
+        CONNECT_ZIEL("ConnectZiel"),
         RUNNING_AUSSTEHEND("RunningAusstehend"),
         OFFLINE_BESTAETIGT("OfflineBestaetigt"),
         ABRUF_CURSOR("AbrufCursor"),
         LETZTER_RUNDENSTART("LetzterRundenstart"),
         AUFTRAEGE("Auftraege"),
-        ZUORDNUNGEN("Zuordnungen");
+        ZUORDNUNGEN("Zuordnungen"),
+        /** Zuletzt in der Meldeliste gesehene Online-ID je lokaler UUID (Löschungserkennung). */
+        MELDELISTE_GESEHEN("MeldelisteGesehen");
 
         private final String name;
 
@@ -128,6 +132,7 @@ public final class PtmOnlineSyncSpeicher {
         Optional<String> bisherigesTurnier = optional(lese(Feld.TURNIER_ID));
         if (bisherigesTurnier.isPresent() && !bisherigesTurnier.get().equals(turnier.id)) {
             leeren();
+            schreibe(Feld.MELDELISTE_GESEHEN, "");
         }
         schreibe(Feld.TURNIER_NAME, turnier.name);
         schreibe(Feld.TURNIER_ID, turnier.id);
@@ -303,19 +308,29 @@ public final class PtmOnlineSyncSpeicher {
         return optional(lese(Feld.CONNECT_ID));
     }
 
-    public void setConnectRequestId(@Nullable String connectRequestId) {
-        schreibe(Feld.CONNECT_ID, connectRequestId);
-    }
-
     /**
-     * Speichert Dokument-ID, Schreib-Lease und ID des Verbindungsversuchs, bevor er gesendet wird: Geht die Antwort
-     * nach erfolgreicher Bindung verloren, trägt die Wiederholung dieselben Werte und trifft die eigene Bindung statt
-     * einer fremden (P-22). Ohne Turnier-ID gilt die Verbindung weiterhin als nicht angelegt.
+     * Speichert Dokument-ID, Schreib-Lease, ID und Zielturnier des Verbindungsversuchs, bevor er gesendet wird: Geht
+     * die Antwort nach erfolgreicher Bindung verloren, trägt die Wiederholung dieselben Werte und trifft die eigene
+     * Bindung statt einer fremden (P-22). Wird stattdessen ein anderes Turnier gewählt, verrät das Zielturnier, welche
+     * Bindung womöglich noch freizugeben ist. Ohne Turnier-ID gilt die Verbindung weiterhin als nicht angelegt.
      */
-    public void merkeVerbindungsversuch(String syncDokumentId, String leaseToken, String connectRequestId) {
+    public void merkeVerbindungsversuch(String syncDokumentId, String leaseToken, String connectRequestId,
+            String zielTurnierId) {
         schreibe(Feld.SYNC_DOKUMENT, syncDokumentId);
         schreibe(Feld.SCHLUESSEL, leaseToken);
         schreibe(Feld.CONNECT_ID, connectRequestId);
+        schreibe(Feld.CONNECT_ZIEL, zielTurnierId);
+    }
+
+    /** Online-Turnier eines noch nicht abgeschlossenen Verbindungsversuchs; leer ohne. */
+    public Optional<String> getVerbindungsZiel() {
+        return optional(lese(Feld.CONNECT_ZIEL));
+    }
+
+    /** Der Verbindungsversuch ist im Dokument eingetragen; eine Wiederholung wäre ein neuer Versuch. */
+    public void verbindungsversuchAbgeschlossen() {
+        schreibe(Feld.CONNECT_ID, "");
+        schreibe(Feld.CONNECT_ZIEL, "");
     }
 
     /** Lokaler Startzeitpunkt, solange der Übergang zu {@code running} online noch nicht bestätigt ist (KP-05). */
@@ -410,6 +425,19 @@ public final class PtmOnlineSyncSpeicher {
     /** Entfernt die Zuordnungen der genannten lokalen UUIDs; sie gelten danach als nicht importiert. */
     public void entferneZuordnungen(Set<String> lokaleUuids) {
         speichere(zuordnungen().ohne(lokaleUuids));
+    }
+
+    /**
+     * Zuletzt in der Meldeliste gesehene Online-ID je lokaler UUID. Überdauert Speichern und Schließen: Eine vor dem
+     * nächsten Abgleich gelöschte Zeile nimmt ihre Online-ID (Nr-Zelle) mit, nur hier bleibt sie für die Stornierung.
+     */
+    public Map<String, String> getGeseheneOnlineIds() {
+        return PtmOnlineSyncJson.onlineIdsAusJson(lese(Feld.MELDELISTE_GESEHEN));
+    }
+
+    public void setGeseheneOnlineIds(Map<String, String> onlineIdProUuid) {
+        schreibe(Feld.MELDELISTE_GESEHEN,
+                onlineIdProUuid.isEmpty() ? "" : PtmOnlineSyncJson.onlineIdsAlsJson(onlineIdProUuid));
     }
 
     public void leeren() {

@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -117,23 +118,42 @@ class PtmOnlineSyncSpeicherUITest extends BaseCalcUITest {
     }
 
     /**
-     * Erstes Verbinden mit verlorener Antwort: Die vor dem Senden gemerkten IDs müssen ein neues Objekt (= nächster
-     * Versuch) überleben, ohne dass die Verbindung schon als angelegt gilt.
+     * Erstes Verbinden mit verlorener Antwort: Die vor dem Senden gemerkten IDs und das Zielturnier müssen ein neues
+     * Objekt (= nächster Versuch) überleben, ohne dass die Verbindung schon als angelegt gilt.
      */
     @Test
     void gemerkterVerbindungsversuchUeberlebtUndGiltNichtAlsVerbunden() throws Exception {
         String connectId = "5f0c2b7e-1d4a-4c39-9a51-2f7e8d6c4b10";
         wieImSheetRunner(() -> new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
-                .merkeVerbindungsversuch(DOCUMENT_ID, LEASE_TOKEN, connectId));
+                .merkeVerbindungsversuch(DOCUMENT_ID, LEASE_TOKEN, connectId, "tA"));
 
         PtmOnlineRegistrationMapping wiederholung = new PtmOnlineRegistrationMapping(wkingSpreadsheet,
                 TurnierSystem.SCHWEIZER, null);
         assertThat(wiederholung.getSyncDocumentId()).contains(DOCUMENT_ID);
         assertThat(wiederholung.getLeaseToken()).contains(LEASE_TOKEN);
         assertThat(wiederholung.getConnectRequestId()).contains(connectId);
+        assertThat(wiederholung.getVerbindungsZiel()).as("Ziel für eine spätere Freigabe").contains("tA");
         assertThat(wiederholung.getTournamentId()).as("ohne Server-Antwort kein Turnier eingetragen").isEmpty();
         assertThat(PtmOnlineSyncSpeicher.leseStatus(wkingSpreadsheet, null))
                 .isEqualTo(PtmOnlineSyncStatus.NICHT_VERBUNDEN);
+
+        wieImSheetRunner(wiederholung::verbindungsversuchAbgeschlossen);
+        assertThat(wiederholung.getConnectRequestId()).isEmpty();
+        assertThat(wiederholung.getVerbindungsZiel()).isEmpty();
+        assertThat(wiederholung.getSyncDocumentId()).as("die Identität bleibt").contains(DOCUMENT_ID);
+    }
+
+    @Test
+    void geseheneOnlineIdsUeberlebenNeueObjekteUndTurnierwechselLeertSie() throws Exception {
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+        wieImSheetRunner(() -> mapping.setGeseheneOnlineIds(Map.of(LOKALE_UUID, "online-1")));
+
+        assertThat(new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
+                .getGeseheneOnlineIds()).containsExactly(Map.entry(LOKALE_UUID, "online-1"));
+
+        verbinde(TurnierSystem.SCHWEIZER, null, "t2");
+        assertThat(new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
+                .getGeseheneOnlineIds()).as("gehören zum bisherigen Turnier").isEmpty();
     }
 
     @Test

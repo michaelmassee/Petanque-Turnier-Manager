@@ -6,7 +6,9 @@ package de.petanqueturniermanager.onlinesync.speicher;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -83,5 +85,23 @@ class PtmOnlineSyncJsonTest {
             assertThat(zuordnung.revision()).isEqualTo(1);
             assertThat(zuordnung.teamname()).isEmpty();
         });
+    }
+
+    @Test
+    void geseheneOnlineIdsBleibenMitReihenfolgeErhalten() {
+        Map<String, String> onlineIds = new LinkedHashMap<>();
+        onlineIds.put("u2", "online-2");
+        onlineIds.put("u1", "online-1");
+
+        assertThat(PtmOnlineSyncJson.onlineIdsAusJson(PtmOnlineSyncJson.onlineIdsAlsJson(onlineIds)))
+                .containsExactly(Map.entry("u2", "online-2"), Map.entry("u1", "online-1"));
+    }
+
+    @Test
+    void unvollstaendigeOnlineIdsWerdenUebersprungen() {
+        String json = "[{\"uuid\":\"u1\",\"onlineId\":\"online-1\"},{\"uuid\":\"u2\"},{\"onlineId\":\"x\"}]";
+
+        assertThat(PtmOnlineSyncJson.onlineIdsAusJson(json)).containsExactly(Map.entry("u1", "online-1"));
+        assertThat(PtmOnlineSyncJson.onlineIdsAusJson("")).isEmpty();
     }
 }

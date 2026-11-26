@@ -37,7 +37,9 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * <li>neue Meldungen mit lokaler UUID → Online-Anlage (bis zum Turnierstart; eine gleichnamige, noch nicht verknüpfte
  * Online-Anmeldung lehnt PTM-Online ab, die verknüpft der manuelle Abgleich),</li>
  * <li>gelöschte Meldungen → Online-Stornierung, erst wenn die Zeile in zwei aufeinanderfolgenden Läufen fehlt. Kehrt
- * die Zeile vor dem Versand zurück, wird die Stornierung zurückgenommen.</li>
+ * die Zeile vor dem Versand zurück, wird die Stornierung zurückgenommen. Die zuletzt gesehenen Online-IDs stehen im
+ * Dokument ({@link PtmOnlineRegistrationMapping#getGeseheneOnlineIds}): Wird eine Zeile gelöscht und das Dokument vor
+ * dem nächsten Lauf gespeichert und geschlossen, ist die Löschung nach dem Öffnen weiterhin erkennbar.</li>
  * </ul>
  * Die Setzposition meldet die Check-in-Erkennung ({@link PtmOnlineCheckin}) mit der Teilnahme. Die Gegenrichtung
  * (Online-Anmeldungen und -Änderungen ins Dokument) bleibt dem manuellen Abgleich vorbehalten; hier wird das Dokument
@@ -53,6 +55,8 @@ final class PtmOnlineMeldelistenSync {
     private final Map<String, Map<String, String>> gesehen = new HashMap<>();
     /** Zugeordnete Meldungen, deren Zeile im letzten Lauf fehlte, je Online-Turnier. */
     private final Map<String, Set<String>> fehlend = new HashMap<>();
+    /** Zuletzt ins Dokument geschriebener Stand von {@link #gesehen}, je Online-Turnier. */
+    private final Map<String, Map<String, String>> gespeichert = new HashMap<>();
 
     /**
      * Übernimmt die vorhandenen Zuordnungen eines manuellen Abgleichs oder Rundenstarts im Dokument-Kontext.
@@ -160,6 +164,7 @@ final class PtmOnlineMeldelistenSync {
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
         MeldelisteZiel ziel = verbindung.ziel();
         String tournamentId = verbindung.tournamentId();
+        ladeGesehene(tournamentId, mapping);
         List<LokaleMeldung> meldungen = leseMeldungen(ziel);
         boolean ruecknahmeErledigt = PtmOnlineAuftraege.stornosZuruecknehmen(bestand,
                 meldungen.stream().map(LokaleMeldung::uuid).collect(Collectors.toSet()));
@@ -181,7 +186,32 @@ final class PtmOnlineMeldelistenSync {
         if (!ergebnis.aktionen().isEmpty()) {
             logger.info("PTM-Online: {} Meldelisten-Änderungen als Auftrag erfasst", ergebnis.aktionen().size());
         }
+        speichereGesehene(tournamentId, mapping);
         return ergebnis.nachlauf() || !ruecknahmeErledigt;
+    }
+
+    /**
+     * Beim ersten Lauf je Online-Turnier: den im Dokument gespeicherten Stand übernehmen. Im Speicher schon bekannte
+     * Zuordnungen ({@link #uebernehmen}) haben Vorrang.
+     */
+    private void ladeGesehene(String tournamentId, PtmOnlineRegistrationMapping mapping) throws GenerateException {
+        if (gespeichert.containsKey(tournamentId)) {
+            return;
+        }
+        Map<String, String> imDokument = mapping.getGeseheneOnlineIds();
+        gespeichert.put(tournamentId, Map.copyOf(imDokument));
+        Map<String, String> bekannt = gesehen.computeIfAbsent(tournamentId, id -> new LinkedHashMap<>());
+        imDokument.forEach(bekannt::putIfAbsent);
+    }
+
+    /** Schreibt den gesehenen Stand nur bei Änderung – jeder Schreibvorgang markiert das Dokument als geändert. */
+    private void speichereGesehene(String tournamentId, PtmOnlineRegistrationMapping mapping)
+            throws GenerateException {
+        Map<String, String> aktuell = gesehen.getOrDefault(tournamentId, Map.of());
+        if (!aktuell.equals(gespeichert.get(tournamentId))) {
+            mapping.setGeseheneOnlineIds(aktuell);
+            gespeichert.put(tournamentId, Map.copyOf(aktuell));
+        }
     }
 
     private static void legeAn(AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel, Anlage anlage)

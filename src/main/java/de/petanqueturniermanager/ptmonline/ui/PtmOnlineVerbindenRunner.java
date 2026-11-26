@@ -37,6 +37,7 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineTrennung;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 
 /**
@@ -53,6 +54,9 @@ import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
  * PtmOnlineErsteinstellungen}), bevor der Live-Stand zum ersten Mal übertragen wird.
  */
 final class PtmOnlineVerbindenRunner extends SheetRunner {
+
+    private static final int HTTP_NICHT_GEFUNDEN = 404;
+    private static final int HTTP_KONFLIKT = 409;
 
     private final LibreOfficePtmOnlineSpeicher.Zugangsdaten config;
     private final OnlineTournamentDto turnier;
@@ -159,14 +163,10 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
     private Optional<SyncBindingDto> verbindeUndSpeichere(PtmOnlineRegistrationMapping mapping)
             throws GenerateException {
         LokaleBindung bisherige = LokaleBindung.aus(mapping);
-        // Das Dokument behält seine Identität: ein erneutes Verbinden läuft dann nicht gegen die eigene Bindung.
-        String syncDocumentId = bisherige.syncDocumentId().orElseGet(() -> UUID.randomUUID().toString());
-        String leaseToken = bisherige.leaseToken().orElseGet(() -> UUID.randomUUID().toString() + UUID.randomUUID());
-        // Stabile ID des Verbindungsversuchs: eine Wiederholung nach verlorener Antwort ist dieselbe Verbindung (P-22).
-        String connectRequestId = mapping.getConnectRequestId().orElseGet(() -> UUID.randomUUID().toString());
-        // Vor dem Senden speichern – auch beim ersten Verbinden, sonst erzeugte die Wiederholung neue IDs und liefe
-        // gegen die eigene, schon angelegte Bindung (document_bound).
-        mapping.merkeVerbindungsversuch(syncDocumentId, leaseToken, connectRequestId);
+        Verbindungsversuch versuch = bereiteVersuchVor(mapping, bisherige);
+        String syncDocumentId = versuch.syncDocumentId();
+        String leaseToken = versuch.leaseToken();
+        String connectRequestId = versuch.connectRequestId();
         TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
 
         Optional<SyncBindingDto> binding = serverAufruf(
@@ -183,7 +183,7 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
             } catch (GenerateException | RuntimeException e) {
                 // Lokal bleibt das bisherige Turnier eingetragen: Die neue Bindung darf online nicht verwaisen.
                 getLogger().info("PTM-Online: Turnierwechsel abgebrochen, gebe Turnier {} wieder frei", turnier.id);
-                gibNeueBindungFrei(syncDocumentId, leaseToken, binding.get().writeCounter());
+                gibBindungFrei(turnier.id, syncDocumentId, leaseToken, binding.get().writeCounter());
                 throw e;
             }
         }
@@ -192,15 +192,60 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
             mapping.verbinden(turnier, binding.get(), leaseToken);
             PtmOnlineAuftraege.neueBindung(getWorkingSpreadsheet(), mapping, spieltagNr,
                     binding.get().writeCounter(), anderesTurnier, I18n.get("ptmonline.auftrag.verworfen.neue_bindung"));
-            mapping.setConnectRequestId("");
+            mapping.verbindungsversuchAbgeschlossen();
         } catch (GenerateException | RuntimeException e) {
             getLogger().error("PTM-Online: Verbindung im Dokument speichern fehlgeschlagen", e);
             if (anderesTurnier) {
-                gibNeueBindungFrei(syncDocumentId, leaseToken, binding.get().writeCounter());
+                gibBindungFrei(turnier.id, syncDocumentId, leaseToken, binding.get().writeCounter());
             }
             throw new GenerateException(I18n.get("ptmonline.sheet.fehler.anlegen"));
         }
         return binding;
+    }
+
+    /**
+     * Legt Dokument-Identität und Verbindungs-ID fest und speichert sie samt Zielturnier vor dem Senden – auch beim
+     * ersten Verbinden. Sonst erzeugte eine Wiederholung nach verlorener Antwort neue IDs und liefe gegen die eigene,
+     * schon angelegte Bindung (document_bound). Galt ein unbeantworteter Versuch einem anderen Turnier, das lokal nicht
+     * eingetragen ist, ist es online womöglich trotzdem an dieses Dokument gebunden und wird zuerst freigegeben.
+     */
+    private Verbindungsversuch bereiteVersuchVor(PtmOnlineRegistrationMapping mapping, LokaleBindung bisherige)
+            throws GenerateException {
+        // Das Dokument behält seine Identität: ein erneutes Verbinden läuft dann nicht gegen die eigene Bindung.
+        String syncDocumentId = bisherige.syncDocumentId().orElseGet(() -> UUID.randomUUID().toString());
+        String leaseToken = bisherige.leaseToken().orElseGet(() -> UUID.randomUUID().toString() + UUID.randomUUID());
+        Optional<String> offenesZiel = mapping.getVerbindungsZiel();
+        boolean anderesZiel = offenesZiel.filter(ziel -> !ziel.equals(turnier.id)).isPresent();
+        if (anderesZiel && !offenesZiel.get().equals(bisherige.turnierId())) {
+            gibUnbestaetigteBindungFrei(offenesZiel.get(), syncDocumentId, leaseToken);
+        }
+        // Stabile ID des Verbindungsversuchs: eine Wiederholung nach verlorener Antwort ist dieselbe Verbindung (P-22).
+        String connectRequestId = anderesZiel ? UUID.randomUUID().toString()
+                : mapping.getConnectRequestId().orElseGet(() -> UUID.randomUUID().toString());
+        mapping.merkeVerbindungsversuch(syncDocumentId, leaseToken, connectRequestId, turnier.id);
+        return new Verbindungsversuch(syncDocumentId, leaseToken, connectRequestId);
+    }
+
+    /**
+     * Gibt das Ziel eines unbeantworteten Verbindungsversuchs frei. Eine dabei entstandene Bindung ist neu und steht
+     * daher auf Schreibzähler 0. Antwortet PTM-Online mit 409 (keine oder eine fremde Bindung) oder 404 (Turnier
+     * gelöscht), war das Turnier nicht an dieses Dokument gebunden. Ist PTM-Online nicht erreichbar oder scheitert die
+     * Freigabe anders, bricht das Verbinden ab: Das Ziel bleibt vermerkt und wird beim nächsten Versuch erneut
+     * freigegeben.
+     */
+    private void gibUnbestaetigteBindungFrei(String zielTurnierId, String syncDocumentId, String leaseToken)
+            throws GenerateException {
+        getLogger().info("PTM-Online: unbestätigter Verbindungsversuch zu Turnier {}, gebe es vorsorglich frei",
+                zielTurnierId);
+        SyncAntwort antwort = serverAufruf(() -> new TournamentSyncClient(config.baseUrl(), config.apiKey(),
+                syncDocumentId, leaseToken).sende(trennenAuftrag(zielTurnierId, 0)));
+        if (!antwort.erfolgreich() && antwort.status() != HTTP_NICHT_GEFUNDEN && antwort.status() != HTTP_KONFLIKT) {
+            getLogger().warn("PTM-Online: Freigabe von Turnier {} gescheitert (HTTP {})", zielTurnierId,
+                    antwort.status());
+            throw new GenerateException(
+                    PtmOnlineFehlerText.fuer(new PtmOnlineHttpException(antwort.status(), antwort.body())));
+        }
+        protokolliereFreigabe(zielTurnierId, antwort);
     }
 
     /**
@@ -311,19 +356,31 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
         }
     }
 
-    /** Gibt eine gerade erzeugte Bindung wieder frei, deren Blatt nicht angelegt werden konnte. */
-    private void gibNeueBindungFrei(String syncDocumentId, String leaseToken, long writeCounter)
+    /** Gibt eine gerade erzeugte Bindung wieder frei, die nicht im Dokument eingetragen wird. */
+    private void gibBindungFrei(String tournamentId, String syncDocumentId, String leaseToken, long writeCounter)
             throws GenerateException {
-        SyncAuftrag trennen = new SyncAuftrag(UUID.randomUUID().toString(), writeCounter + 1, AuftragsArt.TRENNEN,
-                "POST", TournamentSyncClient.trennenPfad(turnier.id), "{}", "{}");
         try {
-            new TournamentSyncClient(config.baseUrl(), config.apiKey(), syncDocumentId, leaseToken).sende(trennen);
-            getLogger().info("PTM-Online: Turnier {} freigegeben", turnier.id);
+            SyncAntwort antwort = new TournamentSyncClient(config.baseUrl(), config.apiKey(), syncDocumentId,
+                    leaseToken).sende(trennenAuftrag(tournamentId, writeCounter));
+            protokolliereFreigabe(tournamentId, antwort);
         } catch (IOException e) {
-            getLogger().warn("PTM-Online: Turnier {} konnte nicht freigegeben werden", turnier.id, e);
+            getLogger().warn("PTM-Online: Turnier {} konnte nicht freigegeben werden", tournamentId, e);
         } catch (InterruptedException e) {
-            getLogger().debug("PTM-Online: Freigabe von Turnier {} abgebrochen", turnier.id, e);
+            getLogger().debug("PTM-Online: Freigabe von Turnier {} abgebrochen", tournamentId, e);
             throw verarbeitungAbgebrochen();
+        }
+    }
+
+    private static SyncAuftrag trennenAuftrag(String tournamentId, long writeCounter) {
+        return new SyncAuftrag(UUID.randomUUID().toString(), writeCounter + 1, AuftragsArt.TRENNEN, "POST",
+                TournamentSyncClient.trennenPfad(tournamentId), "{}", "{}");
+    }
+
+    private void protokolliereFreigabe(String tournamentId, SyncAntwort antwort) {
+        if (antwort.erfolgreich()) {
+            getLogger().info("PTM-Online: Turnier {} freigegeben", tournamentId);
+        } else {
+            getLogger().warn("PTM-Online: Turnier {} nicht freigegeben (HTTP {})", tournamentId, antwort.status());
         }
     }
 
@@ -346,6 +403,10 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
     @FunctionalInterface
     private interface ServerAufruf<T> {
         T ausfuehren() throws IOException, InterruptedException;
+    }
+
+    /** Dokument-Identität und ID eines Verbindungsversuchs, vor dem Senden gespeichert. */
+    private record Verbindungsversuch(String syncDocumentId, String leaseToken, String connectRequestId) {
     }
 
     /** Bisherige Verbindung dieses Dokuments (bzw. Spieltags) laut Sync-Zustand, jeweils leer ohne. */

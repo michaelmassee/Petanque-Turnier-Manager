@@ -6,7 +6,9 @@ package de.petanqueturniermanager.onlinesync.speicher;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
@@ -53,6 +55,7 @@ final class PtmOnlineSyncJson {
     private static final String BESETZUNG = "besetzung";
     private static final String VERMERK = "vermerk";
     private static final String TEAMNAME = "teamname";
+    private static final String ONLINE_ID = "onlineId";
 
     private PtmOnlineSyncJson() {
     }
@@ -102,6 +105,33 @@ final class PtmOnlineSyncJson {
 
     static PtmOnlineZuordnungsTabelle zuordnungenAusJson(String json) {
         return new PtmOnlineZuordnungsTabelle(lese(json, PtmOnlineSyncJson::zuordnung));
+    }
+
+    /** Online-ID je lokaler UUID als Liste von Paaren; die Reihenfolge bleibt erhalten. */
+    static String onlineIdsAlsJson(Map<String, String> onlineIdProUuid) {
+        JsonArray liste = new JsonArray();
+        onlineIdProUuid.forEach((uuid, onlineId) -> {
+            JsonObject objekt = new JsonObject();
+            objekt.addProperty(UUID, uuid);
+            objekt.addProperty(ONLINE_ID, onlineId);
+            liste.add(objekt);
+        });
+        return liste.toString();
+    }
+
+    static Map<String, String> onlineIdsAusJson(String json) {
+        Map<String, String> ergebnis = new LinkedHashMap<>();
+        lese(json, PtmOnlineSyncJson::onlineIdPaar).forEach(paar -> ergebnis.putIfAbsent(paar.getKey(), paar.getValue()));
+        return ergebnis;
+    }
+
+    private static Map.Entry<String, String> onlineIdPaar(JsonObject objekt) {
+        String uuid = text(objekt, UUID);
+        String onlineId = text(objekt, ONLINE_ID);
+        if (uuid.isBlank() || onlineId.isBlank()) {
+            throw new IllegalArgumentException("Online-ID-Zuordnung ohne UUID oder Online-ID");
+        }
+        return Map.entry(uuid, onlineId);
     }
 
     private static AuftragsBestand.Eintrag auftrag(JsonObject objekt) {
