@@ -122,6 +122,41 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
     private void verbinde() throws GenerateException {
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(getWorkingSpreadsheet(),
                 getTurnierSystem(), spieltagNr);
+        Optional<SyncBindingDto> binding;
+        try {
+            binding = PtmOnlineAuftraege.unterVersandsperre(getWorkingSpreadsheet(), mapping, spieltagNr,
+                    () -> verbindeUndSpeichere(mapping));
+        } catch (InterruptedException e) {
+            getLogger().debug("PTM-Online: Verbinden beim Warten auf einen laufenden Versand abgebrochen", e);
+            throw verarbeitungAbgebrochen();
+        }
+        if (binding.isEmpty()) {
+            return;
+        }
+        frageErsteinstellungen();
+        PtmOnlineLiveBeobachter.bindungErneuert(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), turnier.id);
+        verbunden = true;
+        if (anlage.isPresent()) {
+            // Der anschließende Abgleich meldet das Ergebnis; eine zweite Box davor wäre nur ein Klick mehr.
+            processBox().info(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name));
+            return;
+        }
+        MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
+                .caption(I18n.get("ptmonline.menu.toplevel"))
+                .message(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name))
+                .show();
+    }
+
+    /**
+     * Verbindet online und trägt die neue Bindung im Dokument ein. Läuft unter der Versandsperre ({@link
+     * PtmOnlineAuftraege#unterVersandsperre}): Ein Hintergrundversand der alten Bindung zwischen Server-Antwort und
+     * {@link PtmOnlineAuftraege#neueBindung} bekäme sonst denselben Schreibzähler wie der nächste neue Auftrag. Ein
+     * laufender Hintergrundversand wartet dafür auch während der Rückfragen zu Übernahme und Wiederherstellung.
+     *
+     * @return leer, wenn der Nutzer abgebrochen hat
+     */
+    private Optional<SyncBindingDto> verbindeUndSpeichere(PtmOnlineRegistrationMapping mapping)
+            throws GenerateException {
         LokaleBindung bisherige = LokaleBindung.aus(mapping);
         // Das Dokument behält seine Identität: ein erneutes Verbinden läuft dann nicht gegen die eigene Bindung.
         String syncDocumentId = bisherige.syncDocumentId().orElseGet(() -> UUID.randomUUID().toString());
@@ -137,37 +172,27 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
                 () -> verbindeOderUebernehme(client, syncDocumentId, leaseToken, connectRequestId));
         if (binding.isEmpty()) {
             getLogger().info("PTM-Online: Verbinden von Turnier {} vom Nutzer abgebrochen", turnier.id);
-            return;
+            return binding;
         }
         getLogger().info("PTM-Online: Turnier {} verbunden (Server-Aufruf ok)", turnier.id);
 
         if (bisherige.istVerbundenMitAnderem(turnier.id)) {
             gibBisherigesTurnierFrei(mapping);
         }
+        boolean anderesTurnier = !turnier.id.equals(bisherige.turnierId());
         try {
             mapping.verbinden(turnier, binding.get(), leaseToken);
             PtmOnlineAuftraege.neueBindung(getWorkingSpreadsheet(), mapping, spieltagNr,
-                    binding.get().writeCounter(), I18n.get("ptmonline.auftrag.verworfen.neue_bindung"));
+                    binding.get().writeCounter(), anderesTurnier, I18n.get("ptmonline.auftrag.verworfen.neue_bindung"));
             mapping.setConnectRequestId("");
         } catch (GenerateException | RuntimeException e) {
             getLogger().error("PTM-Online: Verbindung im Dokument speichern fehlgeschlagen", e);
-            if (!turnier.id.equals(bisherige.turnierId())) {
+            if (anderesTurnier) {
                 gibNeueBindungFrei(syncDocumentId, leaseToken, binding.get().writeCounter());
             }
             throw new GenerateException(I18n.get("ptmonline.sheet.fehler.anlegen"));
         }
-        frageErsteinstellungen();
-        PtmOnlineLiveBeobachter.bindungErneuert(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), turnier.id);
-        verbunden = true;
-        if (anlage.isPresent()) {
-            // Der anschließende Abgleich meldet das Ergebnis; eine zweite Box davor wäre nur ein Klick mehr.
-            processBox().info(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name));
-            return;
-        }
-        MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
-                .caption(I18n.get("ptmonline.menu.toplevel"))
-                .message(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name))
-                .show();
+        return binding;
     }
 
     /**

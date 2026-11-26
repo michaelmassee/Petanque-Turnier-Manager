@@ -126,7 +126,7 @@ class AuftragsBestandTest {
         erzeuge(bestand, AuftragsArt.TEILNAHME);
         erzeuge(bestand, AuftragsArt.TEILNAHME);
 
-        bestand.neueBindung(0, "neue Bindung");
+        bestand.neueBindung(0, "neue Bindung", false);
 
         assertThat(bestand.zuSenden(false)).isEmpty();
         assertThat(erzeuge(bestand, AuftragsArt.TEILNAHME).zaehler()).isEqualTo(1);

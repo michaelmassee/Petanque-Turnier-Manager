@@ -57,6 +57,36 @@ class PtmOnlineAuftraegeTest {
         assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).isEmpty();
     }
 
+    @Test
+    void neueBindungAnAnderesTurnierGibtAbgelehnteMeldungenFrei() {
+        AuftragsBestand bestand = mitAbgelehnterAnlage("u1");
+
+        bestand.neueBindung(0, "neue Bindung", true);
+
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).isEmpty();
+        assertThat(bestand.eintraege()).extracting(AuftragsBestand.Eintrag::zustand)
+                .containsExactly(AuftragsBestand.Zustand.VERWORFEN);
+    }
+
+    @Test
+    void erneuteBindungAnDasselbeTurnierBehaeltUngeklaerteAblehnungen() {
+        AuftragsBestand bestand = mitAbgelehnterAnlage("u1");
+
+        bestand.neueBindung(0, "neue Bindung", false);
+
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u1");
+    }
+
+    private static AuftragsBestand mitAbgelehnterAnlage(String uuid) {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag auftrag = bestand.erzeuge(AuftragsArt.ANMELDUNG_ANLEGEN, "PUT", "/test", "{}",
+                "{\"lokaleUuid\":\"" + uuid + "\"}");
+        VersandErgebnis abgelehnt = new VersandErgebnis(auftrag, new SyncAntwort(409, "{}", false), false);
+        bestand.gesendet(abgelehnt);
+        bestand.angewendet(abgelehnt, "possible_same_registration");
+        return bestand;
+    }
+
     private static PtmOnlineStatusAuftrag.Eintrag aktiv(String uuid) {
         return new PtmOnlineStatusAuftrag.Eintrag(uuid, OnlineTeilnahme.AKTIV, null, null);
     }

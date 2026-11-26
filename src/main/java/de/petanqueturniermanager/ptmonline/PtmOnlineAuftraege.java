@@ -114,14 +114,42 @@ public final class PtmOnlineAuftraege {
     }
 
     /**
-     * Neue Bindung (Verbinden oder Übernehmen): offene Aufträge der alten Bindung werden verworfen, der Zähler
-     * übernimmt den Stand des Servers. Speichert sofort.
+     * Neue Bindung (Verbinden oder Übernehmen): offene Aufträge der alten Bindung werden verworfen, beim Wechsel des
+     * Online-Turniers auch ihre ungeklärten Ablehnungen; der Zähler übernimmt den Stand des Servers. Speichert sofort.
+     * Nur innerhalb von {@link #unterVersandsperre} aufrufen.
      */
     public static void neueBindung(WorkingSpreadsheet ws, PtmOnlineRegistrationMapping mapping,
-            @Nullable Integer spieltagNr, long serverZaehler, String grund) throws GenerateException {
+            @Nullable Integer spieltagNr, long serverZaehler, boolean anderesTurnier, String grund)
+            throws GenerateException {
         AuftragsBestand bestand = bestand(ws, mapping, spieltagNr);
-        bestand.neueBindung(serverZaehler, grund);
+        bestand.neueBindung(serverZaehler, grund, anderesTurnier);
         mapping.schreibeAuftragsBestand(bestand);
+    }
+
+    /**
+     * Führt {@code aktion} unter der Versandsperre der Bindung aus. Für das (Wieder-)Verbinden: Zwischen der Antwort
+     * des Servers (Schreibzähler zurückgesetzt) und {@link #neueBindung} darf kein Auftrag der alten Bindung
+     * hinausgehen – er bekäme online denselben Zählerstand wie der nächste neue Auftrag, und PTM-Online lehnte diesen
+     * dann als Dokumentkopie ab. Die Sperre ist wiedereintrittsfähig; synchrones Senden innerhalb der Aktion
+     * ({@link #sendeAllein}) ist möglich.
+     *
+     * @throws InterruptedException wenn das Warten auf einen laufenden Versand abgebrochen wird
+     */
+    public static <T> T unterVersandsperre(WorkingSpreadsheet ws, PtmOnlineRegistrationMapping mapping,
+            @Nullable Integer spieltagNr, AktionUnterSperre<T> aktion) throws GenerateException, InterruptedException {
+        AuftragsBestand bestand = bestand(ws, mapping, spieltagNr);
+        bestand.versandSperre().lockInterruptibly();
+        try {
+            return aktion.ausfuehren();
+        } finally {
+            bestand.versandSperre().unlock();
+        }
+    }
+
+    /** Aktion für {@link #unterVersandsperre}. */
+    @FunctionalInterface
+    public interface AktionUnterSperre<T> {
+        T ausfuehren() throws GenerateException, InterruptedException;
     }
 
     /** Alle geladenen Bestände eines Dokuments, je Bindung (Supermêlée: je Spieltag) einer. */

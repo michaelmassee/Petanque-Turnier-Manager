@@ -292,10 +292,15 @@ public final class AuftragsBestand {
 
     /**
      * Neue Bindung (Verbinden oder Übernehmen): PTM-Online hat den Schreibzähler zurückgesetzt. Offene Aufträge der
-     * alten Bindung werden verworfen, der Zähler übernimmt den Stand des Servers.
+     * alten Bindung werden verworfen, der Zähler übernimmt den Stand des Servers. Aufrufer halten die
+     * {@link #versandSperre()}, damit kein Versand der alten Bindung mehr hinausgeht.
+     *
+     * @param anderesTurnier ob die neue Bindung zu einem anderen Online-Turnier gehört: Dann werden auch ungeklärte
+     *                       Ablehnungen verworfen – sie betreffen das alte Turnier und sperrten sonst dieselben
+     *                       lokalen Meldungen im neuen ({@link AuftragsArt#sperrtMeldungBisZurKlaerung()}).
      */
-    public synchronized void neueBindung(long serverZaehler, String grund) {
-        eintraege.replaceAll(eintrag -> eintrag.zustand() == Zustand.OFFEN
+    public synchronized void neueBindung(long serverZaehler, String grund, boolean anderesTurnier) {
+        eintraege.replaceAll(eintrag -> gehoertZurAltenBindung(eintrag, anderesTurnier)
                 ? new Eintrag(eintrag.auftrag(), Zustand.VERWORFEN, grund, Instant.now())
                 : eintrag);
         ergebnisse.clear();
@@ -375,6 +380,10 @@ public final class AuftragsBestand {
                 protokoll--;
             }
         }
+    }
+
+    private static boolean gehoertZurAltenBindung(Eintrag eintrag, boolean anderesTurnier) {
+        return eintrag.zustand() == Zustand.OFFEN || (anderesTurnier && eintrag.zustand() == Zustand.ABGELEHNT);
     }
 
     private static boolean bleibtStehen(Eintrag eintrag) {
