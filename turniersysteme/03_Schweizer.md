@@ -207,8 +207,9 @@ aussteigen und später wieder einsteigen.
   Möglichkeit nicht erneut gelost.
 - **Leere Aktiv-Zelle nach gespielten Partien:** Wurde die Zelle eines Teams geleert, statt 2 einzutragen, wird es
   wie ausgestiegen gewertet: Seine Ergebnisse zählen weiter, es bleibt in der Rangliste und wird nicht mehr gelost.
-  Beim Auslosen der nächsten Runde weist das Plugin darauf hin und bittet, 2 einzutragen. Teams mit leerer Zelle
-  ohne Partie erscheinen nicht in der Rangliste.
+  Beim Auslosen der nächsten Runde trägt das Plugin für diese Teams automatisch 2 ein (Vermerk in der
+  Fortschrittsanzeige), damit Meldeliste und PTM-Online den Ausstieg zeigen. Teams mit leerer Zelle ohne Partie
+  erscheinen nicht in der Rangliste.
 - Nur gelöschte Meldungen (Zeile aus der Meldeliste entfernt) fallen aus der Auswertung heraus.
 
 ---

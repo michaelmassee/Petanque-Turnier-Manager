@@ -67,6 +67,7 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
         setSpielRundeNrInSheet(aktuelleSpielrunde);
         boolean istErsteRunde = getXSpreadSheet() == null && aktuelleSpielrunde.getNr() == 1;
 
+        leereAktivZellenAlsAusgestiegenEintragen(aktuelleSpielrunde.getNr());
         getMeldeListe().vollstaendigAktualisieren();
         TeamMeldungen aktivUndAusgesetztVorSync = getMeldeListe().getAktiveUndAusgesetztMeldungen();
         Set<Integer> aktiveNrVorSync = PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen());
@@ -123,7 +124,6 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
         getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrundeNr));
 
         SpielrundenAkkumulation akkumulierung = gespieltenRundenEinlesen(aktiveMeldungen, 1, neueSpielrundeNr - 1);
-        hinweisAufLeereAktivZellen(akkumulierung);
 
         boolean erstellt = neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrundeNr), akkumulierung);
         if (erstellt) {

@@ -199,7 +199,7 @@ public class SchweizerAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 	/**
 	 * Fehlbedienung: Die Aktiv-Zelle des besiegten Teams wird nach gespielter Runde geleert statt auf 2 gesetzt. Es
 	 * wird wie ein Ausstieg gewertet: Der Sieger behält seinen Sieg in Auslosung und Rangliste, das besiegte Team
-	 * bleibt in der Rangliste stehen und wird als Team ohne Aktiv-Wert mit Partie gemeldet.
+	 * bleibt in der Rangliste stehen, und beim Auslosen der nächsten Runde wird 2 eingetragen.
 	 */
 	@Test
 	public void leereAktivZelleNachPartie_wirdWieAusstiegGewertet() throws GenerateException {
@@ -229,6 +229,20 @@ public class SchweizerAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 				.mapToInt(zeile -> zeile.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0)).sum();
 		assertThat(siegeSumme).as("Jede Partie von Runde 1 vergibt genau einen Sieg")
 				.isEqualTo(zaehleGueltigeZeilen(leseSpielpaarungWerte(SheetNamen.spielrunde(1))));
+
+		testDaten.naechsteSpielrunde.doRun();
+		assertThat(aktivWert(besiegter)).as("Auslosung trägt 2 ein")
+				.isEqualTo(SchweizerMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
+		assertThat(aktivWert(sieger)).as("Andere Teams bleiben unverändert")
+				.isEqualTo(SchweizerMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL);
+		assertThat(leseSpielpaarungWerte(SheetNamen.spielrunde(2)))
+				.as("Team wird nicht mehr gelost").noneMatch(zeile -> zeile.subList(0, 2).contains(besiegter));
+	}
+
+	private int aktivWert(int teamNr) throws GenerateException {
+		SchweizerMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+		return sheetHlp.getIntFromCell(meldeliste.getXSpreadSheet(),
+				Position.from(meldeliste.getAktivSpalte(), meldeliste.getSpielerZeileNr(teamNr)));
 	}
 
 	private void leereAktivZelle(int teamNr) throws GenerateException {

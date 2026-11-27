@@ -55,7 +55,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 
 		SchweizerAuswertung auswertung = gespieltenRundenEinlesen(aktiveMeldungen, 1,
 				aktuelleSpielrunde.getNr() - 1);
-		hinweisAufLeereAktivZellen(auswertung);
+		leereAktivZellenAlsAusgestiegenEintragen(auswertung);
 
 		// Teams nach Rangliste sortieren (ab Runde 2)
 		TeamMeldungen meldungenFuerAuslosung = (aktuelleSpielrunde.getNr() > 1)

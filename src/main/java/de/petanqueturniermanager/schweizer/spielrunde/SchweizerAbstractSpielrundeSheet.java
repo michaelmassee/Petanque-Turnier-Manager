@@ -354,11 +354,15 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	/**
-	 * Meldet Teams, die bereits gespielt haben, deren Aktiv-Zelle aber leer ist. Sie werden wie ausgestiegen gewertet.
+	 * Trägt für Teams, die bereits gespielt haben, deren Aktiv-Zelle aber leer ist, „ausgestiegen“ ein (Wert 2). Die
+	 * Wertung behandelt sie ohnehin so; der Eintrag macht es in der Meldeliste und bei PTM-Online sichtbar.
 	 */
-	protected void hinweisAufLeereAktivZellen(SchweizerAuswertung auswertung) throws GenerateException {
-		WertungsTeilnehmer.hinweisFallsNoetig(getWorkingSpreadsheet(), WertungsTeilnehmer.ohneAktivWertMitPartie(
-				getMeldeListe().getAktiveUndAusgesetztMeldungen(), auswertung.teamsMitPartie()));
+	protected void leereAktivZellenAlsAusgestiegenEintragen(SchweizerAuswertung auswertung)
+			throws GenerateException {
+		SchweizerMeldeListeSheetUpdate meldeliste = getMeldeListe();
+		WertungsTeilnehmer.alsAusgestiegenEintragen(meldeliste, meldeliste.getAktivSpalte(),
+				SchweizerMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN, WertungsTeilnehmer.ohneAktivWertMitPartie(
+						meldeliste.getAktiveUndAusgesetztMeldungen(), auswertung.teamsMitPartie()));
 	}
 
 	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {

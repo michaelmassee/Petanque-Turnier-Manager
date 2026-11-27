@@ -29,6 +29,7 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
         SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
         processBoxinfo("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr());
         setSpielRundeNrInSheet(aktuelleSpielrunde);
+        leereAktivZellenAlsAusgestiegenEintragen(aktuelleSpielrunde.getNr() - 1);
         getMeldeListe().upDateSheet();
         TeamMeldungen aktivUndAusgesetztVorSync = getMeldeListe().getAktiveUndAusgesetztMeldungen();
         Set<Integer> aktiveNrVorSync = PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen());
@@ -49,7 +50,6 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
 
         SpielrundenAkkumulation akkumulierung = gespieltenRundenEinlesen(aktiveMeldungen, 1,
                 aktuelleSpielrunde.getNr() - 1);
-        hinweisAufLeereAktivZellen(akkumulierung);
 
         neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde, akkumulierung);
 
