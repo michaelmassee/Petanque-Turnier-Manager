@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Ergebnis des Einlesens der Spielrunden eines Schweizer-basierten Turniers.
  *
- * @param ergebnisse         Auswertungsdaten je aktivem Team
+ * @param ergebnisse         Auswertungsdaten je Team mit Historie (bei der Auslosung inkl. ausgestiegener Teams,
+ *                           damit Buchholz/Feinbuchholz der aktiven Gegner vollständig bleiben)
  * @param anzGewerteteRunden Anzahl gewerteter Runden mit mindestens einem eingetragenen Ergebnis (Basis für den
  *                           Freilos-Buchholz, siehe {@link FreilosBuchholz})
  */

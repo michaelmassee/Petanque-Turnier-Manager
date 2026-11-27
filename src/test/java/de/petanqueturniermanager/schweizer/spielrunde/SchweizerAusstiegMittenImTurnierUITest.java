@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -18,6 +22,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
@@ -49,14 +54,7 @@ public class SchweizerAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 		String runde1SheetName = SheetNamen.spielrunde(1);
 		List<List<Integer>> runde1VorAusstieg = leseSpielpaarungWerte(runde1SheetName);
 
-		// Team als "ausgestiegen" markieren
-		SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet);
-		int zeile = meldeliste.getSpielerZeileNr(AUSGESTIEGENES_TEAM_NR);
-		assertThat(zeile).as("Team %d muss in der Meldeliste gefunden werden", AUSGESTIEGENES_TEAM_NR)
-				.isGreaterThan(0);
-		sheetHlp.setNumberValueInCell(NumberCellValue
-				.from(meldeliste.getXSpreadSheet(), Position.from(meldeliste.getAktivSpalte(), zeile))
-				.setValue(SchweizerMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN));
+		setzeAktivWert(AUSGESTIEGENES_TEAM_NR, SchweizerMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
 
 		// Runde 2 erzeugen und mit Ergebnissen füllen
 		testDaten.naechsteSpielrunde.doRun();
@@ -136,6 +134,98 @@ public class SchweizerAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 		assertThat(gepaarteNrn).as("Alle 15 weiterhin aktiven Teams müssen in Runde 2 gepaart sein")
 				.hasSize(ANZ_TEAMS - 1)
 				.doesNotContain(AUSGESTIEGENES_TEAM_NR);
+	}
+
+	/**
+	 * Regression: Steigt der in Runde 1 besiegte Gegner aus, behält der Sieger seinen Sieg auch in der Auslosung
+	 * (nicht nur in der Rangliste). Mit 15 aktiven Teams bilden die 8 Runde-1-Sieger eine gerade Sieggruppe; der
+	 * Sieger muss daher in Runde 2 gegen einen anderen Runde-1-Sieger spielen und darf kein Freilos bekommen.
+	 */
+	@Test
+	public void ausstiegDesBesiegten_siegerBehaeltSiegInAuslosung() throws GenerateException {
+		testDaten.generate(1, false);
+		List<List<Integer>> runde1 = leseSpielpaarungWerte(SheetNamen.spielrunde(1));
+		List<Integer> begegnung = ersteBegegnungMitGegner(runde1);
+		int sieger = siegerVon(begegnung);
+		int besiegter = besiegterVon(begegnung);
+		Set<Integer> rundeEinsSieger = runde1.stream().filter(this::istBegegnung).map(this::siegerVon)
+				.collect(Collectors.toSet());
+
+		setzeAktivWert(besiegter, SchweizerMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
+
+		SchweizerAuswertung auswertung = testDaten.naechsteSpielrunde
+				.gespieltenRundenEinlesen(neueMeldeliste().getAktiveMeldungen(), 1, 1);
+		SchweizerTeamErgebnis siegerErgebnis = ergebnisVon(auswertung, sieger);
+		assertThat(siegerErgebnis.siege()).as("Sieg gegen das ausgestiegene Team zählt in der Auslosung").isEqualTo(1);
+		assertThat(siegerErgebnis.punktedifferenz()).as("Punktedifferenz gegen das ausgestiegene Team")
+				.isEqualTo(Math.abs(begegnung.get(2) - begegnung.get(3)));
+		assertThat(siegerErgebnis.gegnerNrn()).as("Gegnerhistorie (Buchholz)").contains(besiegter);
+		assertThat(auswertung.ergebnisse()).as("Ausgestiegenes Team bleibt für Buchholz/Feinbuchholz erhalten")
+				.extracting(SchweizerTeamErgebnis::teamNr).contains(besiegter);
+
+		testDaten.naechsteSpielrunde.doRun();
+		List<List<Integer>> runde2 = leseSpielpaarungWerte(SheetNamen.spielrunde(2));
+		List<Integer> runde2Zeile = runde2.stream()
+				.filter(zeile -> zeile.get(0) == sieger || zeile.get(1) == sieger).findFirst().orElseThrow();
+		int gegnerRunde2 = runde2Zeile.get(0) == sieger ? runde2Zeile.get(1) : runde2Zeile.get(0);
+		assertThat(gegnerRunde2).as("Sieger darf kein Freilos bekommen").isPositive();
+		assertThat(rundeEinsSieger).as("Gegner in Runde 2 muss ebenfalls Runde 1 gewonnen haben")
+				.contains(gegnerRunde2);
+	}
+
+	/**
+	 * Ein ausgestiegenes Team kann wieder einsteigen: Seine Begegnungen zählen wieder vollständig, und der
+	 * Wiederholungsschutz gegen frühere Gegner greift wieder.
+	 */
+	@Test
+	public void wiedereinstieg_historieUndWiederholungsschutzGreifenWieder() throws GenerateException {
+		testDaten.generate(1, false);
+		List<Integer> begegnung = ersteBegegnungMitGegner(leseSpielpaarungWerte(SheetNamen.spielrunde(1)));
+		int sieger = siegerVon(begegnung);
+		int besiegter = besiegterVon(begegnung);
+
+		setzeAktivWert(besiegter, SchweizerMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
+		setzeAktivWert(besiegter, SchweizerMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL);
+
+		TeamMeldungen aktive = neueMeldeliste().getAktiveMeldungen();
+		SchweizerAuswertung auswertung = testDaten.naechsteSpielrunde.gespieltenRundenEinlesen(aktive, 1, 1);
+		assertThat(ergebnisVon(auswertung, sieger).siege()).isEqualTo(1);
+		assertThat(ergebnisVon(auswertung, besiegter).gegnerNrn()).contains(sieger);
+		assertThat(aktive.getTeam(sieger).hatAlsGegner(aktive.getTeam(besiegter)))
+				.as("Wiederholungsschutz nach Wiedereinstieg").isTrue();
+	}
+
+	private SchweizerMeldeListeSheetUpdate neueMeldeliste() {
+		return new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet);
+	}
+
+	private void setzeAktivWert(int teamNr, int aktivWert) throws GenerateException {
+		SchweizerMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+		int zeile = meldeliste.getSpielerZeileNr(teamNr);
+		assertThat(zeile).as("Team %d muss in der Meldeliste gefunden werden", teamNr).isGreaterThan(0);
+		sheetHlp.setNumberValueInCell(NumberCellValue
+				.from(meldeliste.getXSpreadSheet(), Position.from(meldeliste.getAktivSpalte(), zeile))
+				.setValue(aktivWert));
+	}
+
+	private static SchweizerTeamErgebnis ergebnisVon(SchweizerAuswertung auswertung, int teamNr) {
+		return auswertung.ergebnisse().stream().filter(erg -> erg.teamNr() == teamNr).findFirst().orElseThrow();
+	}
+
+	private boolean istBegegnung(List<Integer> zeile) {
+		return zeile.get(0) > 0 && zeile.get(1) > 0;
+	}
+
+	private List<Integer> ersteBegegnungMitGegner(List<List<Integer>> paarungen) {
+		return paarungen.stream().filter(this::istBegegnung).findFirst().orElseThrow();
+	}
+
+	private int siegerVon(List<Integer> begegnung) {
+		return begegnung.get(2) > begegnung.get(3) ? begegnung.get(0) : begegnung.get(1);
+	}
+
+	private int besiegterVon(List<Integer> begegnung) {
+		return begegnung.get(2) > begegnung.get(3) ? begegnung.get(1) : begegnung.get(0);
 	}
 
 	/**

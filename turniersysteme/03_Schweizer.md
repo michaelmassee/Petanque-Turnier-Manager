@@ -192,6 +192,21 @@ Teams mit gleicher Setzposition (> 0) werden in Runde 1 nicht gegeneinander gelo
 Nur wenn eine Setzgruppe mehr als die Hälfte der Teams stellt, spielen so wenige ihrer Teams wie möglich
 gegeneinander.
 
+## 5.5 Ausstieg und Wiedereinstieg eines Teams (PTM)
+In der Meldeliste steht Aktiv = 1 für „nimmt teil“ und Aktiv = 2 für „ausgestiegen“. Ein Team kann jederzeit
+aussteigen und später wieder einsteigen.
+
+- **Auslosung:** Gelost werden nur Teams mit Aktiv = 1.
+- **Bereits gespielte Begegnungen bleiben gültig:** Für Sieggruppen, Setzliste, Buchholz und Feinbuchholz zählen alle
+  bisherigen Begegnungen, auch die gegen inzwischen ausgestiegene Teams. Der Gegner eines Aussteigers behält
+  seine Siege, Punkte und Gegnerhistorie. Auslosung und Rangliste rechnen dabei mit denselben Werten.
+- **Verpasste Runden zählen nicht:** Runden, die ein Team während des Ausstiegs verpasst, gehen weder als
+  Niederlage noch als Freilos in die Wertung ein. Es gibt keine Default-Wertung; die Buchung „Nicht gespielte
+  Runde“ ist eine Supermêlée-Sonderregel.
+- **Wiedereinstieg:** Die früheren Begegnungen des Teams zählen wieder vollständig, frühere Gegner werden nach
+  Möglichkeit nicht erneut gelost.
+- Gelöschte Meldungen (kein gültiger Aktiv-Wert) fallen aus der Auswertung heraus.
+
 ---
 # 6. Komplexe Beispiele
 

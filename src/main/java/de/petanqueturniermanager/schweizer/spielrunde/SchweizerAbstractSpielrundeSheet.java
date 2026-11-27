@@ -10,8 +10,10 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -267,20 +269,26 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * </ul>
 	 * Freilose zählen für den Freilos-Buchholz nur in Runden mit mindestens einem eingetragenen Ergebnis
 	 * (gleiche Regel wie {@link de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser}).
+	 * <p>
+	 * Die Historie umfasst auch ausgestiegene Teams: Eine bereits gespielte Begegnung zählt für den weiterhin
+	 * aktiven Gegner unverändert (Siege, Punkte, Buchholz), sonst wiche die Auslosung von der Rangliste ab. Nur die
+	 * Gegner-/Freilos-Markierungen für die Paarung werden ausschließlich an den aktiven Teams gesetzt. Runden, die ein
+	 * Team während eines Ausstiegs verpasst, zählen nicht (keine Default-Wertung).
 	 *
-	 * @param aktiveMeldungen aktive Teams
+	 * @param aktiveMeldungen aktive Teams (Teilnehmer der neuen Runde)
 	 * @param abSpielrunde    erste einzulesende Runde (inkl.)
 	 * @param bisSpielrunde   letzte einzulesende Runde (inkl.)
-	 * @return Auswertungsdaten je Team (Siege, Punktedifferenz, Gegnerliste, Freilose) und Anzahl gewerteter Runden
+	 * @return Auswertungsdaten je Team mit Historie (aktive und ausgestiegene) und Anzahl gewerteter Runden
 	 */
 	protected SchweizerAuswertung gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
 			int bisSpielrunde) throws GenerateException {
 
+		Set<Integer> historischeTeamNrn = historischeTeamNrn(aktiveMeldungen);
 		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punktediff, [2]=punkte+
 		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
-		for (Team team : aktiveMeldungen.teams()) {
-			statsMap.put(team.getNr(), new int[3]);
-			gegnerMap.put(team.getNr(), new ArrayList<>());
+		for (int teamNr : historischeTeamNrn) {
+			statsMap.put(teamNr, new int[3]);
+			gegnerMap.put(teamNr, new ArrayList<>());
 		}
 		var chronik = new HerunterlosChronik();
 		Map<Integer, Integer> freiloseJeTeam = new HashMap<>();
@@ -306,8 +314,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
 				List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
 				List<Integer> freilosTeams = new ArrayList<>();
-				boolean hatErgebnis = leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap,
-						begegnungen, freilosTeams);
+				boolean hatErgebnis = leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, historischeTeamNrn,
+						statsMap, gegnerMap, begegnungen, freilosTeams);
 				chronik.vermerkeRunde(spielrunde, begegnungen, freilosTeams, siegeVorRunde);
 				if (hatErgebnis) {
 					anzGewerteteRunden++;
@@ -317,13 +325,23 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 
 		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
-		for (Team team : aktiveMeldungen.teams()) {
-			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
-			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
-			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], stats[2], gegnerNrn,
-					chronik.rundenFuer(team.getNr()), freiloseJeTeam.getOrDefault(team.getNr(), 0)));
+		for (int teamNr : historischeTeamNrn) {
+			int[] stats = statsMap.get(teamNr);
+			ergebnisse.add(new SchweizerTeamErgebnis(teamNr, stats[0], stats[1], stats[2], gegnerMap.get(teamNr),
+					chronik.rundenFuer(teamNr), freiloseJeTeam.getOrDefault(teamNr, 0)));
 		}
 		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden);
+	}
+
+	/**
+	 * Teams, deren bisherige Begegnungen in die Auswertung eingehen: alle Meldungen mit gültigem Aktiv-Wert
+	 * (nimmt teil oder ausgestiegen) und zusätzlich die übergebenen aktiven Teams. Gelöschte Meldungen fehlen.
+	 */
+	private Set<Integer> historischeTeamNrn(TeamMeldungen aktiveMeldungen) throws GenerateException {
+		Set<Integer> teamNrn = new LinkedHashSet<>();
+		aktiveMeldungen.teams().forEach(team -> teamNrn.add(team.getNr()));
+		getMeldeListe().getAktiveUndAusgesetztMeldungen().teams().forEach(team -> teamNrn.add(team.getNr()));
+		return teamNrn;
 	}
 
 	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {
@@ -336,8 +354,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * @return {@code true}, wenn die Runde mindestens ein eingetragenes Ergebnis hat
 	 */
 	private boolean leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
-			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			List<HerunterlosChronik.Begegnung> begegnungen, List<Integer> freilosTeams) throws GenerateException {
+			TeamMeldungen aktiveMeldungen, Set<Integer> historischeTeamNrn, Map<Integer, int[]> statsMap,
+			Map<Integer, List<Integer>> gegnerMap, List<HerunterlosChronik.Begegnung> begegnungen,
+			List<Integer> freilosTeams) throws GenerateException {
 		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
@@ -355,10 +374,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			if (nrA == SchweizerTeamNrAufloeser.KEIN_TEAM) {
 				break; // Ende der Daten
 			}
-			Team teamA = aktiveMeldungen.getTeam(nrA);
-			if (teamA == null) {
-				continue; // Team inaktiv oder gelöscht, überspringen
+			if (!historischeTeamNrn.contains(nrA)) {
+				continue; // Meldung gelöscht, überspringen
 			}
+			Team aktivesTeamA = aktiveMeldungen.getTeam(nrA);
 
 			int nrB = teamNrAufloeser.teamB(row, teamFormeln[i][1]);
 			if (nrB == SchweizerTeamNrAufloeser.KEIN_TEAM) {
@@ -367,7 +386,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				// teamPaarungenEinfuegen()). Ohne das wich die Punktedifferenz hier von der
 				// Rangliste (SchweizerRanglisteSheet/SchweizerRundenLeser) ab und sortierte die
 				// Setzliste für die nächste Runde bei Freilos-Teams falsch ein.
-				teamA.setHatteFreilos(true);
+				if (aktivesTeamA != null) {
+					aktivesTeamA.setHatteFreilos(true);
+				}
 				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
 				int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 				int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
@@ -377,12 +398,14 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				statsA[2] += freispielPlus; // punkte+
 				continue;
 			}
-			Team teamB = aktiveMeldungen.getTeam(nrB);
-			if (teamB == null) {
-				continue;
+			if (!historischeTeamNrn.contains(nrB)) {
+				continue; // Meldung gelöscht, überspringen
 			}
-
-			teamA.addGegner(teamB); // registriert gegenseitig
+			Team aktivesTeamB = aktiveMeldungen.getTeam(nrB);
+			if (aktivesTeamA != null && aktivesTeamB != null) {
+				// Wiederholungsschutz nur unter Teilnehmern der neuen Runde; registriert gegenseitig
+				aktivesTeamA.addGegner(aktivesTeamB);
+			}
 			begegnungen.add(new HerunterlosChronik.Begegnung(nrA, nrB));
 
 			gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);

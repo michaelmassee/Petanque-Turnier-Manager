@@ -117,6 +117,21 @@ Die Turniersoftware nutzt dasselbe Verfahren wie beim Schweizer System (`Wiederh
 - Freilos → zählt als Sieg → 100 + 13 + 13 = **126 Punkte** (max. Score).  
 citeturn37search57
 
+### 4.3 Ausstieg und Wiedereinstieg eines Teams (PTM)
+In der Meldeliste steht Aktiv = 1 für „nimmt teil“ und Aktiv = 2 für „ausgestiegen“. Ein Team kann jederzeit
+aussteigen und später wieder einsteigen.
+
+- **Auslosung:** Gelost werden nur Teams mit Aktiv = 1.
+- **Bereits gespielte Begegnungen bleiben gültig:** Siege, Wertung und Punkte aus Begegnungen gegen inzwischen
+  ausgestiegene Teams zählen für den Gegner unverändert weiter. Auslosung und Rangliste rechnen dabei mit
+  denselben Werten.
+- **Verpasste Runden zählen nicht:** Runden, die ein Team während des Ausstiegs verpasst, gehen weder als
+  Niederlage noch als Freilos in die Wertung ein. Es gibt keine Default-Wertung; die Buchung „Nicht gespielte
+  Runde“ ist eine Supermêlée-Sonderregel.
+- **Wiedereinstieg:** Die früheren Begegnungen des Teams zählen wieder vollständig, frühere Gegner werden nach
+  Möglichkeit nicht erneut gelost.
+- Gelöschte Meldungen (kein gültiger Aktiv-Wert) fallen aus der Auswertung heraus.
+
 ---
 # 5. ASCII-Flowchart der Rundenstruktur
 ```
@@ -169,7 +184,7 @@ A gewinnt 10:5 → Score = 100 + 10 + 5 = **115**.
 3. Team A – 432
 ...
 
-Da keine Fremdwertung nötig ist, bleiben Aussteiger ohne Einfluss.
+Da keine Fremdwertung nötig ist, verändert ein Aussteiger die Wertung der übrigen Teams nicht (siehe 4.3).
 
 ---
 ## 6.2 Beispiel: 32 Teams – 4 Runden

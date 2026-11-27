@@ -13,6 +13,7 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -265,8 +266,13 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
      * Liest alle gespielten Runden ein und akkumuliert pro Team:
      * eigenePunkte (Summe), kassiertePunkte (Summe), alle Gegner, Freilos-Flag
      * sowie die spielweise berechnete Formule-X-Wertung.
+     * <p>
+     * Begegnungen mit inzwischen ausgestiegenen Teams zählen für den weiterhin aktiven Gegner unverändert (Siege,
+     * Wertung, Punkte), sonst wiche die Auslosung von der Rangliste ab. Erst die Ergebnis-Liste für die Paarung
+     * enthält nur die aktiven Teams. Runden, die ein Team während eines Ausstiegs verpasst, zählen nicht (keine
+     * Default-Wertung).
      *
-     * @param aktiveMeldungen aktive Teams
+     * @param aktiveMeldungen aktive Teams (Teilnehmer der neuen Runde)
      * @param abSpielrunde    erste einzulesende Runde (inkl.)
      * @param bisSpielrunde   letzte einzulesende Runde (inkl.)
      * @return Akkumulation mit Ergebnis-Liste und Wertung pro Team
@@ -281,12 +287,13 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         Map<Integer, Integer> siegeProTeam = new HashMap<>();
         Map<Integer, List<FormuleXTeamErgebnis.SpielErgebnisGegen>> spielErgebnisseProTeam = new HashMap<>();
 
-        for (Team team : aktiveMeldungen.teams()) {
-            rawPointsMap.put(team.getNr(), new int[2]);
-            gegnerMap.put(team.getNr(), new ArrayList<>());
-            wertungProTeam.put(team.getNr(), 0);
-            siegeProTeam.put(team.getNr(), 0);
-            spielErgebnisseProTeam.put(team.getNr(), new ArrayList<>());
+        Set<Integer> historischeTeamNrn = historischeTeamNrn(aktiveMeldungen);
+        for (int teamNr : historischeTeamNrn) {
+            rawPointsMap.put(teamNr, new int[2]);
+            gegnerMap.put(teamNr, new ArrayList<>());
+            wertungProTeam.put(teamNr, 0);
+            siegeProTeam.put(teamNr, 0);
+            spielErgebnisseProTeam.put(teamNr, new ArrayList<>());
         }
 
         int siegaufschlag = new FormuleX().getSiegaufschlag(Math.max(bisSpielrunde, 1));
@@ -305,7 +312,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
                     // nicht gewertete Runden zählen weder in Wertung noch in Paarungshistorie
                     continue;
                 }
-                leseRundeEin(sheet, aktiveMeldungen, rawPointsMap, gegnerMap, freilosTeams,
+                leseRundeEin(sheet, historischeTeamNrn, rawPointsMap, gegnerMap, freilosTeams,
                         wertungProTeam, siegeProTeam, spielErgebnisseProTeam, siegaufschlag);
             }
         }
@@ -320,7 +327,18 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         return new SpielrundenAkkumulation(ergebnisse, wertungProTeam, siegeProTeam, spielErgebnisseProTeam);
     }
 
-    private void leseRundeEin(XSpreadsheet sheet, TeamMeldungen aktiveMeldungen, Map<Integer, int[]> rawPointsMap,
+    /**
+     * Teams, deren bisherige Begegnungen in die Auswertung eingehen: alle Meldungen mit gültigem Aktiv-Wert
+     * (nimmt teil oder ausgestiegen) und zusätzlich die übergebenen aktiven Teams. Gelöschte Meldungen fehlen.
+     */
+    private Set<Integer> historischeTeamNrn(TeamMeldungen aktiveMeldungen) throws GenerateException {
+        Set<Integer> teamNrn = new LinkedHashSet<>();
+        aktiveMeldungen.teams().forEach(team -> teamNrn.add(team.getNr()));
+        getMeldeListe().getAktiveUndAusgesetztMeldungen().teams().forEach(team -> teamNrn.add(team.getNr()));
+        return teamNrn;
+    }
+
+    private void leseRundeEin(XSpreadsheet sheet, Set<Integer> historischeTeamNrn, Map<Integer, int[]> rawPointsMap,
             Map<Integer, List<Integer>> gegnerMap, Set<Integer> freilosTeams,
             Map<Integer, Integer> wertungProTeam, Map<Integer, Integer> siegeProTeam,
             Map<Integer, List<FormuleXTeamErgebnis.SpielErgebnisGegen>> spielErgebnisseProTeam, int siegaufschlag)
@@ -338,9 +356,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
             if (nrA <= 0) {
                 break;
             }
-            Team teamA = aktiveMeldungen.getTeam(nrA);
-            if (teamA == null) {
-                continue;
+            if (!historischeTeamNrn.contains(nrA)) {
+                continue; // Meldung gelöscht
             }
 
             int nrB = row.get(1).getIntVal(0); // TEAM_B (relativ: 1)
@@ -350,9 +367,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
                 siegeProTeam.merge(nrA, 1, Integer::sum); // Freilos zählt als Sieg (Doku 4.2)
                 continue;
             }
-            Team teamB = aktiveMeldungen.getTeam(nrB);
-            if (teamB == null) {
-                continue;
+            if (!historischeTeamNrn.contains(nrB)) {
+                continue; // Meldung gelöscht
             }
 
             gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);

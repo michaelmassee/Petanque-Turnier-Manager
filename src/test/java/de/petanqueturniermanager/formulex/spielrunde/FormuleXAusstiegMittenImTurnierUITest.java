@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
@@ -49,14 +51,7 @@ public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         String runde1SheetName = testDaten.naechsteSpielrunde.getSheetName(SpielRundeNr.from(1));
         List<List<Integer>> runde1VorAusstieg = leseSpielpaarungWerte(runde1SheetName);
 
-        // Team als "ausgestiegen" markieren
-        FormuleXMeldeListeSheetUpdate meldeliste = new FormuleXMeldeListeSheetUpdate(wkingSpreadsheet);
-        int zeile = meldeliste.getSpielerZeileNr(AUSGESTIEGENES_TEAM_NR);
-        assertThat(zeile).as("Team %d muss in der Meldeliste gefunden werden", AUSGESTIEGENES_TEAM_NR)
-                .isGreaterThan(0);
-        sheetHlp.setNumberValueInCell(NumberCellValue
-                .from(meldeliste.getXSpreadSheet(), Position.from(meldeliste.getAktivSpalte(), zeile))
-                .setValue(FormuleXMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN));
+        setzeAktivWert(AUSGESTIEGENES_TEAM_NR, FormuleXMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
 
         // Runde 2 erzeugen und mit Ergebnissen füllen
         testDaten.naechsteSpielrunde.doRun();
@@ -129,6 +124,81 @@ public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         assertThat(siegeSumme)
                 .as("Kein Sieg darf durch den Ausstieg des Gegners aus der Rangliste-Summe verschwinden")
                 .isEqualTo(erwarteteSiege);
+    }
+
+    /**
+     * Regression: Steigt der in Runde 1 besiegte Gegner aus, behält der Sieger in der Auslosung seinen Sieg und
+     * seine Wertung; nur die Ergebnis-Liste für die Paarung enthält das ausgestiegene Team nicht mehr.
+     */
+    @Test
+    public void ausstiegDesBesiegten_siegerBehaeltSiegUndWertungInAuslosung() throws GenerateException {
+        testDaten.generate(1, false);
+        List<Integer> begegnung = ersteBegegnungMitGegner(
+                leseSpielpaarungWerte(testDaten.naechsteSpielrunde.getSheetName(SpielRundeNr.from(1))));
+        int sieger = siegerVon(begegnung);
+        int besiegter = besiegterVon(begegnung);
+        int siegerPunkte = Math.max(begegnung.get(2), begegnung.get(3));
+        int besiegterPunkte = Math.min(begegnung.get(2), begegnung.get(3));
+        int erwarteteWertung = new FormuleX().getSiegaufschlag(1) + siegerPunkte + (siegerPunkte - besiegterPunkte);
+
+        setzeAktivWert(besiegter, FormuleXMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
+
+        var akkumulation = testDaten.naechsteSpielrunde
+                .gespieltenRundenEinlesen(neueMeldeliste().getAktiveMeldungen(), 1, 1);
+        assertThat(akkumulation.siegeProTeam()).as("Sieg gegen das ausgestiegene Team zählt in der Auslosung")
+                .containsEntry(sieger, 1);
+        assertThat(akkumulation.wertungProTeam()).as("Wertung gegen das ausgestiegene Team zählt in der Auslosung")
+                .containsEntry(sieger, erwarteteWertung);
+        assertThat(akkumulation.ergebnisse()).as("Paarungsliste enthält nur aktive Teams")
+                .extracting(FormuleXErgebnis::teamNr).contains(sieger).doesNotContain(besiegter);
+    }
+
+    /**
+     * Ein ausgestiegenes Team kann wieder einsteigen: Seine Begegnungen zählen wieder vollständig, und es wird
+     * wieder ausgelost.
+     */
+    @Test
+    public void wiedereinstieg_historieZaehltWieder() throws GenerateException {
+        testDaten.generate(1, false);
+        List<Integer> begegnung = ersteBegegnungMitGegner(
+                leseSpielpaarungWerte(testDaten.naechsteSpielrunde.getSheetName(SpielRundeNr.from(1))));
+        int sieger = siegerVon(begegnung);
+        int besiegter = besiegterVon(begegnung);
+
+        setzeAktivWert(besiegter, FormuleXMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
+        setzeAktivWert(besiegter, FormuleXMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL);
+
+        var akkumulation = testDaten.naechsteSpielrunde
+                .gespieltenRundenEinlesen(neueMeldeliste().getAktiveMeldungen(), 1, 1);
+        assertThat(akkumulation.siegeProTeam()).containsEntry(sieger, 1);
+        FormuleXErgebnis besiegterErgebnis = akkumulation.ergebnisse().stream()
+                .filter(erg -> erg.teamNr() == besiegter).findFirst().orElseThrow();
+        assertThat(besiegterErgebnis.gegnerNrn()).as("Wiederholungsschutz nach Wiedereinstieg").contains(sieger);
+    }
+
+    private FormuleXMeldeListeSheetUpdate neueMeldeliste() {
+        return new FormuleXMeldeListeSheetUpdate(wkingSpreadsheet);
+    }
+
+    private void setzeAktivWert(int teamNr, int aktivWert) throws GenerateException {
+        FormuleXMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+        int zeile = meldeliste.getSpielerZeileNr(teamNr);
+        assertThat(zeile).as("Team %d muss in der Meldeliste gefunden werden", teamNr).isGreaterThan(0);
+        sheetHlp.setNumberValueInCell(NumberCellValue
+                .from(meldeliste.getXSpreadSheet(), Position.from(meldeliste.getAktivSpalte(), zeile))
+                .setValue(aktivWert));
+    }
+
+    private List<Integer> ersteBegegnungMitGegner(List<List<Integer>> paarungen) {
+        return paarungen.stream().filter(zeile -> zeile.get(0) > 0 && zeile.get(1) > 0).findFirst().orElseThrow();
+    }
+
+    private int siegerVon(List<Integer> begegnung) {
+        return begegnung.get(2) > begegnung.get(3) ? begegnung.get(0) : begegnung.get(1);
+    }
+
+    private int besiegterVon(List<Integer> begegnung) {
+        return begegnung.get(2) > begegnung.get(3) ? begegnung.get(1) : begegnung.get(0);
     }
 
     /**
