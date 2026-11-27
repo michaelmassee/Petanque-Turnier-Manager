@@ -8,7 +8,6 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
-import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -59,16 +58,16 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet imple
 		processBoxinfo("processbox.rangliste.aktualisieren");
 
 		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
-		// Siehe SchweizerRanglisteSheet.doRunIntern(): ausgestiegene Teams bleiben mit ihrem
+		// Siehe SchweizerRanglisteSheet.leseRanglistenDaten(): ausgestiegene Teams bleiben mit ihrem
 		// bisherigen Ergebnis in der Rangliste stehen.
-		TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
-		if (aktiveUndAusgesetztMeldungen.size() == 0) {
+		RanglistenDaten daten = leseRanglistenDaten(meldeliste);
+		if (daten.gelistet().isEmpty()) {
 			processBoxinfo("processbox.abbruch");
 			return;
 		}
 
-		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveUndAusgesetztMeldungen.size());
-		berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
+		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, daten.gelistet().size());
+		berechnungUndSchreiben(sheet, meldeliste, daten);
 
 
 		// Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf der

@@ -205,7 +205,11 @@ aussteigen und später wieder einsteigen.
   Runde“ ist eine Supermêlée-Sonderregel.
 - **Wiedereinstieg:** Die früheren Begegnungen des Teams zählen wieder vollständig, frühere Gegner werden nach
   Möglichkeit nicht erneut gelost.
-- Gelöschte Meldungen (kein gültiger Aktiv-Wert) fallen aus der Auswertung heraus.
+- **Leere Aktiv-Zelle nach gespielten Partien:** Wurde die Zelle eines Teams geleert, statt 2 einzutragen, wird es
+  wie ausgestiegen gewertet: Seine Ergebnisse zählen weiter, es bleibt in der Rangliste und wird nicht mehr gelost.
+  Beim Auslosen der nächsten Runde weist das Plugin darauf hin und bittet, 2 einzutragen. Teams mit leerer Zelle
+  ohne Partie erscheinen nicht in der Rangliste.
+- Nur gelöschte Meldungen (Zeile aus der Meldeliste entfernt) fallen aus der Auswertung heraus.
 
 ---
 # 6. Komplexe Beispiele

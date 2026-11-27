@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -20,6 +21,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz;
 import de.petanqueturniermanager.algorithmen.schweizer.FreilosRundenText;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
+import de.petanqueturniermanager.basesheet.meldeliste.WertungsTeilnehmer;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -51,7 +53,6 @@ import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelpe
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchholzModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
@@ -271,19 +272,14 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		}
 
 		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
-		// Ausgestiegene Teams bleiben mit ihrem bisherigen Ergebnis in der Rangliste stehen
-		// (Pétanque-Konvention Schweizer System: ein vorzeitiger Ausstieg darf weder das eigene
-		// Ergebnis noch – über die Buchholz-Wertung – das der Gegner verfälschen). Nur die
-		// Rundenerzeugung selbst (SchweizerSpielrundeSheetNaechste) verwendet weiterhin
-		// getAktiveMeldungen(), damit Ausgestiegene nicht mehr neu gepaart werden.
-		TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
-		if (aktiveUndAusgesetztMeldungen.size() == 0) {
+		RanglistenDaten daten = leseRanglistenDaten(meldeliste);
+		if (daten.gelistet().isEmpty()) {
 			processBoxinfo("processbox.abbruch");
 			return;
 		}
 
 		insertHeader(sheet, getKonfigurationSheet().getRankingModus());
-		berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
+		berechnungUndSchreiben(sheet, meldeliste, daten);
 
 		if (SheetRunner.isRunning()) {
 			getSheetHelper().setActiveSheet(sheet);
@@ -298,23 +294,49 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	/**
+	 * Gelesene Spielrunden und die Teams der Rangliste.
+	 *
+	 * @param auswertung Ergebnisse aller Meldungen (Basis für Buchholz/Feinbuchholz)
+	 * @param gelistet   Teamnummern, die in der Rangliste stehen (siehe {@link WertungsTeilnehmer#gelistet})
+	 */
+	protected record RanglistenDaten(SchweizerAuswertung auswertung, Set<Integer> gelistet) {
+
+		protected RanglistenDaten {
+			gelistet = Set.copyOf(gelistet);
+		}
+	}
+
+	/**
+	 * Liest die Spielrunden über alle Meldungen, unabhängig vom Aktiv-Wert: Ein ausgestiegenes Team (Aktiv 2) und
+	 * ebenso ein Team, dessen Aktiv-Zelle nach gespielten Partien geleert wurde, bleibt mit seinem bisherigen Ergebnis
+	 * stehen. Ein vorzeitiger Ausstieg darf weder das eigene Ergebnis noch – über die Buchholz-Wertung – das der
+	 * Gegner verfälschen. Nur die Rundenerzeugung lost ausschließlich aktive Teams aus.
+	 */
+	protected RanglistenDaten leseRanglistenDaten(SchweizerMeldeListeSheetUpdate meldeliste)
+			throws GenerateException {
+		int bisSpielrunde = getKonfigurationSheet().getAktiveSpielRunde().getNr();
+		SchweizerAuswertung auswertung = SchweizerRundenLeser.leseErgebnisse(getWorkingSpreadsheet(),
+				meldeliste.getAlleMeldungen(), bisSpielrunde, this::getSpielrundenMetadatenSchluessel,
+				getSpielrundenBasisName(), meldeliste, getKonfigurationSheet().getFreispielPunktePlus(),
+				getKonfigurationSheet().getFreispielPunkteMinus());
+		Set<Integer> gelistet = WertungsTeilnehmer.gelistet(meldeliste.getAktiveUndAusgesetztMeldungen(),
+				auswertung.teamsMitPartie());
+		return new RanglistenDaten(auswertung, gelistet);
+	}
+
+	/**
 	 * Berechnet alle Ranglisten-Daten aus den Spielrunden und schreibt sie in das Sheet.
 	 * <p>
 	 * Wird sowohl vom vollständigen Neuaufbau ({@link #doRunIntern()}) als auch vom
 	 * inkrementellen Update ({@link SchweizerRanglisteSheetUpdate}) verwendet.
 	 * Das Sheet muss bereits existieren und der Header muss gesetzt sein.
 	 */
-	protected void berechnungUndSchreiben(XSpreadsheet sheet,
-			SchweizerMeldeListeSheetUpdate meldeliste, TeamMeldungen aktiveMeldungen) throws GenerateException {
-		int bisSpielrunde = getKonfigurationSheet().getAktiveSpielRunde().getNr();
+	protected void berechnungUndSchreiben(XSpreadsheet sheet, SchweizerMeldeListeSheetUpdate meldeliste,
+			RanglistenDaten daten) throws GenerateException {
 		SchweizerRankingModus modus = getKonfigurationSheet().getRankingModus();
-		logger.debug("berechnungUndSchreiben – {} Spielrunden, Modus={}, Thread='{}'",
-				bisSpielrunde, modus, Thread.currentThread().getName());
+		logger.debug("berechnungUndSchreiben – Modus={}, Thread='{}'", modus, Thread.currentThread().getName());
 
-		SchweizerAuswertung auswertung = SchweizerRundenLeser.leseErgebnisse(getWorkingSpreadsheet(),
-				aktiveMeldungen, bisSpielrunde, this::getSpielrundenMetadatenSchluessel, getSpielrundenBasisName(),
-				meldeliste, getKonfigurationSheet().getFreispielPunktePlus(),
-				getKonfigurationSheet().getFreispielPunkteMinus());
+		SchweizerAuswertung auswertung = daten.auswertung();
 		List<SchweizerTeamErgebnis> ergebnisse = auswertung.ergebnisse();
 		var freilosBuchholz = new FreilosBuchholz(getKonfigurationSheet().getFreilosBuchholzModus(),
 				auswertung.anzGewerteteRunden());
@@ -323,7 +345,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 		var schweizerSystem = new SchweizerSystem();
 		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse, modus,
-				freilosBuchholz);
+				freilosBuchholz).stream().filter(erg -> daten.gelistet().contains(erg.teamNr())).toList();
 		setZuletztSortierteErgebnisse(sortiert);
 
 		// BHZ/FBHZ nur berechnen wenn der Modus es erfordert – bei OHNE_BUCHHOLZ bleiben die Spalten leer (0)
@@ -561,7 +583,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		int ersteZeile = meldeliste.getErsteDatenZiele();
 
 		if (getKonfigurationSheet().getRanglisteTeamAnzeige() == TeamAnzeige.NR) {
-			for (var meldung : meldeliste.getAktiveUndAusgesetztMeldungen().teams()) {
+			for (var meldung : meldeliste.getAlleMeldungen().teams()) {
 				result.put(meldung.getNr(), String.valueOf(meldung.getNr()));
 			}
 			return result;

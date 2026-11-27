@@ -5,8 +5,10 @@ package de.petanqueturniermanager.formulex.rangliste;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,6 +62,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.WertungsTeilnehmer;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
@@ -140,16 +143,14 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         }
 
         FormuleXMeldeListeSheetUpdate meldeliste = new FormuleXMeldeListeSheetUpdate(getWorkingSpreadsheet());
-        // Ausgestiegene Teams bleiben mit ihrem bisherigen Ergebnis in der Rangliste stehen (siehe
-        // SchweizerRanglisteSheet); nur die Rundenerzeugung selbst schließt sie von Neupaarungen aus.
-        TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
-        if (aktiveUndAusgesetztMeldungen.size() == 0) {
+        RanglistenDaten daten = leseRanglistenDaten(meldeliste);
+        if (daten.ergebnisse().isEmpty()) {
             processBoxinfo("processbox.abbruch");
             return;
         }
 
         insertHeader(sheet);
-        berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
+        berechnungUndSchreiben(sheet, meldeliste, daten);
 
         if (SheetRunner.isRunning()) {
             getSheetHelper().setActiveSheet(sheet);
@@ -164,17 +165,43 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     }
 
     /**
+     * Ergebnisse der Teams, die in der Rangliste stehen.
+     *
+     * @param ergebnisse Ergebnisse der gelisteten Teams (siehe {@link WertungsTeilnehmer#gelistet})
+     */
+    protected record RanglistenDaten(List<FormuleXTeamErgebnis> ergebnisse) {
+
+        protected RanglistenDaten {
+            ergebnisse = List.copyOf(ergebnisse);
+        }
+    }
+
+    /**
+     * Liest die Spielrunden über alle Meldungen, unabhängig vom Aktiv-Wert: Ein ausgestiegenes Team (Aktiv 2) und
+     * ebenso ein Team, dessen Aktiv-Zelle nach gespielten Partien geleert wurde, bleibt mit seinem bisherigen Ergebnis
+     * stehen, und seine Gegner behalten ihre Punkte. Nur die Rundenerzeugung lost ausschließlich aktive Teams aus.
+     */
+    protected RanglistenDaten leseRanglistenDaten(FormuleXMeldeListeSheetUpdate meldeliste) throws GenerateException {
+        int bisSpielrunde = konfigurationSheet.getAktiveSpielRunde().getNr();
+        Set<Integer> teamsMitPartie = new HashSet<>();
+        List<FormuleXTeamErgebnis> alleErgebnisse = leseAlleRunden(meldeliste.getAlleMeldungen(), bisSpielrunde,
+                teamsMitPartie);
+        Set<Integer> gelistet = WertungsTeilnehmer.gelistet(meldeliste.getAktiveUndAusgesetztMeldungen(),
+                teamsMitPartie);
+        return new RanglistenDaten(
+                alleErgebnisse.stream().filter(erg -> gelistet.contains(erg.teamNr())).toList());
+    }
+
+    /**
      * Berechnet alle Ranglisten-Daten aus den Spielrunden und schreibt sie ins Sheet.
      * Wird sowohl vom vollständigen Neuaufbau als auch vom inkrementellen Update verwendet.
      */
     protected void berechnungUndSchreiben(XSpreadsheet sheet, FormuleXMeldeListeSheetUpdate meldeliste,
-            TeamMeldungen aktiveMeldungen) throws GenerateException {
-        int bisSpielrunde = konfigurationSheet.getAktiveSpielRunde().getNr();
-        LOGGER.debug("berechnungUndSchreiben – {} Spielrunden, Thread='{}'",
-                bisSpielrunde, Thread.currentThread().getName());
+            RanglistenDaten daten) throws GenerateException {
+        LOGGER.debug("berechnungUndSchreiben – {} Teams, Thread='{}'",
+                daten.ergebnisse().size(), Thread.currentThread().getName());
 
-        List<FormuleXTeamErgebnis> teamErgebnisse = leseAlleRunden(aktiveMeldungen, bisSpielrunde);
-        List<FormuleXTeamErgebnis> sortiert = new FormuleXRanglisteRechner().sortiere(teamErgebnisse);
+        List<FormuleXTeamErgebnis> sortiert = new FormuleXRanglisteRechner().sortiere(daten.ergebnisse());
 
         Map<Integer, String> teamNrZuName = leseTeamnamen(meldeliste);
         insertDatenAlsWerte(sheet, sortiert, teamNrZuName);
@@ -230,12 +257,12 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     private static final int STATS_WERTUNG = 3;
     private static final int STATS_LEN = 4;
 
-    private List<FormuleXTeamErgebnis> leseAlleRunden(TeamMeldungen aktiveMeldungen, int bisSpielrunde)
-            throws GenerateException {
+    private List<FormuleXTeamErgebnis> leseAlleRunden(TeamMeldungen meldungen, int bisSpielrunde,
+            Set<Integer> teamsMitPartie) throws GenerateException {
         Map<Integer, int[]> statsMap = new HashMap<>();
         Map<Integer, List<FormuleXTeamErgebnis.SpielErgebnisGegen>> spielErgebnisseMap = new HashMap<>();
 
-        for (Team team : aktiveMeldungen.teams()) {
+        for (Team team : meldungen.teams()) {
             statsMap.put(team.getNr(), new int[STATS_LEN]);
             spielErgebnisseMap.put(team.getNr(), new ArrayList<>());
         }
@@ -255,11 +282,11 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 LOGGER.debug("leseAlleRunden: Runde {} – nicht gewertet, übersprungen", runde);
                 continue;
             }
-            leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, spielErgebnisseMap, siegaufschlag);
+            leseRundeEin(rundeSheet, meldungen, teamsMitPartie, statsMap, spielErgebnisseMap, siegaufschlag);
         }
 
         List<FormuleXTeamErgebnis> ergebnisse = new ArrayList<>();
-        for (Team team : aktiveMeldungen.teams()) {
+        for (Team team : meldungen.teams()) {
             int[] stats = statsMap.getOrDefault(team.getNr(), new int[STATS_LEN]);
             List<FormuleXTeamErgebnis.SpielErgebnisGegen> spielErgebnisse =
                     spielErgebnisseMap.getOrDefault(team.getNr(), List.of());
@@ -269,7 +296,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         return ergebnisse;
     }
 
-    private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
+    private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen meldungen, Set<Integer> teamsMitPartie,
             Map<Integer, int[]> statsMap, Map<Integer, List<FormuleXTeamErgebnis.SpielErgebnisGegen>> spielErgebnisseMap,
             int siegaufschlag) throws GenerateException {
         var readRange = RangePosition.from(
@@ -289,9 +316,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
             if (nrA <= 0) {
                 break;
             }
-            if (aktiveMeldungen.getTeam(nrA) == null) {
-                continue;
+            if (meldungen.getTeam(nrA) == null) {
+                continue; // Meldung gelöscht
             }
+            teamsMitPartie.add(nrA);
 
             int nrB = row.get(1).getIntVal(0);
             if (nrB <= 0) {
@@ -300,9 +328,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 s[STATS_WERTUNG] += 126;
                 continue;
             }
-            if (aktiveMeldungen.getTeam(nrB) == null) {
-                continue;
+            if (meldungen.getTeam(nrB) == null) {
+                continue; // Meldung gelöscht
             }
+            teamsMitPartie.add(nrB);
 
             int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
             int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;

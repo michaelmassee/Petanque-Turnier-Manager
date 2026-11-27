@@ -133,6 +133,7 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrunde));
 
 		SchweizerAuswertung auswertung = gespieltenRundenEinlesen(aktiveMeldungen, 1, neueSpielrunde - 1);
+		hinweisAufLeereAktivZellen(auswertung);
 
 		// Teams nach Rangliste sortieren (ab Runde 2)
 		TeamMeldungen meldungenFuerAuslosung = (neueSpielrunde > 1)

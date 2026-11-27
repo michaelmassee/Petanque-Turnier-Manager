@@ -13,6 +13,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
+import de.petanqueturniermanager.basesheet.meldeliste.WertungsTeilnehmer;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
@@ -174,6 +175,44 @@ public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         FormuleXErgebnis besiegterErgebnis = akkumulation.ergebnisse().stream()
                 .filter(erg -> erg.teamNr() == besiegter).findFirst().orElseThrow();
         assertThat(besiegterErgebnis.gegnerNrn()).as("Wiederholungsschutz nach Wiedereinstieg").contains(sieger);
+    }
+
+    /**
+     * Fehlbedienung: Die Aktiv-Zelle des besiegten Teams wird nach gespielter Runde geleert statt auf 2 gesetzt. Es
+     * wird wie ein Ausstieg gewertet: Der Sieger behält Sieg und Wertung, das besiegte Team bleibt in der Rangliste
+     * und wird als Team ohne Aktiv-Wert mit Partie gemeldet.
+     */
+    @Test
+    public void leereAktivZelleNachPartie_wirdWieAusstiegGewertet() throws GenerateException {
+        testDaten.generate(1, false);
+        String runde1 = testDaten.naechsteSpielrunde.getSheetName(SpielRundeNr.from(1));
+        List<Integer> begegnung = ersteBegegnungMitGegner(leseSpielpaarungWerte(runde1));
+        int sieger = siegerVon(begegnung);
+        int besiegter = besiegterVon(begegnung);
+
+        FormuleXMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+        sheetHlp.clearValInCell(meldeliste.getXSpreadSheet(),
+                Position.from(meldeliste.getAktivSpalte(), meldeliste.getSpielerZeileNr(besiegter)));
+
+        var akkumulation = testDaten.naechsteSpielrunde
+                .gespieltenRundenEinlesen(neueMeldeliste().getAktiveMeldungen(), 1, 1);
+        assertThat(akkumulation.siegeProTeam()).as("Sieg zählt trotz leerer Aktiv-Zelle").containsEntry(sieger, 1);
+        assertThat(WertungsTeilnehmer.ohneAktivWertMitPartie(neueMeldeliste().getAktiveUndAusgesetztMeldungen(),
+                akkumulation.teamsMitPartie())).as("Hinweis nennt das Team").containsExactly(besiegter);
+
+        new FormuleXRanglisteSheet(wkingSpreadsheet).doRun();
+        XSpreadsheet rangliste = sheetHlp.findByName(
+                de.petanqueturniermanager.helper.i18n.SheetNamen.formulexRangliste());
+        RangeData ranglisteData = RangeHelper.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                RangePosition.from(FormuleXRanglisteSheet.TEAM_NR_SPALTE, FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE,
+                        FormuleXRanglisteSheet.SIEGE_SPALTE, FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1))
+                .getDataFromRange();
+        assertThat(ranglisteData).as("Rangliste listet alle Teams, auch das ohne Aktiv-Wert").hasSize(ANZ_TEAMS)
+                .anySatisfy(zeile -> assertThat(zeile.get(0).getIntVal(-1)).isEqualTo(besiegter));
+        int siegeSumme = ranglisteData.stream()
+                .mapToInt(zeile -> zeile.get(FormuleXRanglisteSheet.SIEGE_SPALTE).getIntVal(0)).sum();
+        assertThat(siegeSumme).as("Jede Partie von Runde 1 vergibt genau einen Sieg")
+                .isEqualTo(zaehleGueltigeZeilen(leseSpielpaarungWerte(runde1)));
     }
 
     private FormuleXMeldeListeSheetUpdate neueMeldeliste() {

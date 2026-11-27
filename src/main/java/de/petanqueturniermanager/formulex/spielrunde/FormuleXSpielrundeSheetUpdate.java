@@ -49,6 +49,7 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
 
         SpielrundenAkkumulation akkumulierung = gespieltenRundenEinlesen(aktiveMeldungen, 1,
                 aktuelleSpielrunde.getNr() - 1);
+        hinweisAufLeereAktivZellen(akkumulierung);
 
         neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde, akkumulierung);
 

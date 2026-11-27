@@ -15,6 +15,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
+import de.petanqueturniermanager.basesheet.meldeliste.WertungsTeilnehmer;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -193,6 +194,47 @@ public class SchweizerAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 		assertThat(ergebnisVon(auswertung, besiegter).gegnerNrn()).contains(sieger);
 		assertThat(aktive.getTeam(sieger).hatAlsGegner(aktive.getTeam(besiegter)))
 				.as("Wiederholungsschutz nach Wiedereinstieg").isTrue();
+	}
+
+	/**
+	 * Fehlbedienung: Die Aktiv-Zelle des besiegten Teams wird nach gespielter Runde geleert statt auf 2 gesetzt. Es
+	 * wird wie ein Ausstieg gewertet: Der Sieger behält seinen Sieg in Auslosung und Rangliste, das besiegte Team
+	 * bleibt in der Rangliste stehen und wird als Team ohne Aktiv-Wert mit Partie gemeldet.
+	 */
+	@Test
+	public void leereAktivZelleNachPartie_wirdWieAusstiegGewertet() throws GenerateException {
+		testDaten.generate(1, false);
+		List<Integer> begegnung = ersteBegegnungMitGegner(leseSpielpaarungWerte(SheetNamen.spielrunde(1)));
+		int sieger = siegerVon(begegnung);
+		int besiegter = besiegterVon(begegnung);
+
+		leereAktivZelle(besiegter);
+
+		SchweizerMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+		SchweizerAuswertung auswertung = testDaten.naechsteSpielrunde
+				.gespieltenRundenEinlesen(meldeliste.getAktiveMeldungen(), 1, 1);
+		assertThat(ergebnisVon(auswertung, sieger).siege()).as("Sieg zählt trotz leerer Aktiv-Zelle").isEqualTo(1);
+		assertThat(WertungsTeilnehmer.ohneAktivWertMitPartie(meldeliste.getAktiveUndAusgesetztMeldungen(),
+				auswertung.teamsMitPartie())).as("Hinweis nennt das Team").containsExactly(besiegter);
+
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		RangeData ranglisteData = RangeHelper.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				RangePosition.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
+						SchweizerRanglisteSheet.SIEGE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1))
+				.getDataFromRange();
+		assertThat(ranglisteData).as("Rangliste listet alle Teams, auch das ohne Aktiv-Wert").hasSize(ANZ_TEAMS)
+				.anySatisfy(zeile -> assertThat(zeile.get(0).getIntVal(-1)).isEqualTo(besiegter));
+		int siegeSumme = ranglisteData.stream()
+				.mapToInt(zeile -> zeile.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0)).sum();
+		assertThat(siegeSumme).as("Jede Partie von Runde 1 vergibt genau einen Sieg")
+				.isEqualTo(zaehleGueltigeZeilen(leseSpielpaarungWerte(SheetNamen.spielrunde(1))));
+	}
+
+	private void leereAktivZelle(int teamNr) throws GenerateException {
+		SchweizerMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+		sheetHlp.clearValInCell(meldeliste.getXSpreadSheet(),
+				Position.from(meldeliste.getAktivSpalte(), meldeliste.getSpielerZeileNr(teamNr)));
 	}
 
 	private SchweizerMeldeListeSheetUpdate neueMeldeliste() {

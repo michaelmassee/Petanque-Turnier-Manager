@@ -123,6 +123,7 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
         getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrundeNr));
 
         SpielrundenAkkumulation akkumulierung = gespieltenRundenEinlesen(aktiveMeldungen, 1, neueSpielrundeNr - 1);
+        hinweisAufLeereAktivZellen(akkumulierung);
 
         boolean erstellt = neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrundeNr), akkumulierung);
         if (erstellt) {

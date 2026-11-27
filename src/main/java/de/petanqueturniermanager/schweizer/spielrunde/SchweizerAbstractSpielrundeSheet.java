@@ -10,6 +10,7 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz;
 import de.petanqueturniermanager.algorithmen.schweizer.HerunterlosChronik;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
+import de.petanqueturniermanager.basesheet.meldeliste.WertungsTeilnehmer;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamNrAufloeser;
@@ -270,15 +272,16 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * Freilose zählen für den Freilos-Buchholz nur in Runden mit mindestens einem eingetragenen Ergebnis
 	 * (gleiche Regel wie {@link de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser}).
 	 * <p>
-	 * Die Historie umfasst auch ausgestiegene Teams: Eine bereits gespielte Begegnung zählt für den weiterhin
-	 * aktiven Gegner unverändert (Siege, Punkte, Buchholz), sonst wiche die Auslosung von der Rangliste ab. Nur die
-	 * Gegner-/Freilos-Markierungen für die Paarung werden ausschließlich an den aktiven Teams gesetzt. Runden, die ein
-	 * Team während eines Ausstiegs verpasst, zählen nicht (keine Default-Wertung).
+	 * Die Historie umfasst alle Meldungen, unabhängig vom Aktiv-Wert: Eine bereits gespielte Begegnung zählt für den
+	 * weiterhin aktiven Gegner unverändert (Siege, Punkte, Buchholz), auch wenn das andere Team ausgestiegen ist oder
+	 * seine Aktiv-Zelle geleert wurde (siehe {@link WertungsTeilnehmer}). Sonst wiche die Auslosung von der Rangliste
+	 * ab. Nur die Gegner-/Freilos-Markierungen für die Paarung werden ausschließlich an den aktiven Teams gesetzt.
+	 * Runden, die ein Team während eines Ausstiegs verpasst, zählen nicht (keine Default-Wertung).
 	 *
 	 * @param aktiveMeldungen aktive Teams (Teilnehmer der neuen Runde)
 	 * @param abSpielrunde    erste einzulesende Runde (inkl.)
 	 * @param bisSpielrunde   letzte einzulesende Runde (inkl.)
-	 * @return Auswertungsdaten je Team mit Historie (aktive und ausgestiegene) und Anzahl gewerteter Runden
+	 * @return Auswertungsdaten je Meldung, Anzahl gewerteter Runden und Teams mit Partie
 	 */
 	protected SchweizerAuswertung gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
 			int bisSpielrunde) throws GenerateException {
@@ -292,6 +295,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 		var chronik = new HerunterlosChronik();
 		Map<Integer, Integer> freiloseJeTeam = new HashMap<>();
+		Set<Integer> teamsMitPartie = new HashSet<>();
 		int anzGewerteteRunden = 0;
 
 		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
@@ -317,6 +321,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				boolean hatErgebnis = leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, historischeTeamNrn,
 						statsMap, gegnerMap, begegnungen, freilosTeams);
 				chronik.vermerkeRunde(spielrunde, begegnungen, freilosTeams, siegeVorRunde);
+				begegnungen.forEach(begegnung -> {
+					teamsMitPartie.add(begegnung.nrA());
+					teamsMitPartie.add(begegnung.nrB());
+				});
+				teamsMitPartie.addAll(freilosTeams);
 				if (hatErgebnis) {
 					anzGewerteteRunden++;
 					freilosTeams.forEach(teamNr -> freiloseJeTeam.merge(teamNr, 1, Integer::sum));
@@ -330,18 +339,26 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			ergebnisse.add(new SchweizerTeamErgebnis(teamNr, stats[0], stats[1], stats[2], gegnerMap.get(teamNr),
 					chronik.rundenFuer(teamNr), freiloseJeTeam.getOrDefault(teamNr, 0)));
 		}
-		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden);
+		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden, teamsMitPartie);
 	}
 
 	/**
-	 * Teams, deren bisherige Begegnungen in die Auswertung eingehen: alle Meldungen mit gültigem Aktiv-Wert
-	 * (nimmt teil oder ausgestiegen) und zusätzlich die übergebenen aktiven Teams. Gelöschte Meldungen fehlen.
+	 * Teams, deren bisherige Begegnungen in die Auswertung eingehen: alle Meldungen, unabhängig vom Aktiv-Wert, und
+	 * zusätzlich die übergebenen aktiven Teams. Gelöschte Meldungen fehlen.
 	 */
 	private Set<Integer> historischeTeamNrn(TeamMeldungen aktiveMeldungen) throws GenerateException {
 		Set<Integer> teamNrn = new LinkedHashSet<>();
 		aktiveMeldungen.teams().forEach(team -> teamNrn.add(team.getNr()));
-		getMeldeListe().getAktiveUndAusgesetztMeldungen().teams().forEach(team -> teamNrn.add(team.getNr()));
+		getMeldeListe().getAlleMeldungen().teams().forEach(team -> teamNrn.add(team.getNr()));
 		return teamNrn;
+	}
+
+	/**
+	 * Meldet Teams, die bereits gespielt haben, deren Aktiv-Zelle aber leer ist. Sie werden wie ausgestiegen gewertet.
+	 */
+	protected void hinweisAufLeereAktivZellen(SchweizerAuswertung auswertung) throws GenerateException {
+		WertungsTeilnehmer.hinweisFallsNoetig(getWorkingSpreadsheet(), WertungsTeilnehmer.ohneAktivWertMitPartie(
+				getMeldeListe().getAktiveUndAusgesetztMeldungen(), auswertung.teamsMitPartie()));
 	}
 
 	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {

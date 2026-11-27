@@ -12,7 +12,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
-import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
@@ -46,16 +45,16 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet impleme
         processBoxinfo("processbox.rangliste.aktualisieren");
 
         FormuleXMeldeListeSheetUpdate meldeliste = new FormuleXMeldeListeSheetUpdate(getWorkingSpreadsheet());
-        // Siehe FormuleXRanglisteSheet.doRunIntern(): ausgestiegene Teams bleiben mit ihrem
+        // Siehe FormuleXRanglisteSheet.leseRanglistenDaten(): ausgestiegene Teams bleiben mit ihrem
         // bisherigen Ergebnis in der Rangliste stehen.
-        TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
-        if (aktiveUndAusgesetztMeldungen.size() == 0) {
+        RanglistenDaten daten = leseRanglistenDaten(meldeliste);
+        if (daten.ergebnisse().isEmpty()) {
             processBoxinfo("processbox.abbruch");
             return;
         }
 
-        RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveUndAusgesetztMeldungen.size());
-        berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
+        RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, daten.ergebnisse().size());
+        berechnungUndSchreiben(sheet, meldeliste, daten);
 
 
         // Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf der

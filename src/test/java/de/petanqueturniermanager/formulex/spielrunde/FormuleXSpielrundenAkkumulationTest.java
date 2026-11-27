@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,8 @@ class FormuleXSpielrundenAkkumulationTest {
                 Map.of(1, 3, 2, 2),
                 Map.of(
                         1, List.of(new FormuleXTeamErgebnis.SpielErgebnisGegen(2, 13, 5)),
-                        2, List.of(new FormuleXTeamErgebnis.SpielErgebnisGegen(1, 5, 13))));
+                        2, List.of(new FormuleXTeamErgebnis.SpielErgebnisGegen(1, 5, 13))),
+                Set.of(1, 2));
 
         List<FormuleXErgebnis> sortiert = akkumulierung.sortiertNachRangliste();
 
@@ -46,7 +48,8 @@ class FormuleXSpielrundenAkkumulationTest {
         var team1 = new FormuleXErgebnis(1, 0, 0, List.of(), false);
 
         var akkumulierung = new SpielrundenAkkumulation(
-                List.of(team2, team1), Map.of(1, 0, 2, 0), Map.of(1, 0, 2, 0), Map.of(1, List.of(), 2, List.of()));
+                List.of(team2, team1), Map.of(1, 0, 2, 0), Map.of(1, 0, 2, 0), Map.of(1, List.of(), 2, List.of()),
+                Set.of());
 
         List<FormuleXErgebnis> sortiert = akkumulierung.sortiertNachRangliste();
 

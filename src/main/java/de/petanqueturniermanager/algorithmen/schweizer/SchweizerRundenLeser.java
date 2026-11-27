@@ -5,8 +5,10 @@ package de.petanqueturniermanager.algorithmen.schweizer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.IntFunction;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +34,9 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 
 /**
  * Liest die Spielrunden-Sheets eines Schweizer-basierten Turniersystems (Schweizer System,
- * Maastrichter-Vorrunden, ...) ein und berechnet je aktivem Team Siege, Punktedifferenz und
- * die Gegnerliste (für BHZ/FBHZ).
+ * Maastrichter-Vorrunden, ...) ein und berechnet je Team Siege, Punktedifferenz und
+ * die Gegnerliste (für BHZ/FBHZ). Übergeben werden alle Meldungen, unabhängig vom Aktiv-Wert: Bereits gespielte
+ * Partien zählen immer (siehe {@link de.petanqueturniermanager.basesheet.meldeliste.WertungsTeilnehmer}).
  * <p>
  * Gemeinsam genutzt von {@link de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet}
  * (schreibt die angezeigte Rangliste) und
@@ -51,7 +54,7 @@ public final class SchweizerRundenLeser {
 	}
 
 	/**
-	 * Liest die Runden 1..anzRunden ein und berechnet je Team in {@code aktiveMeldungen}
+	 * Liest die Runden 1..anzRunden ein und berechnet je Team in {@code meldungen}
 	 * Siege, Punktedifferenz, Gegnerliste und Freilose. Als „nicht gewertet" markierte Runden
 	 * ({@link RundenWertungHelper}) werden übersprungen. Freilose zählen für den Freilos-Buchholz nur in Runden,
 	 * die bereits ein eingetragenes Ergebnis haben – eine ausgeloste, ungespielte Runde verändert BHZ/FBHZ nicht.
@@ -61,16 +64,16 @@ public final class SchweizerRundenLeser {
 	 * @param rundenBasisName           Basisname für den Legacy-Namens-Fallback ("N. " + Basisname)
 	 * @param freispielPunktePlus       konfigurierte Punkte+ für ein Freilos
 	 * @param freispielPunkteMinus      konfigurierte Punkte- für ein Freilos
-	 * @return Teamergebnisse und Anzahl gewerteter Runden mit Ergebnissen
+	 * @return Teamergebnisse, Anzahl gewerteter Runden mit Ergebnissen und Teams mit Partie
 	 */
 	public static SchweizerAuswertung leseErgebnisse(WorkingSpreadsheet workingSpreadsheet,
-			TeamMeldungen aktiveMeldungen, int anzRunden, IntFunction<String> rundenMetadatenSchluessel,
+			TeamMeldungen meldungen, int anzRunden, IntFunction<String> rundenMetadatenSchluessel,
 			String rundenBasisName, SchweizerMeldeListeSheetUpdate meldeliste, int freispielPunktePlus,
 			int freispielPunkteMinus) throws GenerateException {
 
 		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punkte+, [2]=punkte-
 		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
-		for (Team team : aktiveMeldungen.teams()) {
+		for (Team team : meldungen.teams()) {
 			statsMap.put(team.getNr(), new int[3]);
 			gegnerMap.put(team.getNr(), new ArrayList<>());
 		}
@@ -81,6 +84,7 @@ public final class SchweizerRundenLeser {
 		var chronik = new HerunterlosChronik();
 		Map<Integer, Integer> freiloseJeTeam = new HashMap<>();
 		Map<Integer, List<Integer>> freilosRundenJeTeam = new HashMap<>();
+		Set<Integer> teamsMitPartie = new HashSet<>();
 		int anzGewerteteRunden = 0;
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
@@ -98,8 +102,13 @@ public final class SchweizerRundenLeser {
 			Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
 			List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
 			List<Integer> freilosTeams = new ArrayList<>();
-			boolean hatErgebnis = leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap,
+			boolean hatErgebnis = leseRundeEin(workingSpreadsheet, rundeSheet, meldungen, statsMap, gegnerMap,
 					begegnungen, freilosTeams, teamNrAufloeser, freispielPunktePlus, freispielPunkteMinus);
+			begegnungen.forEach(begegnung -> {
+				teamsMitPartie.add(begegnung.nrA());
+				teamsMitPartie.add(begegnung.nrB());
+			});
+			teamsMitPartie.addAll(freilosTeams);
 			chronik.vermerkeRunde(runde, begegnungen, freilosTeams, siegeVorRunde);
 			int freilosRunde = runde;
 			freilosTeams.forEach(teamNr -> freilosRundenJeTeam.computeIfAbsent(teamNr, k -> new ArrayList<>())
@@ -111,7 +120,7 @@ public final class SchweizerRundenLeser {
 		}
 
 		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
-		for (Team team : aktiveMeldungen.teams()) {
+		for (Team team : meldungen.teams()) {
 			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
 			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
 			int punkteDiff = stats[1] - stats[2];
@@ -119,7 +128,7 @@ public final class SchweizerRundenLeser {
 					chronik.rundenFuer(team.getNr()), freiloseJeTeam.getOrDefault(team.getNr(), 0),
 					freilosRundenJeTeam.getOrDefault(team.getNr(), List.of())));
 		}
-		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden);
+		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden, teamsMitPartie);
 	}
 
 	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {
@@ -132,7 +141,7 @@ public final class SchweizerRundenLeser {
 	 * @return {@code true}, wenn die Runde mindestens ein eingetragenes Ergebnis hat
 	 */
 	private static boolean leseRundeEin(WorkingSpreadsheet workingSpreadsheet, XSpreadsheet rundeSheet,
-			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
+			TeamMeldungen meldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
 			List<HerunterlosChronik.Begegnung> begegnungen, List<Integer> freilosTeams,
 			SchweizerTeamNrAufloeser teamNrAufloeser, int freispielPunktePlus,
 			int freispielPunkteMinus) throws GenerateException {
@@ -164,9 +173,8 @@ public final class SchweizerRundenLeser {
 			if (nrA == SchweizerTeamNrAufloeser.KEIN_TEAM) {
 				break; // Ende der Daten
 			}
-			Team teamA = aktiveMeldungen.getTeam(nrA);
-			if (teamA == null) {
-				continue; // Team inaktiv oder gelöscht
+			if (meldungen.getTeam(nrA) == null) {
+				continue; // Meldung gelöscht
 			}
 
 			int nrB = teamNrAufloeser.teamB(row, teamFormeln[i][1]);
@@ -180,9 +188,8 @@ public final class SchweizerRundenLeser {
 				statsA[2] += freispielPunkteMinus;
 				continue;
 			}
-			Team teamB = aktiveMeldungen.getTeam(nrB);
-			if (teamB == null) {
-				continue;
+			if (meldungen.getTeam(nrB) == null) {
+				continue; // Meldung gelöscht
 			}
 			begegnungen.add(new HerunterlosChronik.Begegnung(nrA, nrB));
 
