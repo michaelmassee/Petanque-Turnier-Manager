@@ -42,7 +42,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
-import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -165,9 +164,9 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
             TeamMeldungen aktiveMeldungen) throws GenerateException {
         processBoxinfo("processbox.rangliste.einfuegen");
 
-        int gruppengroesse = konfigurationSheet.getGruppengroesse();
-        if (gruppengroesse > 0 && aktiveMeldungen.size() > gruppengroesse) {
-            berechnungUndSchreibenGruppen(sheet, meldeListe, aktiveMeldungen, gruppengroesse);
+        List<TeamMeldungen> gruppen = ermittleGruppen(aktiveMeldungen);
+        if (gruppen.size() > 1) {
+            berechnungUndSchreibenGruppen(sheet, meldeListe, gruppen);
         } else {
             berechnungUndSchreibenEinzel(sheet, meldeListe, aktiveMeldungen);
         }
@@ -195,9 +194,13 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         getxCalculatable().calculateAll();
     }
 
+    /** Gruppen wie im Spielplan (siehe {@link JGJRanglisteRechner#ermittleGruppen}). */
+    protected List<TeamMeldungen> ermittleGruppen(TeamMeldungen aktiveMeldungen) throws GenerateException {
+        return rangListeRechner.ermittleGruppen(aktiveMeldungen, konfigurationSheet.getGruppengroesse());
+    }
+
     private void berechnungUndSchreibenGruppen(XSpreadsheet sheet, JGJMeldeListeSheet_Update meldeListe,
-            TeamMeldungen aktiveMeldungen, int gruppengroesse) throws GenerateException {
-        List<TeamMeldungen> gruppen = JGJGruppenAufteiler.teileInGruppen(aktiveMeldungen, gruppengroesse);
+            List<TeamMeldungen> gruppen) throws GenerateException {
         Map<Integer, String> teamNamen = leseTeamNamen(meldeListe);
         int aktuelleZeile = ERSTE_DATEN_ZEILE;
 

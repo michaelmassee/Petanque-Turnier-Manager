@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.jedergegenjeden.rangliste;
 
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,8 +51,7 @@ public class JGJRanglisteSheetUpdate extends JGJRanglisteSheet implements PtmOnl
             return;
         }
 
-        int clearAnzZeilen = berechneClearAnzZeilen(aktiveMeldungen.size(),
-                getKonfigurationSheet().getGruppengroesse());
+        int clearAnzZeilen = berechneClearAnzZeilen(ermittleGruppen(aktiveMeldungen));
         RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, clearAnzZeilen);
         insertHeader(sheet);
         berechnungUndSchreiben(sheet, meldeListe, aktiveMeldungen);
@@ -62,11 +63,8 @@ public class JGJRanglisteSheetUpdate extends JGJRanglisteSheet implements PtmOnl
      * Berechnet die Mindestanzahl zu löschender Zeilen.
      * Im Gruppen-Modus kommen pro Gruppe eine Header-Zeile hinzu.
      */
-    private int berechneClearAnzZeilen(int teamAnzahl, int gruppengroesse) {
-        if (gruppengroesse <= 0 || teamAnzahl <= gruppengroesse) {
-            return teamAnzahl;
-        }
-        int anzGruppen = (int) Math.ceil((double) teamAnzahl / gruppengroesse);
-        return teamAnzahl + anzGruppen;
+    private static int berechneClearAnzZeilen(List<TeamMeldungen> gruppen) {
+        int teamAnzahl = gruppen.stream().mapToInt(TeamMeldungen::size).sum();
+        return gruppen.size() > 1 ? teamAnzahl + gruppen.size() : teamAnzahl;
     }
 }

@@ -3,11 +3,14 @@ package de.petanqueturniermanager.jedergegenjeden.rangliste;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteRechner.TeamStats;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -93,5 +96,77 @@ class JGJRanglisteRechnerTest {
 
 		assertThat(stats.spielDiff()).isEqualTo(3);
 		assertThat(stats.spielPunkteDiff()).isEqualTo(25);
+	}
+
+	private static final String PARTIE = "=PTM.UUID.TEAMNR(...)";
+	private static final String KOPF = "0";
+
+	/** Spielplan mit zwei Gruppen: A = 1–4, B = 5–8 (Kopfzeilen mit festem Wert 0). */
+	private static RangeData zweiGruppenSpielplan() {
+		RangeData data = new RangeData();
+		data.add(new RowData(0, 0));
+		data.add(new RowData(1, 2));
+		data.add(new RowData(3, 4));
+		data.add(new RowData(1, 3));
+		data.add(new RowData(0, 0));
+		data.add(new RowData(5, 6));
+		data.add(new RowData(7, 8));
+		return data;
+	}
+
+	private static String[][] formeln(String... teamAFormeln) {
+		return Arrays.stream(teamAFormeln).map(formel -> new String[] { formel, PARTIE })
+				.toArray(String[][]::new);
+	}
+
+	private static TeamMeldungen meldungen(int... teamNrn) {
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int nr : teamNrn) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(nr));
+		}
+		return meldungen;
+	}
+
+	private static List<List<Integer>> nummern(List<TeamMeldungen> gruppen) {
+		return gruppen.stream().map(gruppe -> gruppe.teams().stream().map(Team::getNr).toList()).toList();
+	}
+
+	@Test
+	void spielplanGruppenLiestGruppenAusKopfzeilen() {
+		List<List<Integer>> gruppen = JGJRanglisteRechner.spielplanGruppen(zweiGruppenSpielplan(),
+				formeln(KOPF, PARTIE, PARTIE, PARTIE, KOPF, PARTIE, PARTIE));
+		assertThat(gruppen).containsExactly(List.of(1, 2, 3, 4), List.of(5, 6, 7, 8));
+	}
+
+	@Test
+	void geloeschtesTeamMitFormelTrenntKeineGruppe() {
+		RangeData data = zweiGruppenSpielplan();
+		data.set(2, new RowData(0, 4)); // Team 3 gelöscht: Formel ergibt 0
+		List<List<Integer>> gruppen = JGJRanglisteRechner.spielplanGruppen(data,
+				formeln(KOPF, PARTIE, PARTIE, PARTIE, KOPF, PARTIE, PARTIE));
+		assertThat(gruppen).containsExactly(List.of(1, 2, 4, 3), List.of(5, 6, 7, 8));
+	}
+
+	@Test
+	void spielplanOhneGruppenErgibtEineGruppe() {
+		RangeData data = new RangeData();
+		data.add(new RowData(1, 2));
+		data.add(new RowData(3, 0)); // Freilos
+		assertThat(JGJRanglisteRechner.spielplanGruppen(data, formeln(PARTIE, PARTIE)))
+				.containsExactly(List.of(1, 2, 3));
+	}
+
+	@Test
+	void ausgestiegenesTeamVerschiebtKeineGruppe() {
+		List<TeamMeldungen> gruppen = JGJRanglisteRechner.gruppenAusSpielplan(
+				List.of(List.of(1, 2, 3, 4), List.of(5, 6, 7, 8)), meldungen(1, 3, 4, 5, 6, 7, 8));
+		assertThat(nummern(gruppen)).containsExactly(List.of(1, 3, 4), List.of(5, 6, 7, 8));
+	}
+
+	@Test
+	void eineSpielplanGruppeBehaeltAlleAktivenTeams() {
+		List<TeamMeldungen> gruppen = JGJRanglisteRechner.gruppenAusSpielplan(List.of(List.of(1, 2, 3)),
+				meldungen(1, 2, 3, 9));
+		assertThat(nummern(gruppen)).containsExactly(List.of(1, 2, 3, 9));
 	}
 }

@@ -3,8 +3,10 @@ package de.petanqueturniermanager.jedergegenjeden.rangliste;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -12,9 +14,11 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -58,6 +62,95 @@ public class JGJRanglisteRechner {
 		return Comparator.comparingInt(TeamStats::spielePlus).reversed()
 				.thenComparing(Comparator.comparingInt(TeamStats::spielPunkteDiff).reversed())
 				.thenComparing(Comparator.comparingInt(TeamStats::spielPunktePlus).reversed());
+	}
+
+	/**
+	 * Gruppen für Rangliste, Gesamtrangliste und Finalrunde. Maßgeblich ist die Gruppeneinteilung des bestehenden
+	 * Spielplans, gefiltert auf die aktiven Teams: Ein nachträglich deaktiviertes Team fällt nur aus seiner Gruppe
+	 * heraus, die übrigen Teams bleiben in der Gruppe, in der sie gespielt haben. Eine Neuaufteilung der aktiven Teams
+	 * würde Teams in fremde Gruppen verschieben. Nur ohne Spielplan werden die Gruppen wie beim Erstellen neu
+	 * aufgeteilt.
+	 *
+	 * @return mindestens eine Gruppe; bei genau einer Gruppe alle aktiven Teams
+	 */
+	public List<TeamMeldungen> ermittleGruppen(TeamMeldungen aktiveMeldungen, int gruppengroesse)
+			throws GenerateException {
+		XSpreadsheet spielplanSheet = spielplanSheet();
+		if (spielplanSheet == null) {
+			boolean gruppenModus = gruppengroesse > 0 && aktiveMeldungen.size() > gruppengroesse;
+			return gruppenModus ? JGJGruppenAufteiler.teileInGruppen(aktiveMeldungen, gruppengroesse)
+					: List.of(aktiveMeldungen);
+		}
+		String[][] teamAFormeln = new SheetHelper(workingSpreadsheet).getFormulaArrayFromRange(spielplanSheet,
+				teamNummernBereich());
+		return gruppenAusSpielplan(spielplanGruppen(leseTeamNummern(spielplanSheet), teamAFormeln),
+				aktiveMeldungen);
+	}
+
+	/**
+	 * Ordnet die aktiven Teams den Spielplan-Gruppen zu. Bei höchstens einer Gruppe bleibt es bei allen aktiven Teams
+	 * (auch nachgemeldeten ohne Partie). Im Gruppenmodus bleibt jede Gruppe erhalten, auch wenn alle ihre Teams
+	 * ausgestiegen sind, damit die Gruppenbuchstaben stabil bleiben.
+	 */
+	static List<TeamMeldungen> gruppenAusSpielplan(List<List<Integer>> spielplanGruppen,
+			TeamMeldungen aktiveMeldungen) {
+		if (spielplanGruppen.size() <= 1) {
+			return List.of(aktiveMeldungen);
+		}
+		List<TeamMeldungen> gruppen = new ArrayList<>();
+		for (List<Integer> teamNrn : spielplanGruppen) {
+			TeamMeldungen gruppe = new TeamMeldungen();
+			for (int teamNr : teamNrn) {
+				Team team = aktiveMeldungen.getTeam(teamNr);
+				if (team != null) {
+					gruppe.addTeamWennNichtVorhanden(team);
+				}
+			}
+			gruppen.add(gruppe);
+		}
+		return gruppen;
+	}
+
+	/**
+	 * Gruppenstruktur des Spielplans: Teamnummern je Gruppe in Spielplan-Reihenfolge. Eine Gruppe beginnt nach einer
+	 * Kopfzeile; ein Spielplan ohne Gruppen ergibt genau eine Gruppe. Kopfzeilen tragen in der Team-A-Spalte den
+	 * festen Wert 0, Partiezeilen eine Formel – so trennt auch ein gelöschtes Team (Formel ergibt 0) keine Gruppe.
+	 *
+	 * @param teamNrData   Spalten Team-A-Nr und Team-B-Nr ab der ersten Spieltag-Datenzeile
+	 * @param teamAFormeln Formeln derselben Zeilen (Spalte 0 = Team A)
+	 */
+	static List<List<Integer>> spielplanGruppen(RangeData teamNrData, String[][] teamAFormeln) {
+		List<Set<Integer>> gruppen = new ArrayList<>();
+		boolean neueGruppe = true;
+		for (int i = 0; i < teamNrData.size(); i++) {
+			RowData zeile = teamNrData.get(i);
+			if (zeile.size() < 2) {
+				break;
+			}
+			int nrA = zeile.get(0).getIntVal(0);
+			int nrB = zeile.get(1).getIntVal(0);
+			if (nrA <= 0 && !istPartieZeile(teamAFormeln, i)) {
+				neueGruppe = true; // Gruppen-Kopfzeile oder Leerzeile
+				continue;
+			}
+			if (neueGruppe) {
+				gruppen.add(new LinkedHashSet<>());
+				neueGruppe = false;
+			}
+			Set<Integer> gruppe = gruppen.get(gruppen.size() - 1);
+			if (nrA > 0) {
+				gruppe.add(nrA);
+			}
+			if (nrB > 0) {
+				gruppe.add(nrB);
+			}
+		}
+		return gruppen.stream().map(List::copyOf).toList();
+	}
+
+	private static boolean istPartieZeile(String[][] teamAFormeln, int zeile) {
+		return zeile < teamAFormeln.length && teamAFormeln[zeile].length > 0 && teamAFormeln[zeile][0] != null
+				&& teamAFormeln[zeile][0].startsWith("=");
 	}
 
 	/** Statistik der übergebenen Teams berechnen und nach {@link #vergleicher()} sortieren. */
@@ -126,17 +219,13 @@ public class JGJRanglisteRechner {
 		}
 
 		var xDoc = workingSpreadsheet.getWorkingSpreadsheetDocument();
-		XSpreadsheet spielplanSheet = SheetMetadataHelper.findeSheetUndHeile(
-				xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN, JGJSpielPlanSheet.sheetName());
+		XSpreadsheet spielplanSheet = spielplanSheet();
 		if (spielplanSheet == null) {
 			return statsMap;
 		}
 
 		int startZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
-		RangeData teamNrData = RangeHelper.from(spielplanSheet, xDoc,
-				RangePosition.from(JGJSpielPlanSheet.TEAM_A_NR_SPALTE, startZeile,
-						JGJSpielPlanSheet.TEAM_B_NR_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
-				.getDataFromRange();
+		RangeData teamNrData = leseTeamNummern(spielplanSheet);
 
 		RangeData spielpunkteData = RangeHelper.from(spielplanSheet, xDoc,
 				RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, startZeile,
@@ -185,5 +274,21 @@ public class JGJRanglisteRechner {
 			}
 		}
 		return statsMap;
+	}
+
+	private XSpreadsheet spielplanSheet() {
+		return SheetMetadataHelper.findeSheetUndHeile(workingSpreadsheet.getWorkingSpreadsheetDocument(),
+				SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN, JGJSpielPlanSheet.sheetName());
+	}
+
+	private RangeData leseTeamNummern(XSpreadsheet spielplanSheet) throws GenerateException {
+		return RangeHelper.from(spielplanSheet, workingSpreadsheet.getWorkingSpreadsheetDocument(),
+				teamNummernBereich()).getDataFromRange();
+	}
+
+	private static RangePosition teamNummernBereich() {
+		int startZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+		return RangePosition.from(JGJSpielPlanSheet.TEAM_A_NR_SPALTE, startZeile, JGJSpielPlanSheet.TEAM_B_NR_SPALTE,
+				startZeile + MAX_SPIELPLAN_ZEILEN);
 	}
 }

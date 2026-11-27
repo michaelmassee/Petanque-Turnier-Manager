@@ -42,7 +42,6 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
-import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJGesamtranglisteSortModus;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
@@ -179,12 +178,9 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 				new EingabeSignatur(SignaturQuellen::fuerJGJ));
 	}
 
+	/** Gruppen wie im Spielplan (siehe {@link JGJRanglisteRechner#ermittleGruppen}). */
 	public List<TeamMeldungen> ermittleGruppen(TeamMeldungen aktiveMeldungen) throws GenerateException {
-		int gruppengroesse = konfigurationSheet.getGruppengroesse();
-		if (gruppengroesse <= 0 || aktiveMeldungen.size() <= gruppengroesse) {
-			return List.of(aktiveMeldungen);
-		}
-		return JGJGruppenAufteiler.teileInGruppen(aktiveMeldungen, gruppengroesse);
+		return rangListeRechner.ermittleGruppen(aktiveMeldungen, konfigurationSheet.getGruppengroesse());
 	}
 
 	/**
