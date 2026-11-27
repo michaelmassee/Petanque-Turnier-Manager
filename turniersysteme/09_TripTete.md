@@ -56,6 +56,17 @@ Ein Team gewinnt die Begegnung, wenn es **mindestens 2 von 3 Punkten** erreicht.
 
 **Wichtig:** Selbst wenn das Triplette verloren geht, ist der Gesamtsieg noch möglich (Doublette + Tête à la fois gewinnen).
 
+### Rangliste
+Die Platzierung ergibt sich in dieser Reihenfolge:
+1. Punkte + (gewonnene Begegnungen)
+2. Siege + (gewonnene Partien)
+3. Spielpunkte +
+4. Spielpunkte-Δ
+
+Sind alle vier Kriterien gleich, teilen sich die Teams den Platz (kein Losentscheid).
+
+Ein Team, das nach dem Erstellen des Spielplans aussteigt (Aktiv = 2 oder leer), bleibt mit seinen gespielten Begegnungen in der Rangliste stehen. Der Spielplan selbst bleibt unverändert.
+
 ---
 # 4. Taktische Tiefe
 Trip‑Tête bietet ein hohes Maß an Strategie:
