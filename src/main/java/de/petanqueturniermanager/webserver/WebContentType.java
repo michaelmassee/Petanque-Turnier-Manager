@@ -39,6 +39,8 @@ final class WebContentType {
 			case "gif" -> "image/gif";
 			case "webp" -> "image/webp";
 			case "ico" -> "image/x-icon";
+			case "woff" -> "font/woff";
+			case "woff2" -> "font/woff2";
 			case "wav" -> "audio/wav";
 			case "pdf" -> "application/pdf";
 			case "txt" -> "text/plain; charset=UTF-8";

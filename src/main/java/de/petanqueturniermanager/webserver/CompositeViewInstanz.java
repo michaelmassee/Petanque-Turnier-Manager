@@ -11,7 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,6 +47,9 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
     private static final String GONG_RESOURCE = "de/petanqueturniermanager/timer/gong.wav";
     private static final Gson GSON = new Gson();
+    /** Dateiendungen, die als Unterressource einer lokalen Panel-HTML-Datei ausgeliefert werden dürfen. */
+    private static final Set<String> ERLAUBTE_PANEL_ENDUNGEN = Set.of(
+            "html", "css", "js", "svg", "png", "jpg", "jpeg", "gif", "webp", "ico", "woff", "woff2");
 
     private volatile CompositeViewKonfiguration konfiguration;
     private final HttpServer httpServer;
@@ -404,7 +409,41 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         if (!kandidat.startsWith(echteWurzel)) {
             throw new IOException("Lokale Panel-Ressource liegt außerhalb des HTML-Verzeichnisses: " + kandidat);
         }
+        if (enthaeltVersteckteKomponente(echteWurzel.relativize(kandidat))) {
+            throw new IOException("Lokale Panel-Ressource liegt in verstecktem Pfad: " + kandidat);
+        }
+        if (!istErlaubteWebRessource(kandidat)) {
+            throw new IOException("Lokale Panel-Ressource hat keinen erlaubten Web-Dateityp: " + kandidat);
+        }
         return kandidat;
+    }
+
+    /**
+     * Versteckte Dateien und Verzeichnisse (z. B. {@code .ssh}, {@code .git}, {@code .config})
+     * werden nie ausgeliefert – sie enthalten typischerweise Schlüssel und Zugangsdaten.
+     */
+    private static boolean enthaeltVersteckteKomponente(Path relativerPfad) {
+        for (Path komponente : relativerPfad) {
+            if (komponente.toString().startsWith(".")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Nur typische Web-Ressourcen einer HTML-Seite werden als Unterressource ausgeliefert.
+     * Geprüft wird der echte Dateiname (nach Symlink-Auflösung), damit ein Link
+     * {@code bild.png -> id_rsa} nicht greift.
+     */
+    private static boolean istErlaubteWebRessource(Path echteDatei) {
+        Path dateiname = echteDatei.getFileName();
+        if (dateiname == null) {
+            return false;
+        }
+        String name = dateiname.toString();
+        int punkt = name.lastIndexOf('.');
+        return punkt > 0 && ERLAUBTE_PANEL_ENDUNGEN.contains(name.substring(punkt + 1).toLowerCase(Locale.ROOT));
     }
 
     private void serviereClasspathRessource(HttpExchange exchange, String ressourcePfad, String contentType,

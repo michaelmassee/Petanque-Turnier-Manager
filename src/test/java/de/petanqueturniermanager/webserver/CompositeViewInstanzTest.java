@@ -93,6 +93,45 @@ class CompositeViewInstanzTest {
     }
 
     @Test
+    void lokalePanelDateiBlockiertVersteckteVerzeichnisse() throws IOException {
+        Path htmlDatei = testPanelDateienAnlegen();
+        Path sshVerzeichnis = Files.createDirectories(htmlDatei.getParent().resolve(".ssh"));
+        Files.writeString(sshVerzeichnis.resolve("id_rsa"), "privater Schlüssel");
+        Files.writeString(sshVerzeichnis.resolve("bild.png"), "getarnt");
+        var instanz = compositeViewMitLokalerDatei(htmlDatei);
+
+        assertThat(lokalePanelAntwort(instanz, "0/.ssh/id_rsa").status()).isEqualTo(404);
+        assertThat(lokalePanelAntwort(instanz, "0/.ssh/bild.png").status()).isEqualTo(404);
+        assertThat(lokalePanelAntwort(instanz, "0/images/../.ssh/bild.png").status()).isEqualTo(404);
+    }
+
+    @Test
+    void lokalePanelDateiBlockiertDateienOhneWebDateityp() throws IOException {
+        Path htmlDatei = testPanelDateienAnlegen();
+        Files.writeString(htmlDatei.getParent().resolve("notizen.txt"), "privat");
+        Files.writeString(htmlDatei.getParent().resolve("credentials"), "privat");
+        var instanz = compositeViewMitLokalerDatei(htmlDatei);
+
+        assertThat(lokalePanelAntwort(instanz, "0/notizen.txt").status()).isEqualTo(404);
+        assertThat(lokalePanelAntwort(instanz, "0/credentials").status()).isEqualTo(404);
+    }
+
+    @Test
+    void lokalePanelDateiBlockiertGetarntenSymlinkInnerhalbDesHtmlVerzeichnisses() throws IOException {
+        Path htmlDatei = testPanelDateienAnlegen();
+        Path geheimeDatei = htmlDatei.getParent().resolve("id_rsa");
+        Files.writeString(geheimeDatei, "privater Schlüssel");
+        try {
+            Files.createSymbolicLink(htmlDatei.getParent().resolve("bild.png"), geheimeDatei);
+        } catch (UnsupportedOperationException | IOException | SecurityException e) {
+            assumeTrue(false, "Symlinks im Test-Dateisystem nicht verfügbar: " + e.getMessage());
+        }
+        var instanz = compositeViewMitLokalerDatei(htmlDatei);
+
+        assertThat(lokalePanelAntwort(instanz, "0/bild.png").status()).isEqualTo(404);
+    }
+
+    @Test
     void lokalePanelDateiIgnoriertUngueltigePanelId() throws IOException {
         Path htmlDatei = testPanelDateienAnlegen();
         var instanz = compositeViewMitLokalerDatei(htmlDatei);
