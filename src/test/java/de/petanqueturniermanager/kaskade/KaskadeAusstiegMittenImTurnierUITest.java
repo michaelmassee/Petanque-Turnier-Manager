@@ -120,6 +120,27 @@ public class KaskadeAusstiegMittenImTurnierUITest extends BaseCalcUITest {
     }
 
     /**
+     * Regression: Eine leere Aktiv-Zelle heißt „nimmt nicht teil“. Früher setzte die Turnier-Eröffnung jede leere
+     * Zelle auf 1 und loste das Team mit – anders als die übrigen Systeme und gegen den Check-in bei PTM-Online.
+     */
+    @Test
+    public void leereAktivZelle_bleibtLeerUndWirdNichtGelost() throws GenerateException {
+        testDaten.generate(0, false);
+        KaskadeMeldeListeSheetUpdate meldeliste = new KaskadeMeldeListeSheetUpdate(wkingSpreadsheet);
+        Position aktivZelle = Position.from(meldeliste.getAktivSpalte(),
+                meldeliste.getSpielerZeileNr(AUSGESTIEGENES_TEAM_NR));
+        sheetHlp.clearValInCell(meldeliste.getXSpreadSheet(), aktivZelle);
+
+        testDaten.spielrundeSheet.setForceOk(true);
+        testDaten.spielrundeSheet.naechsteRunde();
+
+        assertThat(sheetHlp.getIntFromCell(meldeliste.getXSpreadSheet(), aktivZelle)).as("Aktiv-Zelle bleibt leer")
+                .isNotEqualTo(KaskadeMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL);
+        assertThat(leseSpielpaarungWerte(SheetNamen.kaskadenRunde(1))).as("Team wird nicht gelost")
+                .noneMatch(zeile -> zeile.subList(1, 3).contains(AUSGESTIEGENES_TEAM_NR));
+    }
+
+    /**
      * Liest SPIEL_NR-/Team-A-/Team-B-/Ergebnis-Werte als {@code List<List<Integer>>} statt
      * {@code RangeData} – {@link de.petanqueturniermanager.helper.sheet.rangedata.CellData} hat kein
      * {@code equals()}, ein direkter {@code RangeData}-Vergleich wäre daher immer Objekt-Identität

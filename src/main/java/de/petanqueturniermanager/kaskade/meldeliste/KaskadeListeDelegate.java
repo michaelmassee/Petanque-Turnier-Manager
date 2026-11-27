@@ -36,6 +36,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
@@ -638,6 +640,32 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         if (!bereinigt.equals(original)) {
             sheet.getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet, Position.from(spalte, zeile), bereinigt));
         }
+    }
+
+    /**
+     * Setzt alle Teams mit Name und Teamnummer auf {@link #AKTIV_WERT_NIMMT_TEIL}. Liest die Meldungen als Block und
+     * schreibt die Aktiv-Spalte als Block zurück; leere Zellen ohne Meldung bleiben leer.
+     */
+    void alleTeamsAktivieren() throws GenerateException {
+        int letzteZeile = letzteZeileMitDaten(sheet.getXSpreadSheet());
+        if (letzteZeile < ERSTE_DATEN_ZEILE) {
+            return;
+        }
+        int kennungSpalte = getZeilenKennungSpalte();
+        int nrSpalte = getTeamNrSpalte();
+        int aktivSpalte = getAktivSpalte();
+        RangeData meldungen = RangeHelper.from(sheet,
+                RangePosition.from(0, ERSTE_DATEN_ZEILE, aktivSpalte, letzteZeile)).getDataFromRange();
+        RangePosition aktivBereich = RangePosition.from(aktivSpalte, ERSTE_DATEN_ZEILE, aktivSpalte, letzteZeile);
+        RangeData aktivWerte = RangeHelper.from(sheet, aktivBereich).getDataFromRange();
+        for (int i = 0; i < meldungen.size(); i++) {
+            RowData zeile = meldungen.get(i);
+            String kennung = zeile.get(kennungSpalte).getStringVal();
+            if (kennung != null && !kennung.isBlank() && zeile.get(nrSpalte).getIntVal(0) > 0) {
+                aktivWerte.get(i).get(0).setVal(AKTIV_WERT_NIMMT_TEIL);
+            }
+        }
+        RangeHelper.from(sheet, aktivBereich).setDataInRange(aktivWerte);
     }
 
     // ---------------------------------------------------------------

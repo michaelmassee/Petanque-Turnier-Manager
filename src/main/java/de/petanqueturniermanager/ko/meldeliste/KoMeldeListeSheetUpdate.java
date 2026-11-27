@@ -18,10 +18,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -253,8 +251,9 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 
 	/**
 	 * Aktualisiert die KO-Meldeliste synchron. Wird auch vom Turnierbaum-Erstellen genutzt,
-	 * damit frisch eingetragene Teams ohne vorherigen separaten Update-Klick eine Nr und
-	 * Aktiv-Defaults bekommen.
+	 * damit frisch eingetragene Teams ohne vorherigen separaten Update-Klick eine Nr bekommen.
+	 * Die Aktiv-Spalte bleibt unverändert: eine leere Zelle heißt „nimmt nicht teil“ (wie in allen Meldelisten und bei
+	 * PTM-Online „nicht eingecheckt“).
 	 */
 	public void aktualisiereMeldeliste() throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();
@@ -264,34 +263,8 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		}
 		stringsBesinigen(xSheet);
 		teamnummernVergeben(xSheet);
-		aktivDefaultSetzen(xSheet);
 		nachRangSortieren(xSheet);
 		upDateSheet();
-	}
-
-	/**
-	 * Setzt Aktiv=1 für Zeilen mit Spielernamen aber leerem Aktiv-Wert (nur für neue Zeilen).
-	 */
-	private void aktivDefaultSetzen(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
-		if (letzteZeile < ERSTE_DATEN_ZEILE) {
-			return;
-		}
-		int vornameSpalte = delegate.getVornameSpalte(0);
-		int aktivSpalte = delegate.getAktivSpalte();
-
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-			if (vorname == null || vorname.isBlank()) {
-				continue;
-			}
-			int aktiv = getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
-			if (aktiv <= 0) {
-				getSheetHelper().setNumberValueInCell(
-						NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile))
-								.setValue(AKTIV_WERT_NIMMT_TEIL));
-			}
-		}
 	}
 
 	/**

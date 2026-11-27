@@ -48,6 +48,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -185,6 +186,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
 
         if (naechsteRundeNr == 1) {
             meldeListe.vollstaendigAktualisieren();
+            fragObAlleTeamsAktivieren();
         } else {
             meldeListe.upDateSheet();
         }
@@ -253,6 +255,27 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
 
         konfigurationSheet.setAktiveKaskadenRunde(naechsteRundeNr);
         turnierstart.bestaetigen();
+    }
+
+    /**
+     * Ohne aktives Team, aber mit Meldungen: fragen, ob alle Teams aktiviert werden sollen (wie bei den übrigen
+     * Turniersystemen). Eine leere Aktiv-Zelle heißt „nimmt nicht teil“.
+     */
+    private void fragObAlleTeamsAktivieren() throws GenerateException {
+        if (meldeListe.getAktiveMeldungen().size() > 0) {
+            return;
+        }
+        int anzMeldungen = meldeListe.getAlleMeldungen().size();
+        if (anzMeldungen == 0) {
+            return;
+        }
+        MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+                .caption(I18n.get("msg.caption.keine.aktiven.meldungen"))
+                .message(I18n.get("msg.text.keine.aktiven.teams.aktivieren", anzMeldungen))
+                .show();
+        if (result == MessageBoxResult.YES) {
+            meldeListe.alleTeamsAktivieren();
+        }
     }
 
     // ---------------------------------------------------------------

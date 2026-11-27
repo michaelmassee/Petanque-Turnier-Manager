@@ -20,7 +20,9 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
+import de.petanqueturniermanager.model.Team;
 
 /**
  * Dokumentiert das aktuelle (statische) Verhalten von KO bei einem Ausstieg NACH bereits erstelltem
@@ -89,5 +91,27 @@ public class KoAusstiegMittenImTurnierUITest extends BaseCalcUITest {
             werte.add(zeile);
         }
         return werte;
+    }
+
+    /**
+     * Regression: Eine leere Aktiv-Zelle heißt „nimmt nicht teil“. Früher setzte der Turnierbaum-Aufbau jede leere
+     * Zelle auf 1 und nahm das Team in den Baum auf – anders als die übrigen Systeme und gegen den Check-in bei
+     * PTM-Online.
+     */
+    @Test
+    public void leereAktivZelle_bleibtLeerUndKommtNichtInDenBaum() throws GenerateException {
+        new KoMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).erstelleMeldelisteWithTestdaten();
+        KoMeldeListeSheetUpdate meldeliste = new KoMeldeListeSheetUpdate(wkingSpreadsheet);
+        Position aktivZelle = Position.from(meldeliste.getAktivSpalte(),
+                meldeliste.getSpielerZeileNr(AUSGESTIEGENES_TEAM_NR));
+        sheetHlp.clearValInCell(meldeliste.getXSpreadSheet(), aktivZelle);
+
+        new KoTurnierbaumSheet(wkingSpreadsheet).doRun(); // Menüpfad inkl. Meldeliste-Aktualisierung
+
+        KoMeldeListeSheetUpdate nachher = new KoMeldeListeSheetUpdate(wkingSpreadsheet);
+        assertThat(sheetHlp.getIntFromCell(nachher.getXSpreadSheet(), aktivZelle)).as("Aktiv-Zelle bleibt leer")
+                .isNotEqualTo(KoMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL);
+        assertThat(nachher.getAktiveMeldungen().teams()).as("Team spielt nicht mit")
+                .extracting(Team::getNr).hasSize(ANZ_TEAMS - 1).doesNotContain(AUSGESTIEGENES_TEAM_NR);
     }
 }
