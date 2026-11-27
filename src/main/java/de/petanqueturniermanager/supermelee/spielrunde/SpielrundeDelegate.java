@@ -372,12 +372,17 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				maxcntr--;
 				Team team1 = Team.from(1);
 				Team team2 = Team.from(2);
+				// Gespielte Teamgröße inkl. inzwischen inaktiver Spieler: Nur aktive Spieler kommen ins Team (sie werden
+				// gelost), die Ausnahme-Team-Zählung muss aber die tatsächlich gespielte Größe sehen – sonst zählte ein
+				// Triplette mit einem inzwischen abwesenden Spieler für die übrigen als Doublette und umgekehrt.
+				int[] gespielteTeamGroesse = new int[2];
 				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) {
 					Team team = (teamCntr == 1) ? team1 : team2;
 					for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
 						pospielerNr.spalte(ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
 						int spielerNr = sheet.getSheetHelper().getIntFromCell(xsheet, pospielerNr);
 						if (spielerNr > 0) {
+							gespielteTeamGroesse[teamCntr - 1]++;
 							Spieler spieler = aktiveMeldungen.findSpielerByNr(spielerNr);
 							if (spieler != null) {
 								try {
@@ -403,9 +408,10 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				// mit von der Default-Modus-Größe abweichender Größe zählen (Triplette-Modus:
 				// kleineres Doublette; Doublette-Modus: größeres Triplette), damit der nächste
 				// Paarungslauf die Ausnahme-Slots fair über die Runden verteilen kann.
-				for (Team team : new Team[] { team1, team2 }) {
-					if (team.size() > 0 && team.size() != defaultTeamGroesse) {
-						for (Spieler s : team.spieler()) {
+				Team[] teams = { team1, team2 };
+				for (int teamIdx = 0; teamIdx < teams.length; teamIdx++) {
+					if (gespielteTeamGroesse[teamIdx] > 0 && gespielteTeamGroesse[teamIdx] != defaultTeamGroesse) {
+						for (Spieler s : teams[teamIdx].spieler()) {
 							s.incAnzMalAusnahmeTeam();
 						}
 					}

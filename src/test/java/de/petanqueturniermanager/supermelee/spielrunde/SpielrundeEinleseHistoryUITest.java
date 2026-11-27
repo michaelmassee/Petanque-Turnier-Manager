@@ -18,13 +18,16 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
 
 /**
@@ -109,6 +112,41 @@ public class SpielrundeEinleseHistoryUITest extends BaseCalcUITest {
 		spielrundeSheetNaechste.gespieltenRundenEinlesen(meldungen, 1, 1);
 
 		assertHistorie(meldungen, erwarteteMitspieler, erwarteteGegner);
+	}
+
+	/**
+	 * Regression: Ein Spieler, der nach Runde 1 aussteigt, darf die Ausnahme-Team-Zählung seiner Mitspieler nicht
+	 * verfälschen. Bei 24 Spielern im Triplette-Modus spielt Runde 1 nur Triplettes; ohne die gespielte Teamgröße
+	 * sah das Team des Aussteigers beim Einlesen wie ein Doublette aus und seine zwei Mitspieler bekamen eine
+	 * Ausnahme angerechnet, die sie nie gespielt haben.
+	 */
+	@Test
+	public void einlesen_ausgestiegenerSpieler_verfaelschtAusnahmeTeamZaehlungNicht() throws GenerateException {
+		spielrundeSheetNaechste.run(); // 1.1
+
+		XSpreadsheet runde1 = sheetHlp.findByName(
+				spielrundeSheetNaechste.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1)));
+		List<Integer> erstesTeam = leseSpielerNrTeam(runde1, SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE, 0);
+		assertThat(erstesTeam).as("Runde 1 mit 24 Spielern spielt nur Triplettes").hasSize(3);
+		int aussteiger = erstesTeam.get(0);
+
+		MeldeListeSheet_Update meldeliste = spielrundeSheetNaechste.getMeldeListe();
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(meldeliste.getXSpreadSheet(),
+				Position.from(meldeliste.aktuelleSpieltagSpalte(), meldeliste.getSpielerZeileNr(aussteiger)))
+				.setValue(SpielrundeGespielt.AUSGESETZT.getId()));
+
+		SpielerMeldungen meldungen = meldeliste.getAktiveMeldungen();
+		assertThat(meldungen.findSpielerByNr(aussteiger)).as("Aussteiger ist nicht mehr aktiv").isNull();
+		spielrundeSheetNaechste.setSpielTag(SpielTagNr.from(1));
+		spielrundeSheetNaechste.setSpielRundeNr(SpielRundeNr.from(2));
+
+		spielrundeSheetNaechste.gespieltenRundenEinlesen(meldungen, 1, 1);
+
+		for (int mitspielerNr : erstesTeam.subList(1, 3)) {
+			assertThat(meldungen.findSpielerByNr(mitspielerNr).getAnzMalAusnahmeTeam())
+					.as("Mitspieler %d des Aussteigers hat Triplette gespielt, keine Ausnahme", mitspielerNr)
+					.isZero();
+		}
 	}
 
 	private SpielerMeldungen frischeAktiveMeldungen() throws GenerateException {
