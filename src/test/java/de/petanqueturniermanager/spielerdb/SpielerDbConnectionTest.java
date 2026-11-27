@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.spielerdb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Field;
@@ -210,6 +211,30 @@ class SpielerDbConnectionTest {
             assertThat(conn.istDbDateiOderBegleitdatei(tempDir.resolve("unter/../aktuell.sqlite3"))).isTrue();
             assertThat(conn.istDbDateiOderBegleitdatei(tempDir.resolve("aktuell.sqlite3-wal"))).isTrue();
             assertThat(conn.istDbDateiOderBegleitdatei(tempDir.resolve("backup.sqlite3"))).isFalse();
+        }
+    }
+
+    @Test
+    void pruefeExportZiel_lehntDbUndBegleitdateienAbUndLaesstDbUnveraendert() throws Exception {
+        Path dbDatei = tempDir.resolve("aktuell.sqlite3");
+        try (SpielerDbConnection conn = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + dbDatei)) {
+            speichereSpieler(conn.getConnection(), "Erster");
+
+            for (Path ziel : List.of(dbDatei, tempDir.resolve("unter/../aktuell.sqlite3"),
+                    tempDir.resolve("aktuell.sqlite3-wal"), tempDir.resolve("aktuell.sqlite3-shm"))) {
+                assertThatThrownBy(() -> conn.pruefeExportZiel(ziel))
+                        .isInstanceOf(SpielerDbException.class)
+                        .hasMessage(I18n.get("spielerdb.export.fehler.ziel_ist_db", ziel.toAbsolutePath()));
+            }
+            assertThat(vornamen(conn.getConnection())).containsExactly("Erster");
+        }
+    }
+
+    @Test
+    void pruefeExportZiel_erlaubtAndereDatei() throws Exception {
+        Path dbDatei = tempDir.resolve("aktuell.sqlite3");
+        try (SpielerDbConnection conn = SpielerDbConnection.fuerJdbcUrl("jdbc:sqlite:" + dbDatei)) {
+            assertThatCode(() -> conn.pruefeExportZiel(tempDir.resolve("spieler.csv"))).doesNotThrowAnyException();
         }
     }
 

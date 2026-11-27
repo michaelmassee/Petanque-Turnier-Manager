@@ -43,9 +43,7 @@ public final class SpielerDbSqliteBackupExporter implements SpielerDbExporter {
     @Override
     public void export(SpielerDbExportData data, ExportRequest request) throws SpielerDbException {
         Path datei = request.target().toAbsolutePath();
-        if (dbConnection.istDbDateiOderBegleitdatei(datei)) {
-            throw new SpielerDbException(I18n.get("spielerdb.export.fehler.ziel_ist_db", datei));
-        }
+        dbConnection.pruefeExportZiel(datei);
         Path elternverzeichnis = datei.getParent();
         if (elternverzeichnis == null) {
             throw new SpielerDbException(I18n.get("spielerdb.export.fehler.verzeichnis", datei));

@@ -202,6 +202,7 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
                 new AllExportFilter(), target);
 
         try {
+            dbConnection.pruefeExportZiel(target);
             SpielerDbExportData data = ladeDaten(format, scope);
             SpielerDbExporter exporter = exporterFuer(format);
             exporter.export(data, request);

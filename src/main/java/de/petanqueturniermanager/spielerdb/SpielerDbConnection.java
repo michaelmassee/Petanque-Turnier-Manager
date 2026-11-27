@@ -327,6 +327,16 @@ public final class SpielerDbConnection implements AutoCloseable {
         return false;
     }
 
+    /**
+     * Bricht ab, wenn {@code ziel} die laufende DB-Datei oder eine ihrer WAL-Begleitdateien ist. Gilt für jedes
+     * Exportformat: Ein CSV-, JSON- oder Calc-Export dorthin überschriebe die Datenbank mit Fremdinhalt.
+     */
+    public void pruefeExportZiel(Path ziel) throws SpielerDbException {
+        if (istDbDateiOderBegleitdatei(ziel)) {
+            throw new SpielerDbException(I18n.get("spielerdb.export.fehler.ziel_ist_db", ziel.toAbsolutePath()));
+        }
+    }
+
     private static boolean istGleicheDatei(Path a, Path b) {
         if (Files.exists(a) && Files.exists(b)) {
             try {
