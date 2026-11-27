@@ -19,9 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
@@ -241,8 +239,8 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
     }
 
     /**
-     * Bereinigt, vergibt Nummern, setzt Aktiv-Standard, sortiert und aktualisiert das Sheet
-     * vollständig.
+     * Bereinigt, vergibt Nummern, sortiert und aktualisiert das Sheet vollständig. Die Aktiv-Spalte bleibt unverändert:
+     * eine leere Zelle heißt „nimmt nicht teil“ (wie bei Schweizer und PTM-Online „nicht eingecheckt“).
      *
      * @return {@code true} wenn das Sheet gefunden und aktualisiert wurde, {@code false} wenn kein Sheet vorhanden
      */
@@ -254,32 +252,9 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
         }
         stringsBesinigen(xSheet);
         teamnummernVergeben(xSheet);
-        aktivDefaultSetzen(xSheet);
         nachNrSortieren(xSheet);
         upDateSheet();
         return true;
-    }
-
-    private void aktivDefaultSetzen(XSpreadsheet xSheet) throws GenerateException {
-        int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
-        if (letzteZeile < ERSTE_DATEN_ZEILE) {
-            return;
-        }
-        int vornameSpalte = delegate.getVornameSpalte(0);
-        int aktivSpalte = delegate.getAktivSpalte();
-
-        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-            if (vorname == null || vorname.isBlank()) {
-                continue;
-            }
-            int aktiv = getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
-            if (aktiv <= 0) {
-                getSheetHelper().setNumberValueInCell(
-                        NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile))
-                                .setValue(AKTIV_WERT_NIMMT_TEIL));
-            }
-        }
     }
 
     private void teamnummernVergeben(XSpreadsheet xSheet) throws GenerateException {

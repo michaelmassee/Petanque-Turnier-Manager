@@ -223,6 +223,27 @@ public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
                 .as("Team wird nicht mehr gelost").noneMatch(zeile -> zeile.subList(0, 2).contains(besiegter));
     }
 
+    /**
+     * Regression: Eine leere Aktiv-Zelle heißt „nimmt nicht teil“. Früher setzte die Auslosung jede leere Zelle auf 1
+     * und loste das Team mit – anders als Schweizer und gegen den Check-in bei PTM-Online.
+     */
+    @Test
+    public void leereAktivZelleOhnePartie_bleibtLeerUndWirdNichtGelost() throws GenerateException {
+        testDaten.generate(0, false);
+        FormuleXMeldeListeSheetUpdate meldeliste = neueMeldeliste();
+        sheetHlp.clearValInCell(meldeliste.getXSpreadSheet(),
+                Position.from(meldeliste.getAktivSpalte(), meldeliste.getSpielerZeileNr(AUSGESTIEGENES_TEAM_NR)));
+
+        testDaten.naechsteSpielrunde.doRun();
+
+        assertThat(aktivWert(AUSGESTIEGENES_TEAM_NR)).as("Aktiv-Zelle bleibt leer")
+                .isNotEqualTo(FormuleXMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL)
+                .isNotEqualTo(FormuleXMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN);
+        assertThat(leseSpielpaarungWerte(testDaten.naechsteSpielrunde.getSheetName(SpielRundeNr.from(1))))
+                .as("Team wird nicht gelost")
+                .noneMatch(zeile -> zeile.subList(0, 2).contains(AUSGESTIEGENES_TEAM_NR));
+    }
+
     private int aktivWert(int teamNr) throws GenerateException {
         FormuleXMeldeListeSheetUpdate meldeliste = neueMeldeliste();
         return sheetHlp.getIntFromCell(meldeliste.getXSpreadSheet(),

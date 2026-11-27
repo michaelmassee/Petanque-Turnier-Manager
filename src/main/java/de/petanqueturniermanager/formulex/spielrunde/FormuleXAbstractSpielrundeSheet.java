@@ -339,8 +339,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
     /**
      * Trägt für Teams, die in den Runden bis {@code bisSpielrunde} gespielt haben, deren Aktiv-Zelle aber leer ist,
      * „ausgestiegen“ ein (Wert 2). Die Wertung behandelt sie ohnehin so; der Eintrag macht es in der Meldeliste und
-     * bei PTM-Online sichtbar. Muss vor {@link FormuleXMeldeListeSheetUpdate#vollstaendigAktualisieren()} laufen,
-     * das leere Aktiv-Zellen sonst auf „nimmt teil“ setzt und das Team wieder auslosen würde.
+     * bei PTM-Online sichtbar.
      */
     protected void leereAktivZellenAlsAusgestiegenEintragen(int bisSpielrunde) throws GenerateException {
         FormuleXMeldeListeSheetUpdate meldeliste = getMeldeListe();
