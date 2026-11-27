@@ -105,6 +105,13 @@ Beispiele:
 > Vorrunden-Rangliste stehen, tragen dort aber statt eines Gruppenbuchstabens eine eigene
 > Cutoff-Markierung.
 
+> **Ausstieg vor der Finalrunde: Nachrücken.** Ein Team, das nach der Vorrunde ausgestiegen ist
+> (Aktiv = 2 oder leer), belegt keinen Gruppenplatz und zählt nicht zur Obergrenze der KO-Phase.
+> Die Teams dahinter rücken nach – steigt z. B. der Vorrunden-Erste aus, spielt bei Gruppengröße 4
+> der Fünfte in Gruppe A. Das ausgestiegene Team bleibt mit seiner Platzierung in der
+> Vorrunden-Rangliste stehen und trägt in der Spalte „Gruppe“ die Kein-KO-Markierung „–“. Die Zuordnung gilt beim
+> Erstellen der Finalrunde; ein Ausstieg danach ändert die erstellten Turnierbäume nicht.
+
 ---
 # 5. Cadrage – Berechnung
 

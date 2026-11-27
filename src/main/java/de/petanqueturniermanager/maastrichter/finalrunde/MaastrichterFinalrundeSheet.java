@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,10 +113,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet, 
 
 		// Bereits von der Vorrunden-Rangliste berechnete und geschriebene Reihenfolge
 		// wiederverwenden – kein zweites Einlesen der Vorrunden-Sheets, damit KO-Einteilung und
-		// Rangliste niemals auseinanderlaufen können (ausgestiegene Teams sind darin enthalten,
-		// siehe SchweizerRanglisteSheet; sie werden weiter unten in
-		// erstelleGruppeTeams(gruppeErg, aktiveMeldungen) trotzdem NICHT den spielenden
-		// Finalgruppen zugeordnet, da dort bewusst die rein aktive Teamliste verwendet wird).
+		// Rangliste niemals auseinanderlaufen können.
 		List<SchweizerTeamErgebnis> sortiert = ranglisteUpdate.getZuletztSortierteErgebnisse();
 
 		if (sortiert.isEmpty()) {
@@ -125,25 +124,25 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet, 
 			return;
 		}
 
+		// Ausgestiegene Teams bleiben mit ihrer Platzierung in der Vorrunden-Rangliste, belegen aber
+		// keinen Gruppenplatz: Die Teams dahinter rücken nach. Gruppen und Obergrenze zählen nur
+		// teilnehmende Teams.
+		List<SchweizerTeamErgebnis> teilnehmendNachRang = sortiert.stream()
+				.filter(erg -> aktiveMeldungen.getTeam(erg.teamNr()) != null)
+				.toList();
+
 		// Obergrenze für die KO-Phase: schwächer platzierte Teams bleiben ohne KO-Spiel,
 		// tauchen aber weiterhin (mit Cutoff-Markierung statt Gruppenbuchstabe) in der
 		// Vorrunden-Rangliste auf.
 		int maxTeamsKoPhase = konfigSheet.getMaxTeamsKoPhase();
-		List<SchweizerTeamErgebnis> teamsFuerKo = sortiert;
-		List<SchweizerTeamErgebnis> ausserhalbCutoff = List.of();
-		if (maxTeamsKoPhase > 0) {
-			// Ausgestiegene Teams bleiben für die Vorrundenrangliste erhalten, dürfen aber
-			// keinen der tatsächlich spielenden KO-Plätze verbrauchen.
-			List<SchweizerTeamErgebnis> aktiveTeamsNachRang = sortiert.stream()
-					.filter(erg -> aktiveMeldungen.getTeam(erg.teamNr()) != null)
-					.toList();
-			List<SchweizerTeamErgebnis> aktiveTeamsImKo = aktiveTeamsNachRang.subList(0,
-					Math.min(maxTeamsKoPhase, aktiveTeamsNachRang.size()));
-			teamsFuerKo = aktiveTeamsImKo;
-			ausserhalbCutoff = sortiert.stream().filter(erg -> !aktiveTeamsImKo.contains(erg)).toList();
-			if (!ausserhalbCutoff.isEmpty()) {
-				processBoxinfo("processbox.maastrichter.cutoff.info", ausserhalbCutoff.size());
-			}
+		int anzTeamsFuerKo = maxTeamsKoPhase > 0
+				? Math.min(maxTeamsKoPhase, teilnehmendNachRang.size())
+				: teilnehmendNachRang.size();
+		List<SchweizerTeamErgebnis> teamsFuerKo = teilnehmendNachRang.subList(0, anzTeamsFuerKo);
+		List<SchweizerTeamErgebnis> ausserhalbCutoff = teilnehmendNachRang.subList(anzTeamsFuerKo,
+				teilnehmendNachRang.size());
+		if (!ausserhalbCutoff.isEmpty()) {
+			processBoxinfo("processbox.maastrichter.cutoff.info", ausserhalbCutoff.size());
 		}
 
 		// Gruppen gemäß konfiguriertem Modus bilden
@@ -155,9 +154,13 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet, 
 		};
 
 		// Buchstabe wird nur für Gruppen mit ≥2 Teams vergeben, damit 'A' immer belegt ist
+		// Ausgestiegene Teams und Teams jenseits der Obergrenze spielen kein KO
+		Set<Integer> koTeamNrs = teamsFuerKo.stream().map(SchweizerTeamErgebnis::teamNr).collect(Collectors.toSet());
 		Map<Integer, String> teamNrZuGruppe = new HashMap<>();
-		for (SchweizerTeamErgebnis erg : ausserhalbCutoff) {
-			teamNrZuGruppe.put(erg.teamNr(), MaastrichterGruppenSpalteHelper.keinKoMarker());
+		for (SchweizerTeamErgebnis erg : sortiert) {
+			if (!koTeamNrs.contains(erg.teamNr())) {
+				teamNrZuGruppe.put(erg.teamNr(), MaastrichterGruppenSpalteHelper.keinKoMarker());
+			}
 		}
 		List<Finalgruppe> finalgruppen = new ArrayList<>();
 		char naechsterBuchstabe = 'A';

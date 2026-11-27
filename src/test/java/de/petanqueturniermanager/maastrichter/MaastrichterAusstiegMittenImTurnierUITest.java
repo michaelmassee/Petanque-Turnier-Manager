@@ -3,7 +3,14 @@ package de.petanqueturniermanager.maastrichter;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -20,6 +29,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
@@ -36,6 +46,7 @@ public class MaastrichterAusstiegMittenImTurnierUITest extends BaseCalcUITest {
     private static final int ANZ_VORRUNDEN = 3;
     private static final int ANZ_TEAMS = 12;
     private static final int AUSGESTIEGENES_TEAM_NR = 1;
+    private static final int GRUPPEN_GROESSE = 4;
 
     private MaastrichterTurnierTestDaten testDaten;
 
@@ -127,6 +138,76 @@ public class MaastrichterAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         testDaten.finalrundeSheet.doRun();
         XSpreadsheet finaleGruppeA = sheetHlp.findByName(SheetNamen.koFinaleGruppe("A"));
         assertThat(finaleGruppeA).as("Finalrunden-Gruppe A muss nach Turnierabschluss vorhanden sein").isNotNull();
+    }
+
+    /**
+     * Steigt der Vorrunden-Erste vor der Finalrunde aus, belegt er keinen Gruppenplatz mehr (Modus „Nach Größe“,
+     * ohne KO-Obergrenze): Der Fünfte rückt in Gruppe A nach. Das ausgestiegene Team bleibt mit Kein-KO-Markierung in
+     * der Vorrunden-Rangliste.
+     */
+    @Test
+    public void ausstiegVorFinalrunde_naechstesTeamRuecktInDieGruppeNach() throws GenerateException {
+        var testDatenViererGruppen = new MaastrichterTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, ANZ_VORRUNDEN,
+                GRUPPEN_GROESSE);
+        testDatenViererGruppen.generate(ANZ_VORRUNDEN, false);
+        testDatenViererGruppen.ranglisteSheet.doRun();
+        List<Integer> nachRang = teamNrnNachRang();
+        int erster = nachRang.get(0);
+        int fuenfter = nachRang.get(GRUPPEN_GROESSE);
+
+        MaastrichterMeldeListeSheetUpdate meldeliste = new MaastrichterMeldeListeSheetUpdate(wkingSpreadsheet);
+        sheetHlp.setNumberValueInCell(NumberCellValue
+                .from(meldeliste.getXSpreadSheet(),
+                        Position.from(meldeliste.getAktivSpalte(), meldeliste.getSpielerZeileNr(erster)))
+                .setValue(MaastrichterMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN));
+
+        testDatenViererGruppen.finalrundeSheet.doRun();
+
+        assertThat(teamNrnNachRang()).as("Vorrunden-Platzierung bleibt unverändert").isEqualTo(nachRang);
+        Map<Integer, String> gruppen = gruppeJeTeam();
+        assertThat(gruppen.get(erster)).as("ausgestiegenes Team spielt kein KO")
+                .isEqualTo(MaastrichterGruppenSpalteHelper.keinKoMarker());
+        assertThat(gruppen.get(fuenfter)).as("Fünfter rückt in Gruppe A nach").isEqualTo("A");
+        assertThat(gruppen.values().stream().filter("A"::equals).count()).as("Gruppe A voll besetzt")
+                .isEqualTo(GRUPPEN_GROESSE);
+        assertThat(teamsImKoBaum("A")).as("KO-Baum Gruppe A").contains(fuenfter).doesNotContain(erster)
+                .hasSize(GRUPPEN_GROESSE);
+    }
+
+    private List<Integer> teamNrnNachRang() throws GenerateException {
+        return leseRanglisteZeilen().stream()
+                .map(row -> row.get(MaastrichterVorrundenRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1)).toList();
+    }
+
+    private Map<Integer, String> gruppeJeTeam() throws GenerateException {
+        Map<Integer, String> gruppen = new HashMap<>();
+        for (var row : leseRanglisteZeilen()) {
+            String gruppe = row.get(MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE).getStringVal();
+            gruppen.put(row.get(MaastrichterVorrundenRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1),
+                    gruppe == null ? "" : gruppe);
+        }
+        return gruppen;
+    }
+
+    private RangeData leseRanglisteZeilen() throws GenerateException {
+        XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.maastrichterVorrundenRangliste());
+        assertThat(rangliste).as("Rangliste-Sheet").isNotNull();
+        RangePosition range = RangePosition.from(MaastrichterVorrundenRanglisteSheet.TEAM_NR_SPALTE,
+                MaastrichterVorrundenRanglisteSheet.ERSTE_DATEN_ZEILE, MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE,
+                MaastrichterVorrundenRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1);
+        return RangeHelper.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), range)
+                .getDataFromRange();
+    }
+
+    /** Teamnummern aller Teams, die im KO-Baum über ihre UUID-Formel referenziert werden. */
+    private Set<Integer> teamsImKoBaum(String gruppe) {
+        XSpreadsheet baum = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppe));
+        assertThat(baum).as("KO-Baum %s", gruppe).isNotNull();
+        var uuidIndex = MeldelisteUuidIndex.lese(wkingSpreadsheet);
+        String[][] formeln = sheetHlp.getFormulaArrayFromRange(baum, RangePosition.from(0, 0, 40, 200));
+        return Arrays.stream(formeln).flatMap(Arrays::stream).map(TeamUuidFormel::findeUuid)
+                .flatMap(Optional::stream).map(uuidIndex::nr).filter(OptionalInt::isPresent)
+                .map(OptionalInt::getAsInt).collect(Collectors.toSet());
     }
 
     /**
