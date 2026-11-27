@@ -41,10 +41,15 @@ final class TripTeteRanglisteDatenSchreiber {
 		return new TripTeteRanglisteDatenSchreiber(ranglisteSheet, meldeListe, workingSpreadsheet);
 	}
 
-	void schreibeDaten() throws GenerateException {
+	/**
+	 * Ermittelt die Ranglistenzeilen aller gelisteten Teams: aktive Teams und Teams mit verbuchter Begegnung (auch nach
+	 * einem Ausstieg). Die Anzahl der Zeilen kann daher größer sein als die Anzahl aktiver Meldungen.
+	 */
+	RangeData erstelleZeilen() throws GenerateException {
+		RangeData rangeData = new RangeData();
 		TeamMeldungen meldungen = meldeListe.getAlleMeldungen();
 		if (meldungen.teams().isEmpty()) {
-			return;
+			return rangeData;
 		}
 
 		var spielPlanSheet = new TripTeteSpielPlanSheet(workingSpreadsheet);
@@ -56,37 +61,41 @@ final class TripTeteRanglisteDatenSchreiber {
 		begegnungen.forEach(rangliste::addBegegnung);
 
 		List<TripTeteTeamErgebnis> sortiert = rangliste.getRangliste();
-		Map<Integer, String> namen = namenMap();
+		Map<Integer, String> namen = meldeListe.leseTeamNamenMap();
 
-		RangeData rangeData = new RangeData();
 		int rang = 1;
 		for (int i = 0; i < sortiert.size(); i++) {
 			if (i > 0 && sortiert.get(i).compareTo(sortiert.get(i - 1)) != 0) {
 				rang = i + 1;
 			}
-			TripTeteTeamErgebnis ergebnis = sortiert.get(i);
-			int teamNr = ergebnis.getTeam().getNr();
-			RowData row = rangeData.addNewRow();
-			row.newInt(teamNr);
-			row.newString(namen.getOrDefault(teamNr, ""));
-			row.newInt(rang);
-			row.newInt(ergebnis.getBegegnungenGewonnen());
-			row.newInt(ergebnis.getBegegnungenVerloren());
-			row.newInt(ergebnis.getPartienGewonnen());
-			row.newInt(ergebnis.getPartienVerloren());
-			row.newInt(ergebnis.getPartienGewonnen() - ergebnis.getPartienVerloren());
-			row.newInt(ergebnis.getSpielPunktePlus());
-			row.newInt(ergebnis.getSpielPunkteMinus());
-			row.newInt(ergebnis.getSpielPunkteDiff());
-			row.newInt(ergebnis.getBegegnungenGespielt());
+			schreibeZeile(rangeData.addNewRow(), sortiert.get(i), rang, namen);
 		}
-
-		Position startPos = Position.from(TripTeteRanglisteSheet.TEAM_NR_SPALTE,
-				TripTeteRanglisteSheet.ERSTE_DATEN_ZEILE);
-		RangeHelper.from(ranglisteSheet, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+		return rangeData;
 	}
 
-	private Map<Integer, String> namenMap() throws GenerateException {
-		return meldeListe.leseTeamNamenMap();
+	void schreibe(RangeData zeilen) throws GenerateException {
+		if (zeilen.isEmpty()) {
+			return;
+		}
+		Position startPos = Position.from(TripTeteRanglisteSheet.TEAM_NR_SPALTE,
+				TripTeteRanglisteSheet.ERSTE_DATEN_ZEILE);
+		RangeHelper.from(ranglisteSheet, zeilen.getRangePosition(startPos)).setDataInRange(zeilen);
+	}
+
+	private static void schreibeZeile(RowData row, TripTeteTeamErgebnis ergebnis, int rang,
+			Map<Integer, String> namen) {
+		int teamNr = ergebnis.getTeam().getNr();
+		row.newInt(teamNr);
+		row.newString(namen.getOrDefault(teamNr, ""));
+		row.newInt(rang);
+		row.newInt(ergebnis.getBegegnungenGewonnen());
+		row.newInt(ergebnis.getBegegnungenVerloren());
+		row.newInt(ergebnis.getPartienGewonnen());
+		row.newInt(ergebnis.getPartienVerloren());
+		row.newInt(ergebnis.getPartienGewonnen() - ergebnis.getPartienVerloren());
+		row.newInt(ergebnis.getSpielPunktePlus());
+		row.newInt(ergebnis.getSpielPunkteMinus());
+		row.newInt(ergebnis.getSpielPunkteDiff());
+		row.newInt(ergebnis.getBegegnungenGespielt());
 	}
 }

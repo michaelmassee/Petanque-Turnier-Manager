@@ -126,13 +126,16 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 			}
 
 			insertHeader();
-			TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
+			var schreiber = TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet());
+			RangeData zeilen = schreiber.erstelleZeilen();
+			schreiber.schreibe(zeilen);
 			for (int spalte = TEAM_NR_SPALTE; spalte <= LETZTE_SPALTE; spalte++) {
 				getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
 			}
-			insertFooter(meldungen.size());
-			formatieren(meldungen.size());
-			printBereichDefinieren(meldungen.size());
+			int anzGelistet = zeilen.size();
+			insertFooter(anzGelistet);
+			formatieren(anzGelistet);
+			printBereichDefinieren(anzGelistet);
 			SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(3).doFreeze();
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);

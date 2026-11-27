@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
+import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheetUpdate;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheetTestDaten;
 
@@ -35,6 +36,9 @@ import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheetTestDa
  * dortiger Javadoc). Da der Spielplan statisch bleibt, taucht ein Team mit bereits gespielten
  * Begegnungen daher IMMER weiter in der Rangliste auf – exakt dieselbe "Rangliste = historischer
  * Spielstand, kein Live-Roster"-Philosophie wie bei Poule. Dieser Test hält das bewusst fest.
+ * <p>
+ * Regression: Fußzeile, Formatierung und Druckbereich richteten sich früher nach der Anzahl aktiver Meldungen –
+ * nach einem Ausstieg rutschte die Fußzeile ohne Leerzeile direkt unter das letzte Team.
  */
 public class TripTeteAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 
@@ -87,6 +91,30 @@ public class TripTeteAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         assertThat(ausgestiegenesTeamInRangliste)
                 .as("Ausgestiegenes Team bleibt (aktuelles Verhalten, wie bei Poule) in der Rangliste stehen")
                 .isTrue();
+
+        // Fußzeile richtet sich nach den gelisteten Teams, nicht nur nach den aktiven – im Vollaufbau und im
+        // Listener-Update.
+        int anzGelistet = meldeliste.getAlleMeldungen().size() + 1;
+        pruefeFusszeileUnterAllenTeams(rangliste, ranglisteDaten, anzGelistet);
+        new TripTeteRanglisteSheetUpdate(wkingSpreadsheet).doRun();
+        pruefeFusszeileUnterAllenTeams(rangliste, RangeHelper
+                .from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), ranglisteRange)
+                .getDataFromRange(), anzGelistet);
+    }
+
+    private void pruefeFusszeileUnterAllenTeams(XSpreadsheet rangliste, RangeData ranglisteDaten, int anzGelistet) {
+        long anzDatenzeilen = ranglisteDaten.stream()
+                .takeWhile(row -> !row.isEmpty()
+                        && row.get(TripTeteRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1) > 0)
+                .count();
+        assertThat(anzDatenzeilen).as("alle Teams mit Begegnung gelistet").isEqualTo(anzGelistet);
+        int abstandsZeile = TripTeteRanglisteSheet.ERSTE_DATEN_ZEILE + anzGelistet;
+        assertThat(sheetHlp.getTextFromCell(rangliste,
+                Position.from(TripTeteRanglisteSheet.TEAM_NR_SPALTE, abstandsZeile)))
+                .as("Leerzeile vor der Fußzeile").isNullOrEmpty();
+        assertThat(sheetHlp.getTextFromCell(rangliste,
+                Position.from(TripTeteRanglisteSheet.TEAM_NR_SPALTE, abstandsZeile + 1)))
+                .as("Fußzeile unter allen gelisteten Teams").isNotBlank();
     }
 
     private List<List<Integer>> leseSpielplanWerte() throws GenerateException {
