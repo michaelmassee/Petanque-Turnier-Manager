@@ -36,6 +36,7 @@ import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XCellSeries;
 import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XFunctionAccess;
+import com.sun.star.sheet.XSheetCellCursor;
 import com.sun.star.sheet.XSheetCellRangeContainer;
 import com.sun.star.sheet.XSheetCellRanges;
 import com.sun.star.sheet.XSheetAnnotations;
@@ -43,6 +44,7 @@ import com.sun.star.sheet.XSheetAnnotationsSupplier;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.sheet.XUsedAreaCursor;
 import com.sun.star.table.CellAddress;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellRangeAddress;
@@ -942,6 +944,19 @@ public class SheetHelper {
 		XCellRangeAddressable zweitesBlatt = Lo.qi(XCellRangeAddressable.class, zweites);
 		return erstesBlatt != null && zweitesBlatt != null
 				&& erstesBlatt.getRangeAddress().Sheet == zweitesBlatt.getRangeAddress().Sheet;
+	}
+
+	/**
+	 * Letzte Zeile (0-basiert) des Blatts, die Inhalt trägt. Calc ermittelt das über {@code GetTableArea} nur aus
+	 * Zellinhalten, reine Formatierung zählt nicht ({@code sc/source/ui/unoobj/cursuno.cxx},
+	 * {@code ScCellCursorObj::gotoEndOfUsedArea}). Ersetzt feste Lesegrenzen, die große Blätter abschneiden.
+	 *
+	 * @return letzte belegte Zeile, {@code 0} bei leerem Blatt
+	 */
+	public static int letzteBelegteZeile(XSpreadsheet sheet) {
+		XSheetCellCursor cursor = sheet.createCursor();
+		Lo.qi(XUsedAreaCursor.class, cursor).gotoEndOfUsedArea(false);
+		return Lo.qi(XCellRangeAddressable.class, cursor).getRangeAddress().EndRow;
 	}
 
 	/**

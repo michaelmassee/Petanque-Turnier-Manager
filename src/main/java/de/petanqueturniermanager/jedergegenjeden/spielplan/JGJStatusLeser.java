@@ -10,6 +10,7 @@ import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
 import com.sun.star.text.XText;
 
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -21,7 +22,6 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 public class JGJStatusLeser {
 
     private static final Logger logger = LogManager.getLogger(JGJStatusLeser.class);
-    private static final int MAX_ZEILEN = 1000;
     private static final String SCORE_PRAEFIX = "PTM_EDIT:";
     private static final String POSITIONS_TRENNZEICHEN = "\\|";
     private static final String KOORDINATEN_TRENNZEICHEN = ",";
@@ -65,7 +65,8 @@ public class JGJStatusLeser {
         int rrGespielt = 0;
 
         try {
-            for (int zeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE; zeile < MAX_ZEILEN; zeile++) {
+            int letzteZeile = SheetHelper.letzteBelegteZeile(sheet);
+            for (int zeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
                 XCell nrZelle = sheet.getCellByPosition(JGJSpielPlanSheet.SPIEL_NR_SPALTE, zeile);
                 if (nrZelle.getType() == CellContentType.EMPTY) {
                     break;

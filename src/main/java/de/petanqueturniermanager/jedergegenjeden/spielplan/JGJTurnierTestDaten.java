@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.jedergegenjeden.spielplan;
 
 
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -91,7 +92,7 @@ public class JGJTurnierTestDaten extends JGJSpielPlanSheet {
         XSpreadsheet sheet = getXSpreadSheet();
         RangePosition leseBereich = RangePosition.from(
                 TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE,
-                TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE + 500);
+                TEAM_B_NR_SPALTE, Math.max(ERSTE_SPIELTAG_DATEN_ZEILE, SheetHelper.letzteBelegteZeile(sheet)));
         RangeData data = RangeHelper
                 .from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), leseBereich)
                 .getDataFromRange();

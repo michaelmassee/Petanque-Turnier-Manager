@@ -12,6 +12,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
@@ -652,7 +653,8 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		Position letzte = RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+		Position letzte = RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE,
+				SheetHelper.letzteBelegteZeile(getXSpreadSheet())))
 				.searchLastNotEmptyInSpalte();
 		// JGJ erzeugt hier aktiv Formeln; eine leere Spiel-Nr-Spalte bleibt ein Generierungsfehler.
 		if (letzte == null || letzte.getZeile() == 0) {

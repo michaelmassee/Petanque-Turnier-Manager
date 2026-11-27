@@ -46,8 +46,6 @@ public class JGJRanglisteRechner {
 		}
 	}
 
-	private static final int MAX_SPIELPLAN_ZEILEN = 500;
-
 	private final WorkingSpreadsheet workingSpreadsheet;
 
 	public JGJRanglisteRechner(WorkingSpreadsheet workingSpreadsheet) {
@@ -82,7 +80,7 @@ public class JGJRanglisteRechner {
 					: List.of(aktiveMeldungen);
 		}
 		String[][] teamAFormeln = new SheetHelper(workingSpreadsheet).getFormulaArrayFromRange(spielplanSheet,
-				teamNummernBereich());
+				teamNummernBereich(spielplanSheet));
 		return gruppenAusSpielplan(spielplanGruppen(leseTeamNummern(spielplanSheet), teamAFormeln),
 				aktiveMeldungen);
 	}
@@ -224,12 +222,11 @@ public class JGJRanglisteRechner {
 			return statsMap;
 		}
 
-		int startZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
 		RangeData teamNrData = leseTeamNummern(spielplanSheet);
 
 		RangeData spielpunkteData = RangeHelper.from(spielplanSheet, xDoc,
-				RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, startZeile,
-						JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
+				RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+						JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteSpielplanZeile(spielplanSheet)))
 				.getDataFromRange();
 
 		for (int i = 0; i < teamNrData.size(); i++) {
@@ -283,12 +280,19 @@ public class JGJRanglisteRechner {
 
 	private RangeData leseTeamNummern(XSpreadsheet spielplanSheet) throws GenerateException {
 		return RangeHelper.from(spielplanSheet, workingSpreadsheet.getWorkingSpreadsheetDocument(),
-				teamNummernBereich()).getDataFromRange();
+				teamNummernBereich(spielplanSheet)).getDataFromRange();
 	}
 
-	private static RangePosition teamNummernBereich() {
-		int startZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
-		return RangePosition.from(JGJSpielPlanSheet.TEAM_A_NR_SPALTE, startZeile, JGJSpielPlanSheet.TEAM_B_NR_SPALTE,
-				startZeile + MAX_SPIELPLAN_ZEILEN);
+	private static RangePosition teamNummernBereich(XSpreadsheet spielplanSheet) {
+		return RangePosition.from(JGJSpielPlanSheet.TEAM_A_NR_SPALTE, JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				JGJSpielPlanSheet.TEAM_B_NR_SPALTE, letzteSpielplanZeile(spielplanSheet));
+	}
+
+	/**
+	 * Letzte zu lesende Spielplan-Zeile. Ohne feste Obergrenze: Ein Spielplan mit 34 Teams hat schon 561 Partien
+	 * je Runde. Mindestens die erste Datenzeile, damit der Bereich auch bei leerem Spielplan gültig bleibt.
+	 */
+	private static int letzteSpielplanZeile(XSpreadsheet spielplanSheet) {
+		return Math.max(JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE, SheetHelper.letzteBelegteZeile(spielplanSheet));
 	}
 }
