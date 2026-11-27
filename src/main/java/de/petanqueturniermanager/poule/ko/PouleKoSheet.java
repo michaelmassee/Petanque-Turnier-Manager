@@ -5,11 +5,13 @@ package de.petanqueturniermanager.poule.ko;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.poule.PouleTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.poule.PouleKoQualifikation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -38,7 +40,8 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
  *   <li>Vorrunden-Rangliste aktualisieren und deren bereits sortierte Gruppen übernehmen
  *       ({@link PouleVorrundenRanglisteSheetUpdate#getZuletztSortierteGruppen()}) –
  *       kein eigenes, zweites Einlesen des Vorrunde-Sheets</li>
- *   <li>A-Teams und B-Teams mit Cross-Seeding bestimmen</li>
+ *   <li>A-Teams und B-Teams mit Cross-Seeding bestimmen ({@link PouleKoQualifikation}); für ausgestiegene
+ *       Teams rücken die Teams dahinter in ihrer Gruppe nach</li>
  *   <li>Alte KO-Sheets löschen</li>
  *   <li>KO-Bracket-Sheets für A- und B-Turnier erstellen</li>
  * </ol>
@@ -90,8 +93,9 @@ public class PouleKoSheet extends SheetRunner implements ISheet, PtmOnlineLiveAu
         var meldeliste = new PouleMeldeListeSheetUpdate(getWorkingSpreadsheet());
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
-        List<PouleTeamErgebnis> aTeamsList = bestimmeATeams(gruppenErgebnisse);
-        List<PouleTeamErgebnis> bTeamsList = bestimmeBTeams(gruppenErgebnisse);
+        var qualifikation = PouleKoQualifikation.von(gruppenErgebnisse, teamNrn(aktiveMeldungen));
+        List<Integer> aTeamsList = qualifikation.aTeams();
+        List<Integer> bTeamsList = qualifikation.bTeams();
 
         if (aTeamsList.size() < 2) {
             MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
@@ -129,71 +133,17 @@ public class PouleKoSheet extends SheetRunner implements ISheet, PtmOnlineLiveAu
         koSheet.erstelleGruppenBrackets(bracketAuftraege, konfigAdapter);
     }
 
-    /**
-     * Bestimmt die A-Turnier-Teams mit Cross-Seeding über Gruppenpaare.
-     * <p>
-     * Gruppenpaare (G1,G2), (G3,G4), ... werden zusammengefasst.
-     * Für jedes Paar: erst alle Platz-1-Teams (G1P1, G2P1, G3P1, ...) dann
-     * alle Platz-2-Teams in umgekehrter Gruppenreihenfolge (G_n P2, ..., G1 P2),
-     * damit benachbarte Teams im Turnierbaum aus verschiedenen Gruppen kommen.
-     */
-    private List<PouleTeamErgebnis> bestimmeATeams(List<List<PouleTeamErgebnis>> gruppen) {
-        var aTeams = new ArrayList<PouleTeamErgebnis>();
-
-        // Erst alle Platz-1-Teams in Paarfolge
-        for (int i = 0; i < gruppen.size(); i += 2) {
-            if (!gruppen.get(i).isEmpty()) {
-                aTeams.add(gruppen.get(i).get(0));
-            }
-            if (i + 1 < gruppen.size() && !gruppen.get(i + 1).isEmpty()) {
-                aTeams.add(gruppen.get(i + 1).get(0));
-            }
-        }
-
-        // Dann alle Platz-2-Teams in umgekehrter Reihenfolge
-        for (int i = gruppen.size() - 1; i >= 0; i--) {
-            if (gruppen.get(i).size() >= 2) {
-                aTeams.add(gruppen.get(i).get(1));
-            }
-        }
-
-        return aTeams;
+    private static Set<Integer> teamNrn(TeamMeldungen meldungen) {
+        return meldungen.teams().stream().map(Team::getNr).collect(Collectors.toUnmodifiableSet());
     }
 
     /**
-     * Bestimmt die B-Turnier-Teams (Platz 3 und ggf. 4 aller Gruppen).
+     * Erstellt ein {@link TeamMeldungen}-Objekt in Setzreihenfolge.
      */
-    private List<PouleTeamErgebnis> bestimmeBTeams(List<List<PouleTeamErgebnis>> gruppen) {
-        var bTeams = new ArrayList<PouleTeamErgebnis>();
-
-        // Platz-3-Teams in Paarfolge
-        for (int i = 0; i < gruppen.size(); i += 2) {
-            if (gruppen.get(i).size() >= 3) {
-                bTeams.add(gruppen.get(i).get(2));
-            }
-            if (i + 1 < gruppen.size() && gruppen.get(i + 1).size() >= 3) {
-                bTeams.add(gruppen.get(i + 1).get(2));
-            }
-        }
-
-        // Platz-4-Teams in umgekehrter Reihenfolge
-        for (int i = gruppen.size() - 1; i >= 0; i--) {
-            if (gruppen.get(i).size() >= 4) {
-                bTeams.add(gruppen.get(i).get(3));
-            }
-        }
-
-        return bTeams;
-    }
-
-    /**
-     * Erstellt ein {@link TeamMeldungen}-Objekt aus der sortierten Ergebnisliste.
-     */
-    private TeamMeldungen erstelleGruppeTeams(List<PouleTeamErgebnis> ergebnisse,
-            TeamMeldungen aktiveMeldungen) {
+    private static TeamMeldungen erstelleGruppeTeams(List<Integer> teamNrn, TeamMeldungen aktiveMeldungen) {
         var gruppeTeams = new TeamMeldungen();
-        for (var erg : ergebnisse) {
-            Team team = aktiveMeldungen.getTeam(erg.teamNr());
+        for (int teamNr : teamNrn) {
+            Team team = aktiveMeldungen.getTeam(teamNr);
             if (team != null) {
                 gruppeTeams.addTeamWennNichtVorhanden(team);
             }

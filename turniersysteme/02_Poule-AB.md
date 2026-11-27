@@ -104,6 +104,16 @@ Poule 2 (1.) vs Poule 1 (2.)
 Poule 4 (1.) vs Poule 3 (2.)
 ```
 
+## Ausstieg vor der K.O.-Phase: Nachrücken
+Steigt ein Team nach der Vorrunde aus (Aktiv = 2 oder leer), rücken die Teams dahinter **in seiner Poule** nach:
+- Gruppensieger steigt aus → der Zweite wird Erster, der **Dritte rückt ins A‑Turnier**, der Vierte wird Dritter (B‑Turnier).
+- Gruppendritter steigt aus → der Vierte rückt auf Platz 3, das A‑Turnier bleibt unverändert.
+- In einer 5er‑Poule rückt der Fünfte ins B‑Turnier nach.
+
+Die Vorrunden-Ergebnisse und Platzierungen bleiben unverändert, auch das ausgestiegene Team steht weiter mit seinen Spielen in der Vorrunden-Rangliste. Nur die Spalte „Turnier“ (A/B) richtet sich nach den noch teilnehmenden Teams; beim ausgestiegenen Team bleibt sie leer. Der K.O.-Baum übernimmt genau diese Zuordnung.
+
+Die Zuordnung gilt beim Erstellen der K.O.-Bäume. Ein Ausstieg danach ändert die bereits erstellten Bäume nicht.
+
 ---
 # 7. Cadrage (Zwischenrunde)
 

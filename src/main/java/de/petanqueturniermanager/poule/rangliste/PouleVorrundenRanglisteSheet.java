@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +20,8 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.algorithmen.poule.PouleKoQualifikation;
+import de.petanqueturniermanager.algorithmen.poule.PouleKoQualifikation.Turnier;
 import de.petanqueturniermanager.algorithmen.poule.PouleRanglisteRechner;
 import de.petanqueturniermanager.algorithmen.poule.PouleTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -45,7 +49,9 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.poule.vorrunde.AbstractPouleVorrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
@@ -189,7 +195,8 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         spaltenBreitenSetzen(xSheet);
         headerSchreiben(xSheet);
 
-        int aktuelleZeile = schreibeDatenZeilen(xSheet, sortiertGruppen);
+        var qualifikation = PouleKoQualifikation.von(sortiertGruppen, teilnehmendeTeamNrn());
+        int aktuelleZeile = schreibeDatenZeilen(xSheet, sortiertGruppen, qualifikation);
 
         int letzteDatenZeile = aktuelleZeile - 1;
         if (letzteDatenZeile >= HEADER_ZEILEN) {
@@ -224,6 +231,15 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
             return;
         }
         berechnungUndSchreiben(vorrundeSheet, xSheet);
+    }
+
+    /**
+     * Teams, die noch teilnehmen (Aktiv = 1). Ausgestiegene Teams bleiben mit ihren Ergebnissen in der Rangliste, ihr
+     * KO-Platz geht an das nächste Team der Gruppe ({@link PouleKoQualifikation}).
+     */
+    private Set<Integer> teilnehmendeTeamNrn() throws GenerateException {
+        return new PouleMeldeListeSheetUpdate(getWorkingSpreadsheet()).getAktiveMeldungen().teams().stream()
+                .map(Team::getNr).collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -338,8 +354,8 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
      *
      * @return die nächste freie Zeile nach den Datenzeilen
      */
-    private int schreibeDatenZeilen(XSpreadsheet xSheet, List<List<PouleTeamErgebnis>> sortiertGruppen)
-            throws GenerateException {
+    private int schreibeDatenZeilen(XSpreadsheet xSheet, List<List<PouleTeamErgebnis>> sortiertGruppen,
+            PouleKoQualifikation qualifikation) throws GenerateException {
 
         var block1 = new RangeData(); // Platz, Gruppe, Nr
         var block2 = new RangeData(); // Siege, Ndlg, PktPlus, PktMinus, Diff, Turnier
@@ -355,7 +371,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
             for (int platzIndex = 0; platzIndex < gruppe.size(); platzIndex++) {
                 var erg = gruppe.get(platzIndex);
                 int platz = platzIndex + 1;
-                boolean istATurnier = platz <= 2;
+                Turnier turnier = qualifikation.turnier(erg.teamNr());
 
                 var row1 = block1.addNewRow();
                 row1.newInt(platz);
@@ -368,12 +384,14 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                 row2.newInt(erg.erzieltePunkte());
                 row2.newInt(erg.erzieltePunkte() - erg.punkteDifferenz());
                 row2.newInt(erg.punkteDifferenz());
-                row2.newString(istATurnier ? "A" : "B");
+                row2.newString(turnier == Turnier.KEINES ? "" : turnier.name());
 
-                if (istATurnier) {
-                    aTurnierZeilen.add(aktuelleZeile);
-                } else {
-                    bTurnierZeilen.add(aktuelleZeile);
+                switch (turnier) {
+                    case A -> aTurnierZeilen.add(aktuelleZeile);
+                    case B -> bTurnierZeilen.add(aktuelleZeile);
+                    case KEINES -> {
+                        // ausgestiegen oder ab Platz 5: kein KO-Turnier, keine Markierung
+                    }
                 }
                 aktuelleZeile++;
             }

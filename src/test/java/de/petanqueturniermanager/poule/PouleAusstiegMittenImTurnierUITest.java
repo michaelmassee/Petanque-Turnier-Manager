@@ -3,7 +3,12 @@ package de.petanqueturniermanager.poule;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -18,6 +25,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.poule.ko.PouleKoSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
@@ -30,9 +38,10 @@ import de.petanqueturniermanager.poule.vorrunde.AbstractPouleVorrundeSheet;
  * generiert ({@link PouleTurnierTestDaten#generate()}). Ein Ausstieg kann daher keine zukünftige
  * Paarung mehr beeinflussen, weil es keine gibt. Auch die Rangliste ({@link PouleVorrundenRanglisteSheet})
  * liest ausschließlich die bereits eingetragenen Vorrunden-Ergebnisse, nicht die Aktiv-Spalte der
- * Meldeliste – ein nachträglicher Ausstieg bleibt daher folgenlos für Vorrunde UND Rangliste. Dieser
- * Test hält das bewusst fest, damit eine künftige Änderung an dieser Stelle (z.B. Filterung nach
- * Aktiv-Status in der Rangliste) hier auffällt.
+ * Meldeliste – ein nachträglicher Ausstieg ändert daher weder Vorrunde noch Ranglisten-Werte.
+ * <p>
+ * Nur die Zuordnung zum KO-Turnier (Spalte „Turnier“, KO-Baum) berücksichtigt den Ausstieg: Die Teams dahinter
+ * rücken in ihrer Gruppe nach.
  */
 public class PouleAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 
@@ -79,6 +88,63 @@ public class PouleAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         assertThat(ausgestiegenesTeamWeiterhinInRangliste)
                 .as("Ausgestiegenes Team bleibt (aktuelles Verhalten) unverändert in der Rangliste")
                 .isTrue();
+    }
+
+    /**
+     * Steigt ein Gruppensieger vor der KO-Runde aus, rücken die Teams dahinter in seiner Gruppe nach: der Gruppendritte
+     * spielt das A-Turnier. Rangliste (Spalte „Turnier“) und KO-Baum zeigen dasselbe.
+     */
+    @Test
+    public void ausstiegGruppensieger_gruppendritterRuecktInsATurnierNach() throws GenerateException {
+        testDaten.generate();
+        int gruppensieger = teamAufPlatz(1, 1);
+        int gruppendritter = teamAufPlatz(1, 3);
+
+        PouleMeldeListeSheetUpdate meldeliste = new PouleMeldeListeSheetUpdate(wkingSpreadsheet);
+        sheetHlp.setNumberValueInCell(NumberCellValue
+                .from(meldeliste.getXSpreadSheet(),
+                        Position.from(meldeliste.getAktivSpalte(), meldeliste.getSpielerZeileNr(gruppensieger)))
+                .setValue(PouleMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN));
+
+        new PouleVorrundenRanglisteSheetUpdate(wkingSpreadsheet).doRun();
+        assertThat(turnierInRangliste(gruppensieger)).as("ausgestiegener Gruppensieger spielt kein KO").isEmpty();
+        assertThat(turnierInRangliste(gruppendritter)).as("Gruppendritter rückt ins A-Turnier nach").isEqualTo("A");
+        assertThat(teamAufPlatz(1, 1)).as("Vorrunden-Platz bleibt unverändert").isEqualTo(gruppensieger);
+
+        new PouleKoSheet(wkingSpreadsheet).doRun();
+        assertThat(teamsImKoBaum("A")).as("A-Turnier").contains(gruppendritter).doesNotContain(gruppensieger);
+        assertThat(teamsImKoBaum("B")).as("B-Turnier").doesNotContain(gruppendritter, gruppensieger);
+    }
+
+    private int teamAufPlatz(int gruppe, int platz) throws GenerateException {
+        return leseRanglisteWerte().stream()
+                .filter(row -> row.get(PouleVorrundenRanglisteSheet.SPALTE_GRUPPE) == gruppe
+                        && row.get(PouleVorrundenRanglisteSheet.SPALTE_PLATZ) == platz)
+                .mapToInt(row -> row.get(PouleVorrundenRanglisteSheet.SPALTE_NR)).findFirst().orElseThrow();
+    }
+
+    private String turnierInRangliste(int teamNr) throws GenerateException {
+        XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.pouleVorrundenRangliste());
+        RangePosition range = RangePosition.from(PouleVorrundenRanglisteSheet.SPALTE_PLATZ,
+                PouleVorrundenRanglisteSheet.HEADER_ZEILEN, PouleVorrundenRanglisteSheet.SPALTE_TURNIER,
+                PouleVorrundenRanglisteSheet.HEADER_ZEILEN + 100);
+        return RangeHelper.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), range).getDataFromRange()
+                .stream()
+                .filter(row -> row.size() > PouleVorrundenRanglisteSheet.SPALTE_TURNIER
+                        && row.get(PouleVorrundenRanglisteSheet.SPALTE_NR).getIntVal(0) == teamNr)
+                .map(row -> row.get(PouleVorrundenRanglisteSheet.SPALTE_TURNIER).getStringVal())
+                .map(wert -> wert == null ? "" : wert).findFirst().orElseThrow();
+    }
+
+    /** Teamnummern aller Teams, die im KO-Baum über ihre UUID-Formel referenziert werden. */
+    private Set<Integer> teamsImKoBaum(String gruppe) {
+        XSpreadsheet baum = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppe));
+        assertThat(baum).as("KO-Baum %s", gruppe).isNotNull();
+        var uuidIndex = MeldelisteUuidIndex.lese(wkingSpreadsheet);
+        String[][] formeln = sheetHlp.getFormulaArrayFromRange(baum, RangePosition.from(0, 0, 40, 200));
+        return Arrays.stream(formeln).flatMap(Arrays::stream).map(TeamUuidFormel::findeUuid)
+                .flatMap(Optional::stream).map(uuidIndex::nr).filter(OptionalInt::isPresent)
+                .map(OptionalInt::getAsInt).collect(Collectors.toSet());
     }
 
     private List<List<Integer>> leseVorrundeWerte() throws GenerateException {
