@@ -88,176 +88,205 @@
   ],
   [
     {
-      "data": 40.0
+      "data": 54.0
     },
     {
-      "data": "Gesine Enzmann"
+      "data": "Evi Doege"
     },
     {
       "data": 1.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 5.0
+      "data": 1.0
     },
     {
-      "data": 8.0
+      "data": 9.0
     },
     {
-      "data": 12.0
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
     }
   ],
   [
     {
-      "data": 42.0
+      "data": 62.0
     },
     {
-      "data": "Joana Steinborn"
+      "data": "Kurth Zipfel"
     },
     {
       "data": 2.0
     },
     {
-      "data": 13.0
+      "data": 10.0
     },
     {
-      "data": 0.0
+      "data": 9.0
     },
     {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 8.0
-    }
-  ],
-  [
-    {
-      "data": 37.0
-    },
-    {
-      "data": "Gaby Puls"
+      "data": 9.0
     },
     {
       "data": 3.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 78.0
-    },
-    {
-      "data": "Marielene Heering"
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 10.0
     },
     {
       "data": 11.0
     },
     {
+      "data": 4.0
+    }
+  ],
+  [
+    {
+      "data": 11.0
+    },
+    {
+      "data": "Birk Reuß"
+    },
+    {
       "data": 3.0
-    }
-  ],
-  [
-    {
-      "data": 74.0
-    },
-    {
-      "data": "Arne Mühlmann"
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 1.0
-    }
-  ],
-  [
-    {
-      "data": 1.0
-    },
-    {
-      "data": "Anett Jakobs"
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
     },
     {
       "data": 9.0
     },
     {
+      "data": 1.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 3.0
+    }
+  ],
+  [
+    {
+      "data": 81.0
+    },
+    {
+      "data": "Niko Gerhard"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 8.0
+    }
+  ],
+  [
+    {
+      "data": 77.0
+    },
+    {
+      "data": "Milan Lott"
+    },
+    {
       "data": 5.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 13.0
     },
     {
       "data": 0.0
     },
     {
-      "data": 13.0
+      "data": 8.0
+    },
+    {
+      "data": 9.0
+    }
+  ],
+  [
+    {
+      "data": 19.0
+    },
+    {
+      "data": "Kornelia Molz"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 3.0
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Berndt Böhme"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
     }
   ],
   [
@@ -268,22 +297,138 @@
       "data": "Wernhard Scheld"
     },
     {
-      "data": 7.0
+      "data": 8.0
     },
     {
       "data": 11.0
     },
     {
-      "data": 8.0
+      "data": 1.0
     },
     {
-      "data": 13.0
+      "data": 11.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 4.0
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Kreszenzia Thielmann"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 9.0
     },
     {
       "data": 11.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 14.0
+    },
+    {
+      "data": "Collin Bohnet"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 8.0
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Anika Drees"
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 86.0
+    },
+    {
+      "data": "Rigobert Asmus"
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 3.0
@@ -291,28 +436,289 @@
   ],
   [
     {
-      "data": 49.0
+      "data": 40.0
     },
     {
-      "data": "Diethmar Herget"
-    },
-    {
-      "data": 8.0
+      "data": "Gesine Enzmann"
     },
     {
       "data": 13.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 6.0
     },
     {
-      "data": 13.0
+      "data": 11.0
     },
     {
       "data": 9.0
     },
     {
+      "data": 3.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 41.0
+    },
+    {
+      "data": "Goswin Riederer"
+    },
+    {
+      "data": 14.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 1.0
+    }
+  ],
+  [
+    {
+      "data": 67.0
+    },
+    {
+      "data": "Maria Bieder"
+    },
+    {
+      "data": 15.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 48.0
+    },
+    {
+      "data": "Ilsetraud Wetzig"
+    },
+    {
+      "data": 16.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 79.0
+    },
+    {
+      "data": "Muthild Döll"
+    },
+    {
+      "data": 17.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
+    },
+    {
       "data": 7.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 83.0
+    },
+    {
+      "data": "Otbert Dold"
+    },
+    {
+      "data": 18.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 72.0
+    },
+    {
+      "data": "Max Krischer"
+    },
+    {
+      "data": 19.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 26.0
+    },
+    {
+      "data": "Eustachius Goetze"
+    },
+    {
+      "data": 20.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 9.0
+    }
+  ],
+  [
+    {
+      "data": 58.0
+    },
+    {
+      "data": "Ehrentraut Bremen"
+    },
+    {
+      "data": 21.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Annika Härle"
+    },
+    {
+      "data": 22.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 11.0
     },
     {
       "data": 10.0
@@ -326,39 +732,16 @@
       "data": "Hartwig Ney"
     },
     {
-      "data": 9.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 1.0
+      "data": 23.0
     },
     {
       "data": 10.0
-    }
-  ],
-  [
+    },
     {
       "data": 5.0
     },
     {
-      "data": "Benjamin Stocker"
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 8.0
+      "data": 4.0
     },
     {
       "data": 11.0
@@ -367,13 +750,36 @@
       "data": 13.0
     },
     {
-      "data": 2.0
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 68.0
     },
     {
-      "data": 13.0
+      "data": "Anneke Wonneberger"
     },
     {
-      "data": 5.0
+      "data": 24.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 8.0
     }
   ],
   [
@@ -384,54 +790,83 @@
       "data": "Rosmarie Zoll"
     },
     {
-      "data": 11.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
+      "data": 25.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 1.0
+      "data": 6.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 4.0
     }
   ],
   [
     {
-      "data": 53.0
+      "data": 25.0
     },
     {
-      "data": "Irmintraud Staub"
+      "data": "Engelbert Radde"
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 1.0
+      "data": 26.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 12.0
+      "data": 6.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 95.0
+    },
+    {
+      "data": "Siegulf Krauss"
+    },
+    {
+      "data": 27.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     },
     {
       "data": 8.0
+    },
+    {
+      "data": 9.0
     }
   ],
   [
@@ -442,141 +877,54 @@
       "data": "Jil Rackow"
     },
     {
-      "data": 13.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 1.0
-    }
-  ],
-  [
-    {
-      "data": 98.0
-    },
-    {
-      "data": "Theodore Baake"
-    },
-    {
-      "data": 14.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 9.0
+      "data": 28.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 1.0
+      "data": 9.0
+    },
+    {
+      "data": 4.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 1.0
+      "data": 10.0
+    },
+    {
+      "data": 13.0
     }
   ],
   [
     {
-      "data": 56.0
+      "data": 69.0
     },
     {
-      "data": "Rita Bäder"
+      "data": "Mariegret Erickson"
     },
     {
-      "data": 15.0
-    },
-    {
-      "data": 13.0
+      "data": 29.0
     },
     {
       "data": 6.0
     },
     {
-      "data": 0.0
+      "data": 10.0
     },
     {
-      "data": 13.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 57.0
-    },
-    {
-      "data": "Zoé Kieslich"
-    },
-    {
-      "data": 16.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 90.0
-    },
-    {
-      "data": "Huldine Meiß"
-    },
-    {
-      "data": 17.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
+      "data": 4.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 7.0
+      "data": 11.0
+    },
+    {
+      "data": 10.0
     }
   ],
   [
@@ -587,97 +935,16 @@
       "data": "Dietmar Kühnle"
     },
     {
-      "data": 18.0
+      "data": 30.0
     },
     {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 5.0
+      "data": 6.0
     },
     {
       "data": 10.0
     },
     {
       "data": 7.0
-    }
-  ],
-  [
-    {
-      "data": 10.0
-    },
-    {
-      "data": "Bianka Wels"
-    },
-    {
-      "data": 19.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 1.0
-    }
-  ],
-  [
-    {
-      "data": 9.0
-    },
-    {
-      "data": "Kreszenzia Thielmann"
-    },
-    {
-      "data": 20.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 22.0
-    },
-    {
-      "data": "Joana Nuber"
-    },
-    {
-      "data": 20.0
-    },
-    {
-      "data": 12.0
     },
     {
       "data": 10.0
@@ -687,125 +954,119 @@
     },
     {
       "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 1.0
     }
   ],
   [
     {
-      "data": 24.0
+      "data": 97.0
     },
     {
-      "data": "Elfgard Pokorny"
+      "data": "Sophie Stabel"
     },
-    {
-      "data": 22.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 100.0
-    },
-    {
-      "data": "Annehilde Matthiessen"
-    },
-    {
-      "data": 23.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 58.0
-    },
-    {
-      "data": "Ehrentraut Bremen"
-    },
-    {
-      "data": 24.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
     {
       "data": 31.0
     },
     {
-      "data": "Erhardt Karch"
+      "data": 9.0
     },
     {
-      "data": 25.0
+      "data": 11.0
     },
     {
-      "data": 12.0
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 12.0
+      "data": 1.0
+    }
+  ],
+  [
+    {
+      "data": 7.0
     },
     {
-      "data": 3.0
+      "data": "Berndt Meinzer"
+    },
+    {
+      "data": 32.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 56.0
+    },
+    {
+      "data": "Rita Bäder"
+    },
+    {
+      "data": 32.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 35.0
+    },
+    {
+      "data": "Franka Grau"
+    },
+    {
+      "data": 34.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 13.0
@@ -819,16 +1080,45 @@
       "data": "Eik Pfefferle"
     },
     {
-      "data": 26.0
+      "data": 35.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 43.0
+    },
+    {
+      "data": "Gretchen Hüttel"
+    },
+    {
+      "data": 36.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 2.0
+      "data": 10.0
     },
     {
-      "data": 13.0
+      "data": 0.0
     },
     {
       "data": 9.0
@@ -842,19 +1132,22 @@
   ],
   [
     {
-      "data": 41.0
+      "data": 36.0
     },
     {
-      "data": "Goswin Riederer"
+      "data": "Friedhilde Linner"
     },
     {
-      "data": 27.0
+      "data": 37.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 0.0
-    },
-    {
-      "data": 13.0
     },
     {
       "data": 9.0
@@ -863,10 +1156,94 @@
       "data": 13.0
     },
     {
-      "data": 13.0
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 18.0
+    },
+    {
+      "data": "Detmar Ciftci"
+    },
+    {
+      "data": 38.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 5.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 17.0
+    },
+    {
+      "data": "Danny Witschel"
+    },
+    {
+      "data": 39.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 55.0
+    },
+    {
+      "data": "Isedore Husmann"
+    },
+    {
+      "data": 40.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     }
   ],
   [
@@ -877,109 +1254,22 @@
       "data": "Theodeline Rentschler"
     },
     {
-      "data": 28.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 3.0
-    }
-  ],
-  [
-    {
-      "data": 76.0
-    },
-    {
-      "data": "Michaela Thielemann"
-    },
-    {
-      "data": 29.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 63.0
-    },
-    {
-      "data": "Leander Fessler"
-    },
-    {
-      "data": 30.0
+      "data": 41.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 3.0
-    },
-    {
-      "data": 5.0
+      "data": 12.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 1.0
+      "data": 11.0
     },
     {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 28.0
-    },
-    {
-      "data": "Annkatrin Eisenhardt"
-    },
-    {
-      "data": 31.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 0.0
+      "data": 10.0
     },
     {
       "data": 13.0
@@ -987,219 +1277,80 @@
   ],
   [
     {
-      "data": 47.0
+      "data": 74.0
     },
     {
-      "data": "Sibylla Panitz"
+      "data": "Arne Mühlmann"
     },
     {
-      "data": 32.0
-    },
-    {
-      "data": 2.0
+      "data": 42.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 5.0
-    }
-  ],
-  [
-    {
-      "data": 83.0
-    },
-    {
-      "data": "Otbert Dold"
-    },
-    {
-      "data": 33.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 60.0
-    },
-    {
-      "data": "Kristine Schenck"
-    },
-    {
-      "data": 34.0
-    },
-    {
       "data": 11.0
-    },
-    {
-      "data": 8.0
     },
     {
       "data": 0.0
     },
     {
       "data": 13.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 97.0
-    },
-    {
-      "data": "Sophie Stabel"
-    },
-    {
-      "data": 35.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 12.0
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 82.0
     },
     {
-      "data": 2.0
+      "data": "Volkwart Hey"
     },
     {
-      "data": 13.0
+      "data": 43.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 10.0
-    }
-  ],
-  [
-    {
-      "data": 95.0
+      "data": 9.0
     },
-    {
-      "data": "Siegulf Krauss"
-    },
-    {
-      "data": 36.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
     {
       "data": 4.0
     },
     {
-      "data": "Annika Härle"
-    },
-    {
-      "data": 37.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 33.0
-    },
-    {
-      "data": "Falk Moog"
-    },
-    {
-      "data": 38.0
+      "data": 11.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
       "data": 13.0
     }
   ],
   [
     {
-      "data": 84.0
+      "data": 31.0
     },
     {
-      "data": "Petra Daum"
+      "data": "Erhardt Karch"
     },
     {
-      "data": 39.0
+      "data": 44.0
     },
     {
-      "data": 3.0
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": 9.0
@@ -1209,93 +1360,58 @@
     },
     {
       "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
     }
   ],
   [
     {
-      "data": 11.0
+      "data": 2.0
     },
     {
-      "data": "Birk Reuß"
+      "data": "Angelika Elsen"
     },
     {
-      "data": 40.0
+      "data": 45.0
     },
     {
       "data": 6.0
     },
     {
-      "data": 13.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 1.0
-    },
-    {
       "data": 10.0
-    }
-  ],
-  [
-    {
-      "data": 88.0
-    },
-    {
-      "data": "Roseliese Petter"
-    },
-    {
-      "data": 40.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 13.0
     },
     {
       "data": 7.0
     },
     {
       "data": 10.0
-    }
-  ],
-  [
-    {
-      "data": 34.0
-    },
-    {
-      "data": "Felix Kamps"
-    },
-    {
-      "data": 42.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
     },
     {
       "data": 3.0
     },
     {
-      "data": 12.0
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 15.0
+    },
+    {
+      "data": "Collin Knöpfle"
+    },
+    {
+      "data": 46.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
     },
     {
       "data": 0.0
@@ -1306,22 +1422,45 @@
   ],
   [
     {
-      "data": 99.0
+      "data": 38.0
     },
     {
-      "data": "Willhart Hempel"
+      "data": "Borwin Meiners"
     },
     {
-      "data": 43.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
+      "data": 47.0
     },
     {
       "data": 1.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 13.0
+    },
+    {
+      "data": "Chantall Knöchel"
+    },
+    {
+      "data": 48.0
+    },
+    {
+      "data": 5.0
     },
     {
       "data": 10.0
@@ -1331,11 +1470,17 @@
     },
     {
       "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     }
   ],
   [
     {
-      "data": "Anzahl Spieler: 43"
+      "data": "Anzahl Spieler: 48"
     },
     {
       "data": ""
@@ -1393,152 +1538,7 @@
   ],
   [
     {
-        "data": "Nicht gespielte Runden werden mit 0:13 gewertet"
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
+      "data": "Nicht gespielte Runden werden mit 0:13 gewertet"
     },
     {
       "data": ""
